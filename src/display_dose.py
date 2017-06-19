@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import sys
-import scipy
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -108,7 +107,7 @@ def afficher_coupe_verticale(f, dose_matrix, maxhom, coord, maillage, dim_vector
     coord : vecteur de taille 6 contenant les informations sur le maillage
     maillage : triplet (xm, ym, zm) 
     dim_vector : triplet (dimx, dimy, dimz) qui définit la dim de chaque axe
-    nb_vector : triplet  (nbx, nby, nbz) qui définit le nombre de points de chaque axe
+    nb_vector : triplet  (nbx, nby, nbz) qui définit le nombre de points sur chaque axe
     """
     (xm, ym, zm) = maillage
     (dimx, dimy, dimz) = dim_vector
@@ -171,9 +170,9 @@ def afficher_coupe_horizontale(f, dose_matrix, maxhom, coord):
     m1legend = plt.legend(lines, labels, loc='best')
     ax = plt.gca().add_artist(m1legend)
 
-    plt.rcParams.update({'font.size': 20})
-    plt.xlabel('Depth [cm]', fontsize=20)
-    plt.ylabel('Off Axis Distance [cm]', fontsize=20)
+    plt.rcParams.update({'font.size': 17})
+    plt.xlabel('Depth [cm]', fontsize=17)
+    plt.ylabel('Off Axis Distance [cm]', fontsize=17)
     
 
 def lancer_affichage(filename):
@@ -203,11 +202,8 @@ def usage(argv):
 
 
 def main():
-    #usage(sys.argv)
-    #filename = "/home/thibault/KIDS_4/workdir/dose.dat"
-    filename = "/home/thibault/KIDS_4/workdir/multisource_dose_fusion.dat"
-    #filename = "/home/thibault/KIDS_4/workdir/multisource_dose_source_001.dat"
-    #filename = "/home/thibault/KIDS_4/workdir/multisource_dose_source_002.dat"
+    usage(sys.argv)
+    filename = sys.argv[1]
     lancer_affichage(filename)
     
 

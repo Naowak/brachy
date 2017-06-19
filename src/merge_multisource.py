@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import sys
-import scipy
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -10,7 +9,8 @@ def lancer_fusion(filename_head, vecteur_sources):
 
     [Params]
     filename_head : chaine de caractère représentant l'en-tete des sources à fusionner
-    (les fichiers sources sont de la forme filename_head_dose_source_xxx)
+    (les fichiers sources doivent etre generes avec l'option -nofusion
+     de la forme filename_head_dose_source_xxx)
     vecteur_sources : vecteur dont les valeurs representent les sources à fusionner
     """
     # Premiere source
@@ -36,31 +36,36 @@ def lancer_fusion(filename_head, vecteur_sources):
     head = head.rstrip() # Suppression du saut de ligne
 
     # Sauvegarde de la fusion
-    np.savetxt(filename_head + "_dose_fusion.dat", res, header=head, footer='\n', comments='', newline='\n')
+    filename = filename_head + "_dose_fusion.dat"
+    np.savetxt(filename, res, header=head, footer='\n', comments='', newline='\n')
+
+    print filename + " successfully generated"
 
     fd_lecture.close()
     
-
-            
     
 def usage(argv):
     if (len(sys.argv) != 3): 
         err_msg = "Usage : python generate_multisource.py filename_head vecteur_sources\n"
+        err_msg += "filename_head : chaine de caractère représentant l'en-tete des sources à \
+        fusionner (les fichiers sources doivent etre generes avec l'option -nofusion de la \
+        forme filename_head_dose_source_xxx)"
         sys.stderr.write(err_msg)
         sys.exit(1)
     elif (len(vecteur_sources) < 2):
         err_msg = "Usage : python generate_multisource.py filename_head vecteur_sources\n"
         err_msg += "vecteur_sources doit etre de taille 2 au minimum"
+        err_msg += "filename_head : chaine de caractère représentant l'en-tete des sources à \
+        fusionner (les fichiers sources doivent etre generes avec l'option -nofusion de la \
+        forme filename_head_dose_source_xxx)"
         sys.stderr.write(err_msg)
         sys.exit(1)
 
 
 def main():
-    #usage(sys.argv)
-    # Simulation d'appel (à supprimer après dev)
-    filename_head = "/home/thibault/KIDS_4/workdir/multisource"
-    vecteur_sources = [1, 2, 3]
-
+    usage(sys.argv)
+    filename_head = sys.argv[1]
+    vecteur_sources = sys.argv[2]
     lancer_fusion(filename_head, vecteur_sources)
     
 

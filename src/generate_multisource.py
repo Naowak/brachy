@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
-import scipy
 import numpy as np
 import matplotlib.pyplot as plt
+from contourage import *
 
 
 # Paramètres globaux
@@ -14,8 +14,8 @@ def get_maillage(n_points, dimensions):
     [Return] Un triplet de trois tableaux (xm, ym, zm) correspondant au maillage 
 
     [Params]
-    n_points : triplet (x, y, z) qui définit le maillage
-    dimensions : triplet (x, y, z) qui définit les dimensions
+    n_points : triplet (x, y, z) qui définit le nombre de points par axe
+    dimensions : triplet (x, y, z) qui définit les dimensions en cm
     """
     (lf, mf, nf) = n_points
     (Lx, Ly, Lz) = dimensions
@@ -24,20 +24,113 @@ def get_maillage(n_points, dimensions):
     xm = np.linspace(coord[0], coord[1], lf)
     ym = np.linspace(coord[2], coord[3], mf)
     zm = np.linspace(coord[4], coord[5], nf)
+    maillage = (xm, ym, zm)
+    
+    return maillage
 
-    return (xm, ym, zm)
 
-
-def get_densite(x, y, z):
-    """ Recupere la densite aux coordonnées x, y, z
-    [Return] Un float correspond à la densité en un point
-    (si le point précis n'est pas défini, on prend la densité la plus proche)
+def get_densite(n_points):
+    """ Lit la densite dans le fichier DICOM
+    [Return] Un tableau de float 2D qui indique la densite en chaque point du maillage
 
     [Params]
-    x, y, z les coordonnées du point
-    """
+    - n_points : triplet (x, y, z) qui définit le nombre de points par axe
+    NB : pour le moment on considere que la densite vaut 1 en chaque point
 
-    return 1
+    [Complexite] O(n)
+    """
+    # Recuperation parametres
+    (lf, mf, nf) = n_points
+
+    # Recuperation de la densite
+    densite = np.array([[1] * mf] * lf)
+
+    return densite
+
+
+def densite_valide(x, y, densite):
+    """ Indique si la densite en un point est valide pour placer une source ou non
+    [Return] True si densite valide, False sinon
+    NB : la densite est considérée comme valide si elle est inferieure à DENSITE_SEUIL
+    
+    [Params]
+    - x, y indiquant les coordonnées dans le maillage
+    - densite : tableau de float 2D retourné par get_densite
+
+    [Compllexité] O(1)
+    """
+    return densite[x, y] <= DENSITE_SEUIL
+
+
+def get_sources(granularite_source, n_points, appartenance_contourage, densite):
+    """ Retourne une séquence de points correspondant aux sources à positionner sur le maillage
+    [Return] Une sequence de points (x, y)
+
+    [Params]
+    - granularite_source : nombre de mailles (pas) qu'on parcourt au mini entre chaque source
+    - n_points : triplet (x, y, z) qui définit le nombre de points par axe
+    - appartenance_contourage : tableau de booleen 2D retourné par get_appartenance_contourage
+    - densite : tableau de float 2D retourné par get_densite
+    
+    [Complexite] O(n)
+    """
+    # Recuperation parametres
+    (lf, mf, nf) = n_points
+    sources = [] # Tableau 1D de points
+    index_sources = 1
+
+    # Calcul de la repartition (naive)
+    sous_maillage_x = np.arange(0, lf, granularite_source)
+    sous_maillage_y = np.arange(0, mf, granularite_source)
+    
+    # Repartition uniforme des sources
+    for x in sous_maillage_x:
+        for y in sous_maillage_y:
+            # Ajout de source si dans contourage et densite valide
+            if (in_contourage(x, y, appartenance_contourage) and densite_valide(x, y, densite)):
+                sources.append([x, y])
+                index_sources += 1
+
+    return np.array(sources)
+
+
+def plot_sources(n_points, dimensions, maillage, sources, contourage):
+    """ Affiche les sources qui sont ajoutées dans le fichier de configuration
+    [Params]
+    - n_points : triplet (x, y, z) qui définit le nombre de points par axe
+    - dimensions : dimensions : triplet (x, y, z) qui définit les dimensions en cm
+    - maillage : triplet (maillage_x, maillage_y, maillage_z) qui représente le maillage
+    - sources : tableau 1D retourné par get_sources
+    - contourage : sequence de points representant un polygone
+
+    [Complexité] O(n)
+    """
+    # Recuperation parametres
+    (lf, mf, nf) = n_points
+    (Lx, Ly, Lz) = dimensions
+    (maillage_x, maillage_y, maillage_z) = maillage
+    n_sources = len(sources)
+
+    # Affichage du contourage
+    contourage_path = mp.Path(contourage)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    patch = patches.PathPatch(contourage_path, facecolor='orange', lw=2)
+    ax.set_xlim([0, Lx])
+    ax.set_ylim([0, Ly])
+    ax.add_patch(patch)
+
+    # Recuperation des coordonnées associées
+    coord_sources = np.zeros([n_sources, 2])
+
+    for i in range(n_sources):
+        (x, y) = sources[i]
+        coord_sources[i] = (maillage_x[x], maillage_y[y])
+
+    # Affichage des sources
+    plt.plot(coord_sources[:,0], coord_sources[:,1], color='b', marker='o', linestyle='None')
+
+    plt.show()
     
 
 def ajouter_header(f, n_points, dimensions):
@@ -46,8 +139,8 @@ def ajouter_header(f, n_points, dimensions):
 
     [Params]
     f : descripteur de fichier
-    n_points : triplet (x, y) qui définit le maillage
-    dimensions : triplet (x, y) qui définit les dimensions
+    n_points : triplet (x, y, z) qui définit le nombre de points par axe
+    dimensions : triplet (x, y, z) qui définit les dimensions en cm
     """
     (lf, mf, nf) = n_points
     (Lx, Ly, Lz) = dimensions
@@ -127,77 +220,69 @@ def ajouter_source(f, groupe, type_particule, direction_M1, volume_sphere, spect
     f.write(res)
     
 
-def lancer_generation(filename, n_sources, n_points, dimensions):
+def lancer_generation(filename, granularite_source, contourage, n_points, dimensions, rayon, direction_M1, spectre_mono):
     """ Lance la generation d'un fichier de configuration .don
     On place n_sources sources réparties uniformement sur le maillage
+    Une source est placée si elle est située dans la zone contourée avec une densité cohérente
     (si n_sources ne permet pas une répartition uniforme on ajuste en conséquence,
      il peut donc y avoir une source en moins que prévue)
 
     [Params]
-    filename : nom du fichier de configuration
-    n_sources : nombre de sources
-    n_points : triplet (x, y) qui définit le maillage
-    dimensions : triplet (x, y) qui définit les dimensions
+    - filename : nom du fichier de configuration
+    - granularite_source : nombre de mailles (pas) qu'on parcourt au mini entre chaque source
+    - contourage : sequence de points (x, y) representant un polygone
+    - n_points : triplet (x, y, z) qui définit le nombre de points par axe
+    - dimensions : triplet (x, y, z) qui définit les dimensions en cm
+    - direction_M1 : un triplet (x, y, z) avec f1 = f0 * [x, y, z]
+    - spectre_mono : un couple (I0, espilon0) ; on injecte à l'énergie epsilon0 avec l'intensité I0
+
+    [Complexité] O(n * log n)
     """
-    (lf, mf, nf) = n_points
+    # Recuperation parametres
     (Lx, Ly, Lz) = dimensions
 
     # Maillage
-    (maillage_x, maillage_y, maillage_z) = get_maillage(n_points, dimensions)
-    z = Lx/2.0
+    maillage = get_maillage(n_points, dimensions)
+    (maillage_x, maillage_y, maillage_z) = maillage
+    z = Lx/2.0 # Choix arbitraire
 
-    # Calcul de la repartition (naive)
-    nb_total_points = lf * mf
-    pas_source = int(float(nb_total_points) / float(n_sources))
-    groupe = 1
-    index = 1
+    # Repartition des sources
+    appartenance_contourage = get_appartenance_contourage(n_points, maillage, contourage)
+    densite = get_densite(n_points)
+    sources = get_sources(granularite_source, n_points, appartenance_contourage, densite)
 
     # Ecriture du fichier de configuration .don
     f  = open(filename, "w")
 
     ajouter_header(f, n_points, dimensions)
-    
-    for y in maillage_y:
-        for x in maillage_x:
-            # On ajoute une source à chaque fois que le pas est atteint et densite coherente
-            if (index >= pas_source and get_densite(x, y, z) <= DENSITE_SEUIL):
-                ajouter_source(f, groupe, "g", (0., 0., 0.), (x, y, z, 0.1), (1e20, 0.03))
-                groupe += 1
-                index = 0
-            else:
-                index += 1
+
+    # On ajoute les sources dans le fichier .don
+    groupe = 1
+    for source in sources:
+        (x, y) = source
+        volume_sphere = (maillage_x[x], maillage_y[y], z, rayon)
+        ajouter_source(f, groupe, "g", direction_M1, volume_sphere, spectre_mono)
+        groupe += 1
+                    
     
     ajouter_footer(f)
+
+    print filename + " successfully generated"
 
     f.close()
 
 
 def usage(argv):
     if (len(sys.argv) != 3): 
-        err_msg = "Usage : python generate_multisource.py filename n_sources\n"
+        err_msg = "Usage : python generate_multisource.py filename granularite_source DICOM_path\n"
         sys.stderr.write(err_msg)
         sys.exit(1)
 
 
 def main():
     #usage(sys.argv)
-    # Simulation d'appel (à supprimer après dev)
-    filename = "multisources.don"
-    n_sources = 50
-    
-    # Parametres
-    lf = 50
-    mf = 50
-    nf = 1
-    Lx = 5
-    Ly = 5
-    Lz = 1
-    n_points = (lf, mf, nf)
-    dimensions = (Lx, Ly, Lz)
-
-    # Generation
-    lancer_generation(filename, n_sources, n_points, dimensions)
-
+    # Pour lancer artificiellement avec des données cf. test_generate_multisource
+    return 0
 
 if __name__ == "__main__":
     main()
