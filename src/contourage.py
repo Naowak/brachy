@@ -23,6 +23,7 @@ def get_appartenance_contourage(n_points, maillage, contourage):
     # Recuperation parametres
     (lf, mf, nf) = n_points
     (maillage_x, maillage_y, maillage_z) = maillage
+    contourage = contourage[:,(0,1)] # On garde seulement 2D pour utiliser mp.Path
     
     # Mise au format 1D pour traitement matplotlib.path
     points = np.zeros([(lf * mf), 2]) # Tableau 1D de points
@@ -43,23 +44,36 @@ def get_appartenance_contourage(n_points, maillage, contourage):
 
     for x in range(lf):
         for y in range(mf):
-            appartenance_contourage_2D[x, y] = appartenance_contourage_1D[indice_1D]
+            appartenance_contourage_2D[x,y] = appartenance_contourage_1D[indice_1D]
             indice_1D += 1
 
     return appartenance_contourage_2D
 
         
-def in_contourage(x, y, appartenance_contourage):
+def in_contourage(appartenance_contourage, x, y):
     """ Indique si un point appartient au contourage ou nom
     [Return] True si point appartient au contourage, False sinon
 
     [Params]
+        - appartenance_contourage : tableau de booleen 2D retourné par get_appartenance_contourage
     - x, y indiquant les coordonnées dans le maillage
-    - appartenance_contourage : tableau de booleen 2D retourné par get_appartenance_contourage
 
     [Complexité] O(1)
     """
-    return appartenance_contourage[x, y]
+    return appartenance_contourage[x,y]
+
+
+def plot_contourage(ax, contourage, color):
+    """ Ajoute la visualisation du contourage sur la figure
+    [Params]
+    - ax : l'axe correspondant à la figure
+    - contourage : une sequence de points representant un polygone fermé
+    - color : couleur du contourage
+    """
+    contourage_2D = contourage[:,(0,1)] # On garde seulement 2D pour utiliser mp.Path
+    contourage_path = mp.Path(contourage_2D)
+    patch = patches.PathPatch(contourage_path, facecolor=color, linewidth=1)
+    ax.add_patch(patch)
 
 
 def plot_appartenance_contourage(n_points, dimensions, maillage, appartenance_contourage, contourage):
@@ -78,14 +92,12 @@ def plot_appartenance_contourage(n_points, dimensions, maillage, appartenance_co
     (Lx, Ly, Lz) = dimensions
     (maillage_x, maillage_y, maillage_z) = maillage
 
-    # Affichage du contourage
-    contourage_path = mp.Path(contourage)
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    patch = patches.PathPatch(contourage_path, facecolor='orange', lw=2)
+    fig, ax = plt.subplots()
     ax.set_xlim([0, Lx])
     ax.set_ylim([0, Ly])
-    ax.add_patch(patch)    
+
+    # Affichage du contourage
+    plot_contourage(ax, contourage, 'orange')
 
     # Affichage de appartenance_contourage
     points_inside = []
@@ -94,7 +106,7 @@ def plot_appartenance_contourage(n_points, dimensions, maillage, appartenance_co
     for x in range(lf):
         for y in range(mf):
             point = (maillage_x[x], maillage_y[y])
-            if in_contourage(x, y, appartenance_contourage):
+            if in_contourage(appartenance_contourage, x, y):
                 points_inside.append(point)
             else:
                 points_outside.append(point)

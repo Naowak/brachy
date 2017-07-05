@@ -6,36 +6,37 @@ from contourage import *
 
 
 # Paramètres globaux
-DENSITE_SEUIL = 1.5
+DENSITE_SEUIL = 1.8
+
+
+###########################  Repartition des sources ###########################
 
 
 def get_maillage(n_points, dimensions):
-    """ Fournit un maillage uniforme python en fonction des paramètres
+    """ Fournit un maillage uniforme en fonction des paramètres
     [Return] Un triplet de trois tableaux (xm, ym, zm) correspondant au maillage 
 
     [Params]
     n_points : triplet (x, y, z) qui définit le nombre de points par axe
-    dimensions : triplet (x, y, z) qui définit les dimensions en cm
+    dimensions : triplet (x, y, z) qui définit les dimensions (cm/mm)
     """
     (lf, mf, nf) = n_points
     (Lx, Ly, Lz) = dimensions
-    coord = np.array([0, Lx, 0, Ly, 0, Lz])
 
-    xm = np.linspace(coord[0], coord[1], lf)
-    ym = np.linspace(coord[2], coord[3], mf)
-    zm = np.linspace(coord[4], coord[5], nf)
+    xm = np.linspace(0, Lx, lf)
+    ym = np.linspace(0, Ly, mf)
+    zm = np.linspace(0, Lz, nf)
     maillage = (xm, ym, zm)
     
     return maillage
 
 
-def get_densite(n_points):
-    """ Lit la densite dans le fichier DICOM
+def get_densite_fantome_eau(n_points):
+    """ Retourne la densite d'un fantome d'eau (1 partout)
     [Return] Un tableau de float 2D qui indique la densite en chaque point du maillage
 
     [Params]
     - n_points : triplet (x, y, z) qui définit le nombre de points par axe
-    NB : pour le moment on considere que la densite vaut 1 en chaque point
 
     [Complexite] O(n)
     """
@@ -48,14 +49,14 @@ def get_densite(n_points):
     return densite
 
 
-def densite_valide(x, y, densite):
+def densite_valide(densite, x, y):
     """ Indique si la densite en un point est valide pour placer une source ou non
     [Return] True si densite valide, False sinon
     NB : la densite est considérée comme valide si elle est inferieure à DENSITE_SEUIL
     
     [Params]
-    - x, y indiquant les coordonnées dans le maillage
     - densite : tableau de float 2D retourné par get_densite
+    - x, y indiquant les coordonnées dans le maillage
 
     [Compllexité] O(1)
     """
@@ -77,7 +78,6 @@ def get_sources(granularite_source, n_points, appartenance_contourage, densite):
     # Recuperation parametres
     (lf, mf, nf) = n_points
     sources = [] # Tableau 1D de points
-    index_sources = 1
 
     # Calcul de la repartition (naive)
     sous_maillage_x = np.arange(0, lf, granularite_source)
@@ -87,51 +87,29 @@ def get_sources(granularite_source, n_points, appartenance_contourage, densite):
     for x in sous_maillage_x:
         for y in sous_maillage_y:
             # Ajout de source si dans contourage et densite valide
-            if (in_contourage(x, y, appartenance_contourage) and densite_valide(x, y, densite)):
+            if (in_contourage(appartenance_contourage, x, y) and densite_valide(densite, x, y)):
                 sources.append([x, y])
-                index_sources += 1
 
     return np.array(sources)
 
 
-def plot_sources(n_points, dimensions, maillage, sources, contourage):
-    """ Affiche les sources qui sont ajoutées dans le fichier de configuration
-    [Params]
-    - n_points : triplet (x, y, z) qui définit le nombre de points par axe
-    - dimensions : dimensions : triplet (x, y, z) qui définit les dimensions en cm
-    - maillage : triplet (maillage_x, maillage_y, maillage_z) qui représente le maillage
-    - sources : tableau 1D retourné par get_sources
-    - contourage : sequence de points representant un polygone
-
-    [Complexité] O(n)
-    """
+def get_coord_sources(sources, maillage):
     # Recuperation parametres
-    (lf, mf, nf) = n_points
-    (Lx, Ly, Lz) = dimensions
     (maillage_x, maillage_y, maillage_z) = maillage
     n_sources = len(sources)
 
-    # Affichage du contourage
-    contourage_path = mp.Path(contourage)
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    patch = patches.PathPatch(contourage_path, facecolor='orange', lw=2)
-    ax.set_xlim([0, Lx])
-    ax.set_ylim([0, Ly])
-    ax.add_patch(patch)
-
-    # Recuperation des coordonnées associées
+    # Recuperation des coordonnees exactes
     coord_sources = np.zeros([n_sources, 2])
 
     for i in range(n_sources):
         (x, y) = sources[i]
         coord_sources[i] = (maillage_x[x], maillage_y[y])
 
-    # Affichage des sources
-    plt.plot(coord_sources[:,0], coord_sources[:,1], color='b', marker='o', linestyle='None')
-
-    plt.show()
+    return coord_sources
     
+
+########################### Mise en forme .don ###########################
+
 
 def ajouter_header(f, n_points, dimensions):
     """ Ajoute le header au fichier de configuration passé en paramètres
@@ -158,7 +136,15 @@ def ajouter_header(f, n_points, dimensions):
     res += "-n_cycles 1200\n"
     res += "-seuil_residu 1.e-1\n"
     res += "-b_maximum\n"
-    res += "-densite constante 1.0\n"
+
+    f.write(res)
+
+
+def ajouter_densite(f, x_min, y_min, x_max, y_max, filename_header="constante"):
+    if (filename_header == "constante"):
+        res = "-densite constante 1.0\n"
+    else:
+        res = "-densite lu_HU " + "densite_hu_" + filename_header + ".don\n"
 
     f.write(res)
 
@@ -220,7 +206,7 @@ def ajouter_source(f, groupe, type_particule, direction_M1, volume_sphere, spect
     f.write(res)
     
 
-def lancer_generation(filename, granularite_source, contourage, n_points, dimensions, rayon, direction_M1, spectre_mono):
+def lancer_generation(filename_header, granularite_source, densite, contourage, n_points, dimensions, rayon, direction_M1, spectre_mono, densite_lu=False):
     """ Lance la generation d'un fichier de configuration .don
     On place n_sources sources réparties uniformement sur le maillage
     Une source est placée si elle est située dans la zone contourée avec une densité cohérente
@@ -228,8 +214,9 @@ def lancer_generation(filename, granularite_source, contourage, n_points, dimens
      il peut donc y avoir une source en moins que prévue)
 
     [Params]
-    - filename : nom du fichier de configuration
+    - filename_header : nom du fichier de configuration
     - granularite_source : nombre de mailles (pas) qu'on parcourt au mini entre chaque source
+    - densite : une matrice 2D qui indique la densite en chaque point
     - contourage : sequence de points (x, y) representant un polygone
     - n_points : triplet (x, y, z) qui définit le nombre de points par axe
     - dimensions : triplet (x, y, z) qui définit les dimensions en cm
@@ -239,6 +226,7 @@ def lancer_generation(filename, granularite_source, contourage, n_points, dimens
     [Complexité] O(n * log n)
     """
     # Recuperation parametres
+    (lf, mf, nf) = n_points
     (Lx, Ly, Lz) = dimensions
 
     # Maillage
@@ -248,13 +236,17 @@ def lancer_generation(filename, granularite_source, contourage, n_points, dimens
 
     # Repartition des sources
     appartenance_contourage = get_appartenance_contourage(n_points, maillage, contourage)
-    densite = get_densite(n_points)
     sources = get_sources(granularite_source, n_points, appartenance_contourage, densite)
 
     # Ecriture du fichier de configuration .don
-    f  = open(filename, "w")
+    f  = open(filename_header + ".don", "w")
 
     ajouter_header(f, n_points, dimensions)
+
+    if (densite_lu):
+        ajouter_densite(f, 0, 0, lf, mf, filename_header=filename_header)
+    else:
+        ajouter_densite(f, 0, 0, lf, mf, filename_header="constante")
 
     # On ajoute les sources dans le fichier .don
     groupe = 1
@@ -267,14 +259,59 @@ def lancer_generation(filename, granularite_source, contourage, n_points, dimens
     
     ajouter_footer(f)
 
-    print filename + " successfully generated"
-
+    print filename_header + ".don successfully generated"
     f.close()
+
+
+########################### Affichage ###########################
+
+
+def plot_sources(n_points, dimensions, maillage, sources, contourage):
+    """ Affiche les sources qui sont ajoutées dans le fichier de configuration
+    [Params]
+    - n_points : triplet (x, y, z) qui définit le nombre de points par axe
+    - dimensions : dimensions : triplet (x, y, z) qui définit les dimensions en cm
+    - maillage : triplet (maillage_x, maillage_y, maillage_z) qui représente le maillage
+    - sources : tableau 1D retourné par get_sources
+    - contourage : sequence de points representant un polygone
+
+    [Complexité] O(n)
+    """
+    # Recuperation parametres
+    (lf, mf, nf) = n_points
+    (Lx, Ly, Lz) = dimensions
+    (maillage_x, maillage_y, maillage_z) = maillage
+    n_sources = len(sources)
+    contourage = contourage[:,(0,1)] # On garde seulement 2D pour utiliser mp.Path
+
+    # Affichage du contourage
+    contourage_path = mp.Path(contourage)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    patch = patches.PathPatch(contourage_path, facecolor='orange', lw=2)
+    ax.set_xlim([0, Lx])
+    ax.set_ylim([0, Ly])
+    ax.add_patch(patch)
+
+    # Recuperation des coordonnées associées
+    coord_sources = np.zeros([n_sources, 2])
+
+    for i in range(n_sources):
+        (x, y) = sources[i]
+        coord_sources[i] = (maillage_x[x], maillage_y[y])
+
+    # Affichage des sources
+    plt.plot(coord_sources[:,0], coord_sources[:,1], color='b', marker='o', linestyle='None')
+
+    plt.show()
+
+
+########################### Main ###########################
 
 
 def usage(argv):
     if (len(sys.argv) != 3): 
-        err_msg = "Usage : python generate_multisource.py filename granularite_source DICOM_path\n"
+        err_msg = "Usage : python generate_multisource.py filename_header granularite_source DICOM_path\n"
         sys.stderr.write(err_msg)
         sys.exit(1)
 

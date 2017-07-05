@@ -1,0 +1,160 @@
+-M2
+-lf 220
+-mf 220
+-Lx 11.
+-Ly 11.
+-2d
+-ordre 1
+-n_groupe_particules 2
+-group 1 e-
+-group 2 g
+-n_cycles 1200
+-seuil_residu 1.e-1
+-b_maximum
+-densite lu_dicom 19 20 30 31
+densite spheroid 1.1 2.1 5.4 0.3 0.4 6
+densite spheroid 1.6 2.1 5.4 0.2 0.2 5
+-frontiere groupe 1
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 6.1 3.0 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 2
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 7.3 3.2 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 3
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 8.1 3.3 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 4
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 8.4 3.8 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 5
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 8.2 5.0 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 6
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 7.8 5.7 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 7
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 7.3 6.7 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 8
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 6.5 7.2 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 9
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 5.6 7.8 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 10
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 4.5 7.8 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 11
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 3.6 7.2 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 12
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 3.1 6.6 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 13
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 2.7 5.7 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 14
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 2.4 5.0 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 15
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 2.1 3.7 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 16
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 2.6 2.9 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 17
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 3.7 2.8 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 18
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 3.2 3.8 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 19
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 3.3 5.0 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 20
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 4.1 6.0 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 21
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 6.7 6.0 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 22
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 7.2 4.9 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-frontiere groupe 23
+-frontiere type_de_particule g 
+-frontiere direction_M1 0. 0. 0.
+-frontiere volume_spheroid 6.8 3.7 4.5 0.06 0.06 0.06
+-frontiere spectre_mono 1.e20 0.03
+-GS_para_alea
+-python
+densite parallepipede 1.85 4.5 3.5 5.5 4.5 2
+densite parallepipede 1.85 4.5 3.5 5.5 4.5 2
+fin fichier KIDS
+
+title
+  cepxs regression test
+first-order
+energy 0.035
+cutoff 0.001
+legendre 8
+electron-source
+ full-coupling
+electrons
+ linear 30
+photons
+ linear 30
+ no-lines
+material H .1111 O .8889
+ density 1.
+material C 0.000124 N 0.755267 O 0.231781 Ar 0.012827
+ density 1.20479E-03
+material H .063984 C .278000 N .027000 O .410016 Mg .002000 P .070000 S .002000 Ca .147000 
+ density 1.85
+material H .03199 O .25599 P .2308 K .0006 Ca .3955 Zn .0774 S .0029 Cl .0044 Fe .00007 Sr .00035
+ density 1.6
+material H .119477 C .637240 N .007970 O .232333 Na .000500 Mg .000020 P .000160 S .000730 Cl .001190 K .000320 Ca .000020 Fe .000020  Zn .000020
+ density 0.92

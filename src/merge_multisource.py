@@ -43,7 +43,10 @@ def lancer_fusion(filename_head, vecteur_sources):
 
     fd_lecture.close()
     
-    
+
+########################### Main ###########################
+
+
 def usage(argv):
     if (len(sys.argv) != 3): 
         err_msg = "Usage : python generate_multisource.py filename_head vecteur_sources\n"

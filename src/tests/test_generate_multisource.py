@@ -5,7 +5,7 @@ from contourage import *
 from generate_multisource import *
 from test_contourage import *
 
-def no_contourage(n_points):
+def get_no_contourage(n_points):
     """ Retourne un contourage correspondant au maillage complet
     [Return] Une sequence de points (polygone) qui fait le tour complet du maillage
 
@@ -17,7 +17,7 @@ def no_contourage(n_points):
     # Recuperation parametres
     (lf, mf, nf) = n_points
     contourage = [(0, 0), (0, mf), (lf, mf), (lf, 0)]
-    return contourage
+    return np.array(contourage)
 
 
 def test_1():
@@ -34,17 +34,17 @@ def test_1():
     rayon = 0.1
     direction_M1 = (0., 0., 0.)
     spectre_mono = (1e20, 0.03)
-    contourage = no_contourage(n_points)
+    densite = get_densite_fantome_eau(n_points)
+    contourage = get_no_contourage(n_points)
 
     # Affichage des sources
     maillage = get_maillage(n_points, dimensions)
     appartenance_contourage = get_appartenance_contourage(n_points, maillage, contourage)
-    densite = get_densite(n_points)
     sources = get_sources(granularite_source, n_points, appartenance_contourage, densite)
     plot_sources(n_points, dimensions, maillage, sources, contourage)
 
     # Generation
-    lancer_generation(filename, granularite_source, contourage, n_points, dimensions, rayon, direction_M1, spectre_mono)
+    lancer_generation(filename, granularite_source, densite, contourage, n_points, dimensions, rayon, direction_M1, spectre_mono)
 
 
 def test_2():
@@ -66,17 +66,17 @@ def test_2():
     rayon = 0.1
     direction_M1 = (0., 0., 0.)
     spectre_mono = (1e20, 0.03)
+    densite = get_densite_fantome_eau(n_points)
     contourage = pol_convexe
 
     # Affichage des sources
     maillage = get_maillage(n_points, dimensions)
     appartenance_contourage = get_appartenance_contourage(n_points, maillage, contourage)
-    densite = get_densite(n_points)
     sources = get_sources(granularite_source, n_points, appartenance_contourage, densite)
     plot_sources(n_points, dimensions, maillage, sources, contourage)
 
     # Generation
-    lancer_generation(filename, granularite_source, contourage, n_points, dimensions, rayon, direction_M1, spectre_mono)
+    lancer_generation(filename, granularite_source, densite, contourage, n_points, dimensions, rayon, direction_M1, spectre_mono)
 
 def main():
     test_1()
