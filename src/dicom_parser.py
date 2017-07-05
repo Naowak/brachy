@@ -12,7 +12,18 @@ from dose_parser import *
 
 
 class DicomParser:
-    """ Toto
+    """ DicomParser est une classe permettant de manipuler (parser) un fichier DICOM
+    Ses champs initialisés lors de l'instanciation de l'objet sont :
+
+    - DICOM_files : un tableau de fichiers DICOM
+    - slices : l'ensemble des coupes
+    - n_points : un triplet (lf, mf, nf) qui represente le nombre de points par axe
+    - dimensions : un triplet (Lx, Ly, Lz) qui définit les dimensions en mm
+    - maillage : un triplet de trois tableaux (xm, ym, zm) correspondant au maillage 
+    - RT_structure : un fichier DICOM (RS_xxxxx) representant les infos des slices
+    - set_ROI : un ensemble de contourages (prostate, vessie...)
+
+    [Complexité] O(n * log(n))
     """
 
     def __init__(self, DICOM_path, RT_structure_id=None):
@@ -60,8 +71,7 @@ class DicomParser:
 
     def get_DICOM_npoints(self):
         """ Recupere les metadata (on prend la premiere slice arbitrairement)
-        [Return] triplet (x, y, z) qui définit le nombre de points par axe
-        [Params] DICOM_slice : une coupe
+        [Return] un triplet (lf, mf, nf) qui represente le nombre de points par axe
         """
         lf = int(self.slices[0].Rows)
         mf = int(self.slices[0].Columns)
@@ -74,8 +84,7 @@ class DicomParser:
 
     def get_DICOM_dimensions(self):
         """ Recupere les metadata (on prend la premiere slice arbitrairement)
-        [Return] triplet (x, y, z) qui définit les dimensions en mm
-        [Params] DICOM_slice : une coupe
+        [Return] un triplet (Lx, Ly, Lz) qui définit les dimensions en mm
         """
         n_points = self.get_DICOM_npoints()
         (lf, mf, nf) = n_points
@@ -92,10 +101,6 @@ class DicomParser:
     def get_DICOM_maillage(self):
         """ Fournit un maillage uniforme en fonction des paramètres
         [Return] Un triplet de trois tableaux (xm, ym, zm) correspondant au maillage 
-
-        [Params]
-        n_points : triplet (x, y, z) qui définit le nombre de points par axe
-        dimensions : triplet (x, y, z) qui définit les dimensions (cm/mm)
         """
         (lf, mf, nf) = self.n_points
         (Lx, Ly, Lz) = self.dimensions
@@ -145,7 +150,7 @@ class DicomParser:
     def get_DICOM_densite(self, slice_id):
         """ Permet de recuperer les informations sur la densité d'une image DICOM
         [Return] Une matrice 2D indiquant la densité en chaque point
-        [Params] DICOM_slice : une coupe
+        [Params] slice_id : identifiant de la coupe
         """
         pixel_array = self.slices[slice_id].pixel_array
         (lf, mf, nf) = self.n_points
@@ -162,7 +167,7 @@ class DicomParser:
     def get_DICOM_hounsfield(self, slice_id):
         """ Permet de convertir la matrice de pixels au format Hounsfield Unit
         [Return] Une matrice 2D indiquant la valeur sur l'échelle de hounsfield en chaque point
-        [Params] DICOM_slice : une coupe
+        [Params] - slice_id : identifiant de la coupe
         [NB] Formule : hu = pixel_value * slope + intercept
         """
         # Recuperation des informations
@@ -189,10 +194,7 @@ class DicomParser:
         """ Permet de récupérer un ensemble de contourages
         [Return] Un dictionnaire indexé par le ROI_id du type et les différents contourages
         ex. : {'1': {'name' : 'CONTOUR EXTERNE', 'contours': 'array' ...}, ... }
-
-        [Params]
-        - DICOM_slice_RT : un fichier DICOM representant les infos des slices (RT_structure, RS_xxx)
-
+        
         [Complexité] O(n)
         """
         set_ROI = {}
@@ -212,11 +214,8 @@ class DicomParser:
         [Return] Un dictionnaire indexé par le UID (identifiant unique d'une coupe) et contenant
         les informations relatives au contourage ROI_id pour chaque coupe (correspondant à UID)
         ex. : {'1.2.840.113619.2.278.3.176243969.786.1462166632.515.88': array([[x1, y1, z1], [x2....}
-
-        [Params]
-        - DICOM_slice_RT : un fichier DICOM representant les infos des slices (RT_structure, RS_xxx)
-        - ROI_id : l'identifiant du contourage (cf. get_DICOM_set_ROI, par exemple prostate, vessie)
-
+        
+        [Params] ROI_id : l'identifiant du contourage (par exemple prostate, vessie)
         [Complexité] O(n)
         """
         if not(ROI_id in self.set_ROI):
@@ -239,10 +238,10 @@ class DicomParser:
         [Return] Un tableau de points (x, y, z) correspondant à une sequence (contourage)
 
         [Params]
-        - DICOM_ROI : Dictionnaire retourné par get_DICOM_ROI
-        - DICOM_slice : une coupe
+        - ROI_id : identifiant du type de contourage
+        - slice_id : identifiant de la coupe
 
-        [Complexité] O(1)
+        [Complexité] O(n)
         """
         UID = self.slices[slice_id].SOPInstanceUID
         DICOM_ROI = self.get_DICOM_ROI(ROI_id)
@@ -260,9 +259,7 @@ class DicomParser:
         """ Convertit un tableau de la forme [x1, y1, z1...] en tableau [(x1, y1, z1), (x2, y2, z2)...]
         [Return] Un tableau de points correspondant à une sequence (contourage)
 
-        [Params]
-        - array : un tableau de points dont les coordonnées sont à plat
-
+        [Params] array : un tableau de points dont les coordonnées sont à plat
         [Complexité] O(n)
 
         [NB]
@@ -270,11 +267,31 @@ class DicomParser:
         - Un point 3D est représenté par un triplet (x, y, z)
         - Meme s'il y a trois dimensions le contourage est supposé 2D car z est constant (coupe)
         """
-        array_3D = zip(*[iter(array)]*3)
+        array_3D = zip(*[iter(array)]*3) # Tricky
         array_3D.append(array_3D[0]) # Pour fermer le polygone
         array_3D = np.array(array_3D)
         array_3D = 256 + array_3D # Correspond aux coordonnées sur 512 pixels (à modifier)
         return array_3D
+
+
+    def get_DICOM_appartenance_contourage_ROI(self, ROI_id):
+        """ Retourne un dictionnaire de matrices d'appartenance à un contourage pour un ROI donné
+        [Return] Un dictionnaire dont l'indexation correspond aux UID des slices contourées pour cet ROI
+        ex. : {'1.2.840.113619.2.278.3.176243969.786.1462166632.515.88': matrice2D_appartenance_contourage, ... }
+
+        [Params] ROI_id : identifiant du type de contourage
+        [Complexité] O(n)
+        """
+        contourages = self.get_DICOM_ROI(ROI_id)
+
+        dic_appartenances_contourages = {]
+
+        for (UID, contourage) in contourages.iteritems():
+            appartenance_contourage = get_appartenance_contourage(self.n_points, self.maillage, contourage)
+            dic_appartenances_contourages[UID] = appartenance_contourage
+
+        return dic_appartenances_contourages
+
     
 
 ###################### Generation des fichiers pour le calcul de dose ######################
@@ -295,7 +312,7 @@ class DicomParser:
         """ Lance la generation d'un fichier .don pour un fichier DICOM avec contourage donné
         [Params]
         - filename_header : le nom du cas traité
-        - DICOM_slice : une coupe
+        - slice_id : identifiant de la coupe
         - contourage : une sequence de points representant un polygone ferme
         """
         # Recuperation des informations
@@ -328,8 +345,7 @@ class DicomParser:
         """ Ajoute un contourage au tableau de contourages passé en paramètre (pour l'afficher ensuite)
         [Params]
         - contourages_array : un tableau de contourages
-        - DICOM_set_ROI : un ensemble de contourages
-        - DICOM_slice : une coupe
+        - slice_id : identifiant de la coupe
         - ROI_id : identifiant du type de contourage
         - color : couleur du contourage
         """
@@ -340,16 +356,13 @@ class DicomParser:
         
 
     def afficher_setROI_names(self):
-        """ Affiche les couples (ROI_id, type_contourage)
-        [Params] set_ROI : l'ensemble de contourages retourné par get_DICOM_set_ROI
-        """
+        """ Affiche les couples (ROI_id, type_contourage) """
         for (ROI_id, contourages) in self.set_ROI.iteritems():
             print (ROI_id, contourages['name'])
 
 
     def afficher_DICOM_files(self):
-        """ TODO
-        """
+        """ Affiche les couples (slice_id, file) """
         n_slices = len(self.DICOM_files)
         for (i, file) in zip(range(n_slices), self.DICOM_files):
             print (i, file)
@@ -359,7 +372,7 @@ class DicomParser:
         """ Trace une figure representant un fichier DICOM avec eventuellement des doses et contourages
         [Params]
         - title : titre de la figure
-        - DICOM_slice : une coupe
+        - slice_id : identifiant de la coupe
         - dose_matrix : une matrice 2D correspondant à la répartition de la dose
         - contourage : une sequence de points representant un polygone ferme
         - contourages_array : un tableau de contourage
@@ -448,11 +461,3 @@ def plot_DICOM_sources(ax, coord_sources):
     - coord_sources : un tableau de points indiquant le positionnement des sources
     """
     ax.plot(coord_sources[:,0], coord_sources[:,1], color='b', marker=',', linestyle='None')
-
-    
-def main():
-    return 1
-  
-
-if __name__ == "__main__":
-    main()
