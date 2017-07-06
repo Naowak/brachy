@@ -50,6 +50,9 @@ class DicomParser:
         else:
             self.RT_structure = None
             self.set_ROI = None
+
+        # Matrice de convertion pixel -> coordinate
+        self.patient_to_pixel_LUT = self.get_patient_to_pixel_LUT()
         
 
 ########################### Metadata ###########################
@@ -88,11 +91,13 @@ class DicomParser:
         """
         n_points = self.get_DICOM_npoints()
         (lf, mf, nf) = n_points
-    
-        Lx = float(self.slices[0].PixelSpacing[0]) * lf 
+
+        # Dimensions en mm
+        Lx = float(self.slices[0].PixelSpacing[0]) * lf
         Ly = float(self.slices[0].PixelSpacing[1]) * mf
         Lz = 1
-        #z = float(DICOM_slice.SliceThickness)
+        # Lz = float(DICOM_slice.SliceThickness)
+        
         dimensions = (Lx, Ly, Lz)
     
         return dimensions
@@ -228,7 +233,10 @@ class DicomParser:
     
         for polygone in self.set_ROI[ROI_id]["contours"]:
             UID = polygone.ContourImages[0].ReferencedSOPInstanceUID
-            contourages[UID] = self.get_contour_points(polygone.ContourData)
+            # NB : On considere que polygone.ContourGeometric = CLOSED_PLANAR
+            contourage = self.get_contour_points(polygone.ContourData)
+            # TODO : convertir de maniere plus fine coord -> pixel
+            contourages[UID] = contourage
 
         return contourages
     
@@ -263,14 +271,15 @@ class DicomParser:
         [Complexité] O(n)
 
         [NB]
+        - Les coordonnées des points sont données en fonction de la position relative (mm)
         - Utilisé dans get_DICOM_contourage
         - Un point 3D est représenté par un triplet (x, y, z)
         - Meme s'il y a trois dimensions le contourage est supposé 2D car z est constant (coupe)
         """
         array_3D = zip(*[iter(array)]*3) # Tricky
-        array_3D.append(array_3D[0]) # Pour fermer le polygone
+        array_3D.append(array_3D[0]) # Pour fermer le polygone (on relie le dernier et le premier point)
         array_3D = np.array(array_3D)
-        array_3D = 256 + array_3D # Correspond aux coordonnées sur 512 pixels (à modifier)
+        array_3D = 256 + array_3D
         return array_3D
 
 
@@ -284,13 +293,78 @@ class DicomParser:
         """
         contourages = self.get_DICOM_ROI(ROI_id)
 
-        dic_appartenances_contourages = {]
+        dic_appartenances_contourages = {}
 
         for (UID, contourage) in contourages.iteritems():
             appartenance_contourage = get_appartenance_contourage(self.n_points, self.maillage, contourage)
             dic_appartenances_contourages[UID] = appartenance_contourage
 
         return dic_appartenances_contourages
+
+
+###################### Pixel to patient coordinate (Part 3 - C.7.6.2.1) ######################
+# Useful help : http://nipy.org/nibabel/dicom/dicom_orientation.html
+# Inutile dans les cas academiques traites
+
+    def get_patient_to_pixel_LUT(self):
+        """ Permet d'obtenir la matrice de transformation faisant le lien entre les pixels et
+        les coordonnées du patient (translation + rotation + pixel_space)
+        
+        [Return] La matrice de transormation permettant pixel -> coordinate
+
+        NB : la première slice est prise arbitrairement (toutes les slices ont mm metadata)"""
+
+        dx = self.slices[0].PixelSpacing[0]
+        dy = self.slices[0].PixelSpacing[1]
+        orientation = self.slices[0].ImageOrientationPatient
+        position = self.slices[0].ImagePositionPatient
+
+        patient_to_pixel_LUT = np.matrix(
+            [[orientation[0]*dx, orientation[3]*dy, 0, position[0]],
+             [orientation[1]*dx, orientation[4]*dy, 0, position[1]],
+             [orientation[2]*dx, orientation[5]*dy, 0, position[2]],
+             [0, 0, 0, 1]])
+
+        return patient_to_pixel_LUT
+
+
+    def convert_coord_to_pixel(self, point):
+        """
+        """
+        # Determine if the patient is prone or supine
+        supine = -1 if 's' in self.slices[0].PatientPosition.lower() else 1
+        headfirst = 1 if 'hf' in self.slices[0].PatientPosition.lower() else -1
+        position = self.slices[0].ImagePositionPatient
+        
+        # Get the pixel spacing
+        spacing = self.slices[0].PixelSpacing
+        
+        vector = np.array([[point[0]],
+                           [point[1]],
+                           [0],
+                           [1]])
+
+        # Coordonnees du pixel dans un plan en mm
+        coord_pixel_mm = self.patient_to_pixel_LUT * vector
+
+        # On recupere ses coordonnees dans le tableau pixel_array de la forme [x, y, z]
+        x = 512 - int((coord_pixel_mm[0][0]) * supine * headfirst / spacing[0])
+        y = 512 - int((coord_pixel_mm[1][0]) * supine / spacing[1])
+        z = point[2]
+        coord_pixel_array = (x, y, z)
+        
+        return coord_pixel_array
+        
+
+    def convert_coord_to_pixel_contourage(self, contourage_coordinate):
+        """ Convertit un contourage avec coordonnees exactes vers contourage pixel """
+        contourage_pixel = []
+        
+        for point in contourage_coordinate:
+            point_pixel = self.convert_coord_to_pixel(point)
+            contourage_pixel.append(point_pixel)
+
+        return np.array(contourage_pixel)
 
     
 
@@ -376,10 +450,11 @@ class DicomParser:
         - dose_matrix : une matrice 2D correspondant à la répartition de la dose
         - contourage : une sequence de points representant un polygone ferme
         - contourages_array : un tableau de contourage
+        - coord_sources : les coordonnees reelles des sources
         """
         fig, ax = plt.subplots()
 
-        depth = abs(self.slices[slice_id].SliceLocation)
+        depth = self.slices[slice_id].SliceLocation
         title = title + " - Depth (mm) : " + str(depth)
 
         pixel_array = self.slices[slice_id].pixel_array
@@ -398,12 +473,12 @@ class DicomParser:
 
         # Configuration de la figure
         ax.set_title(title, fontsize=20, y=1.02)
-        ax.set_xlabel("x (mm)", fontsize=20)
-        ax.set_ylabel("y (mm)", fontsize=20)
-        (Lx, Ly, Lz) = self.dimensions
-        ax.set_xlim([0, Lx])
-        ax.set_ylim([Ly, 0])
-        
+        ax.set_xlabel("x (pixels)", fontsize=20)
+        ax.set_ylabel("y (pixels)", fontsize=20)
+        (lf, mf, nf) = self.n_points
+        ax.set_xlim([0, lf])
+        ax.set_ylim([mf, 0])
+
         fig.show()
 
 
@@ -416,7 +491,7 @@ def plot_DICOM_pixel_array(ax, pixel_array):
     - ax : l'axe correspondant à la figure
     - pixel_array : un tableau de pixel obtenu grace à DICOM_slice.pixel_array
     """
-    ax.imshow(pixel_array, cmap=plt.cm.bone)
+    ax.imshow(pixel_array, origin='lower', cmap=plt.cm.bone)
 
 
 def plot_DICOM_dose(ax, dose_matrix):

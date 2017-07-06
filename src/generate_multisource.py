@@ -65,7 +65,7 @@ def densite_valide(densite, x, y):
 
 def get_sources(granularite_source, n_points, appartenance_contourage, densite):
     """ Retourne une séquence de points correspondant aux sources à positionner sur le maillage
-    [Return] Une sequence de points (x, y)
+    [Return] Une sequence de points (x, y) qui correspond aux coordoonees des sources dans le maillage
 
     [Params]
     - granularite_source : nombre de mailles (pas) qu'on parcourt au mini entre chaque source
@@ -94,6 +94,7 @@ def get_sources(granularite_source, n_points, appartenance_contourage, densite):
 
 
 def get_coord_sources(sources, maillage):
+    """ Recupere les coordoonnees reelles des sources """
     # Recuperation parametres
     (maillage_x, maillage_y, maillage_z) = maillage
     n_sources = len(sources)
@@ -140,7 +141,7 @@ def ajouter_header(f, n_points, dimensions):
     f.write(res)
 
 
-def ajouter_densite(f, x_min, y_min, x_max, y_max, filename_header="constante"):
+def ajouter_densite(f, filename_header="constante"):
     if (filename_header == "constante"):
         res = "-densite constante 1.0\n"
     else:
@@ -231,7 +232,6 @@ def lancer_generation(filename_header, granularite_source, densite, contourage, 
 
     # Maillage
     maillage = get_maillage(n_points, dimensions)
-    (maillage_x, maillage_y, maillage_z) = maillage
     z = Lx/2.0 # Choix arbitraire
 
     # Repartition des sources
@@ -244,15 +244,14 @@ def lancer_generation(filename_header, granularite_source, densite, contourage, 
     ajouter_header(f, n_points, dimensions)
 
     if (densite_lu):
-        ajouter_densite(f, 0, 0, lf, mf, filename_header=filename_header)
+        ajouter_densite(f, filename_header=filename_header)
     else:
-        ajouter_densite(f, 0, 0, lf, mf, filename_header="constante")
+        ajouter_densite(f, filename_header="constante")
 
     # On ajoute les sources dans le fichier .don
     groupe = 1
     for source in sources:
-        (x, y) = source
-        volume_sphere = (maillage_x[x], maillage_y[y], z, rayon)
+        volume_sphere = (source[0], source[1], z, rayon)
         ajouter_source(f, groupe, "g", direction_M1, volume_sphere, spectre_mono)
         groupe += 1
                     
@@ -266,7 +265,7 @@ def lancer_generation(filename_header, granularite_source, densite, contourage, 
 ########################### Affichage ###########################
 
 
-def plot_sources(n_points, dimensions, maillage, sources, contourage):
+def plot_sources(n_points, dimensions, maillage, sources, contourage, polygone_domaine=None):
     """ Affiche les sources qui sont ajoutées dans le fichier de configuration
     [Params]
     - n_points : triplet (x, y, z) qui définit le nombre de points par axe
@@ -280,7 +279,6 @@ def plot_sources(n_points, dimensions, maillage, sources, contourage):
     # Recuperation parametres
     (lf, mf, nf) = n_points
     (Lx, Ly, Lz) = dimensions
-    (maillage_x, maillage_y, maillage_z) = maillage
     n_sources = len(sources)
     contourage = contourage[:,(0,1)] # On garde seulement 2D pour utiliser mp.Path
 
@@ -293,15 +291,16 @@ def plot_sources(n_points, dimensions, maillage, sources, contourage):
     ax.set_ylim([0, Ly])
     ax.add_patch(patch)
 
-    # Recuperation des coordonnées associées
-    coord_sources = np.zeros([n_sources, 2])
-
-    for i in range(n_sources):
-        (x, y) = sources[i]
-        coord_sources[i] = (maillage_x[x], maillage_y[y])
+    coord_sources = get_coord_sources(sources, maillage)
 
     # Affichage des sources
     plt.plot(coord_sources[:,0], coord_sources[:,1], color='b', marker='o', linestyle='None')
+
+    # Affichage du domaine
+    if (polygone_domaine is not None):
+        domaine_path = mp.Path(polygone_domaine)
+        patch_domaine = patches.PathPatch(domaine_path, facecolor='None', lw=3)
+        ax.add_patch(patch_domaine)
 
     plt.show()
 

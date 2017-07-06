@@ -44,7 +44,7 @@ def get_appartenance_contourage(n_points, maillage, contourage):
 
     for x in range(lf):
         for y in range(mf):
-            appartenance_contourage_2D[x,y] = appartenance_contourage_1D[indice_1D]
+            appartenance_contourage_2D[x, y] = appartenance_contourage_1D[indice_1D]
             indice_1D += 1
 
     return appartenance_contourage_2D
@@ -60,7 +60,7 @@ def in_contourage(appartenance_contourage, x, y):
 
     [Complexité] O(1)
     """
-    return appartenance_contourage[x,y]
+    return appartenance_contourage[x, y]
 
 
 def plot_contourage(ax, contourage, color):

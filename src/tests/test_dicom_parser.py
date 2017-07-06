@@ -20,7 +20,7 @@ def test_2():
     # Parametres et instanciation
     DICOM_path = "/home/thibault/stage_CELIA/src/tests/data_tests/my_head"
     DP = DicomParser(DICOM_path)
-
+    
     # Calcul de dose grossier
     dose_path = "/home/thibault/stage_CELIA/src/tests/data_tests/my_head_dose.dat"
     f = open(dose_path, "r")
@@ -99,7 +99,7 @@ def main():
     #test_3()
     #test_4()
     #test_5()
-    #test_6()
+    test_6()
     
     
 if __name__ == "__main__":
