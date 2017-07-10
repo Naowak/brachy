@@ -38,6 +38,7 @@ def test_1():
 
     # Sources
     maillage = get_maillage(n_points, dimensions)
+    print maillage
     appartenance_contourage = get_appartenance_contourage(n_points, maillage, contourage)
     sources = get_sources(granularite_source, n_points, appartenance_contourage, densite)
     plot_sources(n_points, dimensions, maillage, sources, contourage)

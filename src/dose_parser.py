@@ -86,7 +86,7 @@ def get_dose(f, n_points):
             a = a[:].split()
             a = np.asanyarray(a)
             a = a.astype(np.float)
-            d[j] = a[3]
+            d[j] = round(a[3], 5) # On arrondit a cause de precision machine fausse KIDS
 
         dose_matrix[i,:]= d[:]
 

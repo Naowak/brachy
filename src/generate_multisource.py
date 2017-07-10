@@ -20,11 +20,15 @@ def get_maillage(n_points, dimensions):
     n_points : triplet (x, y, z) qui définit le nombre de points par axe
     dimensions : triplet (x, y, z) qui définit les dimensions (cm/mm)
     """
-    (lf, mf, nf) = n_points
-    (Lx, Ly, Lz) = dimensions
+    # Recuperation des informations
+    (lf, mf, nf) = self.n_points
+    (Lx, Ly, Lz) = self.dimensions
+    taille_maille_x = Lx / lf
+    taille_maille_y = Ly / mf
 
-    xm = np.linspace(0, Lx, lf)
-    ym = np.linspace(0, Ly, mf)
+    # Les coordonnees du maillage "pointent" le centre chaque maille (taille_maill/2)
+    xm = np.linspace(0 + taille_maille_x/2.0, Lx - taille_maille_x/2.0, lf)
+    ym = np.linspace(0 + taille_maille_y/2.0, Ly - taille_maille_y/2.0, mf)
     zm = np.linspace(0, Lz, nf)
     maillage = (xm, ym, zm)
     

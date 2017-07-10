@@ -137,23 +137,6 @@ def test_7():
     coord_sources = get_coord_sources(sources, DP.maillage)
     polygon_domaine = get_polygon_domaine_minimal(DP.maillage, domaine)
     DP.afficher_DICOM("Affichage des doses", slice_id, dose_matrix=dose_matrix, contourage=contourage, coord_sources=coord_sources, polygon_domaine=polygon_domaine)    
-
-
-def test_8():
-    # Parametres et instanciation
-    DICOM_path = "/home/thibault/stage_CELIA/src/tests/data_tests/prostate"
-    RT_structure_id = 158 # RS_xxxx
-    DP = DicomParser(DICOM_path, RT_structure_id)
-    slice_id=149
-    
-    # DP.afficher_DICOM_files() (pour avoir le RT_structure_id)
-    DP.afficher_setROI_names() #(pour afficher les ROI)
-
-    dic_appartenance_contourage = {}
-
-    for (ROI_id, contourages) in DP.set_ROI.iteritems():
-        # Action
-    #dic = DP.get_DICOM_appartenance_contourage_ROI(5)
         
 
 def main():
@@ -162,9 +145,8 @@ def main():
     #test_3()
     #test_4()
     #test_5()
-    #test_6()
+    test_6()
     #test_7()
-    test_8()
     
 if __name__ == "__main__":
     main()
