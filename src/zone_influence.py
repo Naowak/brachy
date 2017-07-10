@@ -59,4 +59,62 @@ def get_polygon_domaine_minimal(maillage, domaine_minimal):
                                         [maillage_x[x_min], maillage_y[y_min]]])
 
     return polygon_domaine_minimal
+
+
+def matrix_to_domaine(matrix, domaine):
+    (x_min, y_min, x_max, y_max) = domaine
+    sous_matrix = matrix[x_min:x_max+1, y_min:y_max+1]
+    return sous_matrix
+
+
+def domaine_to_matrix(matrix, sous_matrix, domaine):
+    """ NB modifie par reference (retour inutile donc) """
+    (x_min, y_min, x_max, y_max) = domaine
+    matrix[x_min:x_max+1, y_min:y_max+1] = sous_matrix[:]
+    return matrix
+
+
+def get_domaine_n_points(domaine, old_n_points):
+    (x_min, y_min, x_max, y_max) = domaine
+
+    # +1 car c'est le nombre de points entre deux points inclus
+    lf = (x_max - x_min) + 1
+    mf = (y_max - y_min) + 1
+    nf = old_n_points[2]
+    n_points = (lf, mf, nf)
+
+    return n_points
+
+
+def get_domaine_dimensions(domaine, old_dimensions, old_maillage):
+    (x_min, y_min, x_max, y_max) = domaine
+    (old_maillage_x, old_maillage_y, old_maillage_z) = old_maillage
+    
+    Lx = old_maillage_x[x_max] - old_maillage_x[x_min]
+    Ly = old_maillage_y[y_max] - old_maillage_y[y_min]
+    Lz = old_dimensions[2]
+    dimensions = (Lx, Ly, Lz)
+
+    return dimensions
+
+
+def get_domaine_sources(domaine, sources):
+    (x_min, y_min, x_max, y_max) = domaine
+    domaine_sources = []
+    
+    for source in sources:
+        domaine_sources.append([source[0] - x_min, source[1] - y_min])
+
+    return np.array(domaine_sources)
+
+
+def get_domaine_HU_array(domaine, old_HU_array):
+    return matrix_to_domaine(old_HU_array, domaine)
+    
+                                
+        
+        
+
+
+
     

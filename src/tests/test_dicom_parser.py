@@ -85,13 +85,76 @@ def test_6():
     DICOM_path = "/home/thibault/stage_CELIA/src/tests/data_tests/prostate"
     RT_structure_id = 158
     DP = DicomParser(DICOM_path, RT_structure_id)
+    zone_influence = 50 # 50 pixels ~ 50 mm ~ 5 cm
 
     # Contourage prostate
     contourage_prostate = DP.get_DICOM_contourage(ROI_id=5, slice_id=149)
 
     # Generation
-    DP.generate_DICOM_don(filename_header, 149, contourage_prostate)
+    DP.generate_DICOM_don(filename_header, 149, contourage_prostate, zone_influence, affichage=True)
 
+
+def test_7():
+    """ Après avoir calculé la matrice des doses, on l'affiche """
+    # Parametres et instanciation
+    filename_header = "prostate"
+    DICOM_path = "/home/thibault/stage_CELIA/src/tests/data_tests/prostate"
+    RT_structure_id = 158
+    DP = DicomParser(DICOM_path, RT_structure_id)
+    slice_id=149
+    zone_influence = 50 # 50 pixels ~ 50 mm ~ 5 cm
+    granularite_source = 5
+    (lf, mf, nf) = DP.n_points
+
+    print DP.maillage
+
+    # Contourage prostate
+    contourage = DP.get_DICOM_contourage(ROI_id=5, slice_id=149)
+
+    # Densite
+    HU_array = DP.get_DICOM_hounsfield(slice_id)
+    densite = DP.get_DICOM_densite(slice_id)
+
+    # Sources
+    appartenance_contourage = get_appartenance_contourage(DP.n_points, DP.maillage, contourage)
+    sources = get_sources(granularite_source, DP.n_points, appartenance_contourage, densite)
+
+    # Domaine minimal
+    domaine = get_domaine_minimal(sources, DP.n_points, DP.dimensions, DP.maillage, zone_influence)
+
+    # Recuperation de la dose
+    filename = "./data_tests/resultats_prostate/prostate_dose_source_001.dat"
+    f = open(filename, "r")
+    get_header_info(f)
+    domaine_n_points = get_domaine_n_points(domaine, DP.n_points)
+    domaine_dose_matrix = get_dose(f, domaine_n_points)
+    dose_matrix = np.zeros([lf, mf])
+    dose_matrix = domaine_to_matrix(dose_matrix, domaine_dose_matrix, domaine)
+    dose_matrix = np.fliplr(dose_matrix)
+    dose_matrix = np.flipud(dose_matrix)
+
+    # Affichage
+    coord_sources = get_coord_sources(sources, DP.maillage)
+    polygon_domaine = get_polygon_domaine_minimal(DP.maillage, domaine)
+    DP.afficher_DICOM("Affichage des doses", slice_id, dose_matrix=dose_matrix, contourage=contourage, coord_sources=coord_sources, polygon_domaine=polygon_domaine)    
+
+
+def test_8():
+    # Parametres et instanciation
+    DICOM_path = "/home/thibault/stage_CELIA/src/tests/data_tests/prostate"
+    RT_structure_id = 158 # RS_xxxx
+    DP = DicomParser(DICOM_path, RT_structure_id)
+    slice_id=149
+    
+    # DP.afficher_DICOM_files() (pour avoir le RT_structure_id)
+    DP.afficher_setROI_names() #(pour afficher les ROI)
+
+    dic_appartenance_contourage = {}
+
+    for (ROI_id, contourages) in DP.set_ROI.iteritems():
+        # Action
+    #dic = DP.get_DICOM_appartenance_contourage_ROI(5)
+        
 
 def main():
     #test_1()
@@ -99,8 +162,9 @@ def main():
     #test_3()
     #test_4()
     #test_5()
-    test_6()
-    
+    #test_6()
+    #test_7()
+    test_8()
     
 if __name__ == "__main__":
     main()

@@ -75,20 +75,20 @@ def get_dose(f, n_points):
     """
     (lf, mf, nf) = n_points
     
-    dose_matrix = np.zeros([mf,lf])
+    dose_matrix = np.zeros([lf, mf])
 
-    for j in range (lf):
+    for i in range (lf):
 
         d = np.zeros([mf])
 
-        for i in range (mf):
+        for j in range (mf):
             a = f.readline()
             a = a[:].split()
             a = np.asanyarray(a)
             a = a.astype(np.float)
-            d[i] = a[3]
+            d[j] = a[3]
 
-        dose_matrix[:,j]= d[:]
+        dose_matrix[i,:]= d[:]
 
         # Formatage different Python/Fortran lors de l'écriture de la fusion (saut de ligne)
         last_pos = f.tell()
@@ -174,25 +174,24 @@ def afficher_dose(filename_dose, contourage=None):
     """ Affiche une coupe horizontale et verticale à partir d'un fichier de données .dat
     [Params] filename : nom du fichier de données représentant le dépot de dose (.dat)
     """
-    fig1, ax1 = plt.subplots()
-    fig2, ax2 = plt.subplots()
-    
     f = open(filename_dose, "r")
 
-    # Parsing 
+    # Parsing, recuperation des informations du header et de dose_matrix
     (coord, dim_vector, n_points, maillage) = get_header_info(f)
     dose_matrix = get_dose(f, n_points)
     maxhom = np.amax(dose_matrix)
 
     # Affichage
+    fig1, ax1 = plt.subplots()
+    #fig2, ax2 = plt.subplots()
     afficher_coupe_horizontale(f, ax1, dose_matrix, maxhom, coord)
-    afficher_coupe_verticale(f, ax2, dose_matrix, maxhom, coord, maillage, dim_vector, n_points)
+    #afficher_coupe_verticale(f, ax2, dose_matrix, maxhom, coord, maillage, dim_vector, n_points)
 
     if contourage is not None:
         plot_contourage(ax1, contourage, 'orange')
     
     fig1.show()
-    fig2.show()
+    #fig2.show()
     f.close()
     
 

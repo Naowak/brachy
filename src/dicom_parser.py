@@ -5,8 +5,10 @@ import pylab
 import dicom
 import numpy as np
 import matplotlib.pyplot as plt
+
 from generate_multisource import *
 from dose_parser import *
+from zone_influence import *
 
 # Useful help https://pyscience.wordpress.com/2014/09/08/dicom-in-python-importing-medical-image-data-into-numpy-with-pydicom-and-vtk/
 
@@ -92,9 +94,9 @@ class DicomParser:
         n_points = self.get_DICOM_npoints()
         (lf, mf, nf) = n_points
 
-        # Dimensions en mm
-        Lx = float(self.slices[0].PixelSpacing[0]) * lf
-        Ly = float(self.slices[0].PixelSpacing[1]) * mf
+        # Dimensions qu'on convertit de mm vers cm
+        Lx = float(self.slices[0].PixelSpacing[0]) * lf * 10E-1
+        Ly = float(self.slices[0].PixelSpacing[1]) * mf * 10E-1
         Lz = 1
         # Lz = float(DICOM_slice.SliceThickness)
         
@@ -382,35 +384,45 @@ class DicomParser:
         print filename_coeff + " successfully generated"
 
     
-    def generate_DICOM_don(self, filename_header, slice_id, contourage):
+    def generate_DICOM_don(self, filename_header, slice_id, contourage, zone_influence, affichage=True):
         """ Lance la generation d'un fichier .don pour un fichier DICOM avec contourage donné
         [Params]
         - filename_header : le nom du cas traité
         - slice_id : identifiant de la coupe
         - contourage : une sequence de points representant un polygone ferme
         """
-        # Recuperation des informations
-        n_points = self.n_points
-        dimensions = self.dimensions
-        maillage = self.maillage
+        # Parametres arbitraires (a changer)
         granularite_source = 5
-
-        rayon = 0.06
+        rayon = (0.6, 0.6, 0.6)
         direction_M1 = (0., 0., 0.)
         spectre_mono = (1e20, 0.03)
 
+        # Densite
         HU_array = self.get_DICOM_hounsfield(slice_id)
         densite = self.get_DICOM_densite(slice_id)
-    
-        # Affichage des sources, TODO : reduire zone traitee
-        appartenance_contourage = get_appartenance_contourage(n_points, maillage, contourage)
-        sources = get_sources(granularite_source, n_points, appartenance_contourage, densite)
-        coord_sources = get_coord_sources(sources, maillage)
-        self.afficher_DICOM("Placement des sources", slice_id, contourage=contourage, coord_sources=coord_sources)
+
+        # Sources
+        appartenance_contourage = get_appartenance_contourage(self.n_points, self.maillage, contourage)
+        sources = get_sources(granularite_source, self.n_points, appartenance_contourage, densite)
+
+        # Domaine minimal
+        domaine = get_domaine_minimal(sources, self.n_points, self.dimensions, self.maillage, zone_influence)
+
+        # Affichage des sources et du domaine
+        if (affichage):
+            coord_sources = get_coord_sources(sources, self.maillage)
+            polygon_domaine = get_polygon_domaine_minimal(self.maillage, domaine)
+            self.afficher_DICOM("Placement des sources", slice_id, contourage=contourage, coord_sources=coord_sources, polygon_domaine=polygon_domaine)
+
+        # Reduction des calculs sur le domaine        
+        domaine_n_points = get_domaine_n_points(domaine, self.n_points)
+        domaine_dimensions = get_domaine_dimensions(domaine, self.dimensions, self.maillage)
+        domaine_sources = get_domaine_sources(domaine, sources)
+        domaine_HU_array = get_domaine_HU_array(domaine, HU_array)
 
         # Generation (coefficients HU et fichier de config .don)
-        self.generate_DICOM_hounsfield(filename_header, HU_array)
-        lancer_generation(filename_header, granularite_source, densite, contourage, n_points, dimensions, rayon, direction_M1, spectre_mono, densite_lu=True)
+        self.generate_DICOM_hounsfield(filename_header, domaine_HU_array)
+        lancer_generation(filename_header, domaine_sources, domaine_n_points, domaine_dimensions, rayon, direction_M1, spectre_mono, densite_lu=True)
 
 
 ########################### Affichage ###########################
@@ -442,7 +454,7 @@ class DicomParser:
             print (i, file)
 
 
-    def afficher_DICOM(self, title, slice_id, dose_matrix=None, contourage=None, contourages_array=None, coord_sources=None):
+    def afficher_DICOM(self, title, slice_id, dose_matrix=None, contourage=None, contourages_array=None, coord_sources=None, polygon_domaine=None):
         """ Trace une figure representant un fichier DICOM avec eventuellement des doses et contourages
         [Params]
         - title : titre de la figure
@@ -470,6 +482,9 @@ class DicomParser:
         
         if (coord_sources is not None):
             plot_DICOM_sources(ax, coord_sources)
+
+        if (polygon_domaine is not None):
+            plot_DICOM_domaine(ax, polygon_domaine)
 
         # Configuration de la figure
         ax.set_title(title, fontsize=20, y=1.02)
@@ -536,3 +551,16 @@ def plot_DICOM_sources(ax, coord_sources):
     - coord_sources : un tableau de points indiquant le positionnement des sources
     """
     ax.plot(coord_sources[:,0], coord_sources[:,1], color='b', marker=',', linestyle='None')
+
+
+def plot_DICOM_domaine(ax, polygon_domaine):
+    """ Ajoute la visualisation du domaine sur la figure
+    [Params]
+    - ax : l'axe correspondant à la figure
+    - polygon_domaine : une sequence de cinq points (rectangle) representant le domaine minimal
+                        (les coordonnees doivent etre reelles et pas les indices de maillage)
+    """
+    domaine_path = mp.Path(polygon_domaine)
+    patch_domaine = patches.PathPatch(domaine_path, facecolor='none', edgecolor='white', lw=2)
+    ax.add_patch(patch_domaine)
+    

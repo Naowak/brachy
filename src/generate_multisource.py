@@ -97,16 +97,15 @@ def get_coord_sources(sources, maillage):
     """ Recupere les coordoonnees reelles des sources """
     # Recuperation parametres
     (maillage_x, maillage_y, maillage_z) = maillage
-    n_sources = len(sources)
+    
+    # Recuperation des coordonnees exactes a partir du maillage
+    coord_sources = []
+    
+    for source in sources:
+        coord_source = (maillage_x[source[0]], maillage_y[source[1]])
+        coord_sources.append(coord_source)
 
-    # Recuperation des coordonnees exactes
-    coord_sources = np.zeros([n_sources, 2])
-
-    for i in range(n_sources):
-        (x, y) = sources[i]
-        coord_sources[i] = (maillage_x[x], maillage_y[y])
-
-    return coord_sources
+    return np.array(coord_sources)
     
 
 ########################### Mise en forme .don ###########################
@@ -153,7 +152,8 @@ def ajouter_densite(f, filename_header="constante"):
 def ajouter_footer(f):
     """ Ajoute le footer au fichier de configuration passé en paramètres """
     res = "-GS_para_alea\n"
-    res += "-python\n\n"
+    res += "-python\n"
+    res += "-nofusion\n\n"
     res += "fin fichier KIDS\n\n"
     res += "title\n"
     res += "  cepxs regression test\n"
@@ -193,7 +193,7 @@ def ajouter_source(f, groupe, type_particule, direction_M1, volume_sphere, spect
     f : descripteur de fichier
     groupe : numéro du groupe de calcul
     direction_M1 : un triplet (x, y, z) avec f1 = f0 * [x, y, z]
-    volume_shere : un quadruplet (x, y, z, r) avec r le rayon de la sphère
+    volume_shere : un octuplet (x, y, z, rx, ry, rz) avec r_ le rayon de la sphère selon les axes
     spectre_mono : un couple (I0, espilon0) ; on injecte à l'énergie epsilon0 avec l'intensité I0
     """
     res = "-frontiere groupe " + str(groupe) + "\n"
@@ -201,13 +201,14 @@ def ajouter_source(f, groupe, type_particule, direction_M1, volume_sphere, spect
     res += "-frontiere direction_M1 " + str(direction_M1[0]) + " " + str(direction_M1[1]) + \
            " " +  str(direction_M1[2]) + "\n"
     res += "-frontiere volume_sphere " + str(volume_sphere[0]) + " " + str(volume_sphere[1]) + \
-           " " + str(volume_sphere[2]) + " " + str(volume_sphere[3]) + "\n"
+           " " + str(volume_sphere[2]) + " " + str(volume_sphere[3]) + " " + \
+           str(volume_sphere[4]) + " " + str(volume_sphere[5]) + "\n" 
     res += "-frontiere spectre_mono " + str(spectre_mono[0]) + " " + str(spectre_mono[1]) + "\n"
 
     f.write(res)
     
 
-def lancer_generation(filename_header, granularite_source, densite, contourage, n_points, dimensions, rayon, direction_M1, spectre_mono, densite_lu=False):
+def lancer_generation(filename_header, sources, n_points, dimensions, rayon, direction_M1, spectre_mono, densite_lu=False):
     """ Lance la generation d'un fichier de configuration .don
     On place n_sources sources réparties uniformement sur le maillage
     Une source est placée si elle est située dans la zone contourée avec une densité cohérente
@@ -216,11 +217,9 @@ def lancer_generation(filename_header, granularite_source, densite, contourage, 
 
     [Params]
     - filename_header : nom du fichier de configuration
-    - granularite_source : nombre de mailles (pas) qu'on parcourt au mini entre chaque source
-    - densite : une matrice 2D qui indique la densite en chaque point
-    - contourage : sequence de points (x, y) representant un polygone
     - n_points : triplet (x, y, z) qui définit le nombre de points par axe
     - dimensions : triplet (x, y, z) qui définit les dimensions en cm
+    - rayon : triplet (rx, ry, rz) qui indique le rayon des volumes selon chaque axe
     - direction_M1 : un triplet (x, y, z) avec f1 = f0 * [x, y, z]
     - spectre_mono : un couple (I0, espilon0) ; on injecte à l'énergie epsilon0 avec l'intensité I0
 
@@ -229,14 +228,10 @@ def lancer_generation(filename_header, granularite_source, densite, contourage, 
     # Recuperation parametres
     (lf, mf, nf) = n_points
     (Lx, Ly, Lz) = dimensions
+    (rx, ry, rz) = rayon
 
-    # Maillage
-    maillage = get_maillage(n_points, dimensions)
-    z = Lx/2.0 # Choix arbitraire
-
-    # Repartition des sources
-    appartenance_contourage = get_appartenance_contourage(n_points, maillage, contourage)
-    sources = get_sources(granularite_source, n_points, appartenance_contourage, densite)
+    # ID slice (choix arbitraire)
+    z = Lx/2.0
 
     # Ecriture du fichier de configuration .don
     f  = open(filename_header + ".don", "w")
@@ -251,11 +246,10 @@ def lancer_generation(filename_header, granularite_source, densite, contourage, 
     # On ajoute les sources dans le fichier .don
     groupe = 1
     for source in sources:
-        volume_sphere = (source[0], source[1], z, rayon)
+        volume_sphere = (source[0], source[1], z, rx, ry, rz)
         ajouter_source(f, groupe, "g", direction_M1, volume_sphere, spectre_mono)
         groupe += 1
                     
-    
     ajouter_footer(f)
 
     print filename_header + ".don successfully generated"
@@ -265,7 +259,7 @@ def lancer_generation(filename_header, granularite_source, densite, contourage, 
 ########################### Affichage ###########################
 
 
-def plot_sources(n_points, dimensions, maillage, sources, contourage, polygone_domaine=None):
+def plot_sources(n_points, dimensions, maillage, sources, contourage, polygon_domaine=None):
     """ Affiche les sources qui sont ajoutées dans le fichier de configuration
     [Params]
     - n_points : triplet (x, y, z) qui définit le nombre de points par axe
@@ -273,6 +267,8 @@ def plot_sources(n_points, dimensions, maillage, sources, contourage, polygone_d
     - maillage : triplet (maillage_x, maillage_y, maillage_z) qui représente le maillage
     - sources : tableau 1D retourné par get_sources
     - contourage : sequence de points representant un polygone
+    - polygon_domaine : une sequence de cinq points (rectangle) representant le domaine minimal
+                        (les coordonnees doivent etre reelles et pas les indices de maillage)
 
     [Complexité] O(n)
     """
@@ -297,8 +293,8 @@ def plot_sources(n_points, dimensions, maillage, sources, contourage, polygone_d
     plt.plot(coord_sources[:,0], coord_sources[:,1], color='b', marker='o', linestyle='None')
 
     # Affichage du domaine
-    if (polygone_domaine is not None):
-        domaine_path = mp.Path(polygone_domaine)
+    if (polygon_domaine is not None):
+        domaine_path = mp.Path(polygon_domaine)
         patch_domaine = patches.PathPatch(domaine_path, facecolor='None', lw=3)
         ax.add_patch(patch_domaine)
 

@@ -22,7 +22,6 @@ def get_no_contourage(n_points):
 
 def test_1():
     """ Test cas academique sans contourage
-    NB : les calculs sont réalisés plusieurs fois pour l'affichage des sources notamment
     """
     # Parametres d'appel
     filename = "./data_tests/multisource_no_contourage.don"
@@ -31,20 +30,20 @@ def test_1():
     # Parametres fichier .don
     n_points = (50, 50, 1)
     dimensions = (5, 5, 1)
-    rayon = 0.1
+    rayon = (0.1, 0.1, 0.1)
     direction_M1 = (0., 0., 0.)
     spectre_mono = (1e20, 0.03)
     densite = get_densite_fantome_eau(n_points)
     contourage = get_no_contourage(n_points)
 
-    # Affichage des sources
+    # Sources
     maillage = get_maillage(n_points, dimensions)
     appartenance_contourage = get_appartenance_contourage(n_points, maillage, contourage)
     sources = get_sources(granularite_source, n_points, appartenance_contourage, densite)
     plot_sources(n_points, dimensions, maillage, sources, contourage)
 
     # Generation
-    lancer_generation(filename, granularite_source, densite, contourage, n_points, dimensions, rayon, direction_M1, spectre_mono)
+    lancer_generation(filename, sources, n_points, dimensions, rayon, direction_M1, spectre_mono)
 
 
 def test_2():
@@ -62,8 +61,7 @@ def test_2():
     Lz = 1
     n_points = (lf, mf, nf)
     dimensions = (Lx, Ly, Lz)
-    
-    rayon = 0.1
+    rayon = (0.1, 0.1, 0.1)
     direction_M1 = (0., 0., 0.)
     spectre_mono = (1e20, 0.03)
     densite = get_densite_fantome_eau(n_points)
@@ -76,7 +74,8 @@ def test_2():
     plot_sources(n_points, dimensions, maillage, sources, contourage)
 
     # Generation
-    lancer_generation(filename, granularite_source, densite, contourage, n_points, dimensions, rayon, direction_M1, spectre_mono)
+    lancer_generation(filename, sources, n_points, dimensions, rayon, direction_M1, spectre_mono)
+
 
 def main():
     test_1()
