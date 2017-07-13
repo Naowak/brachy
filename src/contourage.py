@@ -8,7 +8,6 @@ import matplotlib.patches as patches
 
 # Source : http://www.portailsig.org/content/sur-la-creation-des-enveloppes-concaves-concave-hull-et-les-divers-moyens-d-y-parvenir-forme
 
-
 def get_appartenance_contourage(n_points, maillage, contourage):
     """ Regarde pour chaque point p dans points si le point appartient à la zone contourée
     [Return] Un tableau de booléen 2D qui précise pour chaque point s'il appartient au contourage
@@ -31,9 +30,9 @@ def get_appartenance_contourage(n_points, maillage, contourage):
     
     for x in range(lf):
         for y in range(mf):
-            points[indice_points] = (maillage_x[x], maillage_y[y])
+            points[indice_points] = (x, y)
             indice_points += 1
-            
+
     # Calcul du contourage à proprement parler
     contourage_path = mp.Path(contourage)
     appartenance_contourage_1D = contourage_path.contains_points(points)
@@ -117,3 +116,17 @@ def plot_appartenance_contourage(n_points, dimensions, maillage, appartenance_co
     plt.plot(points_inside[:,0], points_inside[:,1], color='g', marker='o', linestyle='None')
     plt.plot(points_outside[:,0], points_outside[:,1], color='r', marker='o', linestyle='None')
     plt.show()
+
+
+def get_coord_contourage(contourage, maillage):
+    # Recuperation parametres
+    (maillage_x, maillage_y, maillage_z) = maillage
+
+    # Recuperation des coordonnees exactes a partir du maillage
+    coord_contourage = []
+    
+    for point in contourage:
+        coord_point = (maillage_x[point[0]], maillage_y[point[1]])
+        coord_contourage.append(coord_point)
+
+    return np.array(coord_contourage)

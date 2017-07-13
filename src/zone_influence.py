@@ -40,42 +40,37 @@ def get_domaine_minimal(sources, n_points, dimensions, maillage, zone_influence)
     taille_maille_y = float(Ly) / mf
     y_influence = int(round(zone_influence / taille_maille_y))
 
-    domaine_minimal = (max(0, x_min - x_influence),
-                       max(0, y_min - y_influence),
-                       min(lf-1, x_max + x_influence),
-                       min(mf-1, y_max + y_influence))
+    domaine_minimal = [[max(0, x_min - x_influence), max(0, y_min - y_influence)],
+                       [min(lf-1, x_max + x_influence), min(mf-1, y_max + y_influence)]]
     
     return domaine_minimal
 
 
-def get_polygon_domaine_minimal(maillage, domaine_minimal):
-    (x_min, y_min, x_max, y_max) = domaine_minimal
-    (maillage_x, maillage_y, maillage_z) = maillage
-    
-    polygon_domaine_minimal = np.array([[maillage_x[x_min], maillage_y[y_min]],
-                                        [maillage_x[x_min], maillage_y[y_max]],
-                                        [maillage_x[x_max], maillage_y[y_max]],
-                                        [maillage_x[x_max], maillage_y[y_min]],
-                                        [maillage_x[x_min], maillage_y[y_min]]])
-
-    return polygon_domaine_minimal
-
-
 def matrix_to_domaine(matrix, domaine):
-    (x_min, y_min, x_max, y_max) = domaine
+    # Recuperation des informations
+    (x_min, y_min) = domaine[0]
+    (x_max, y_max) = domaine[1]
+
+    # Decoupage de la sous-matrice
     sous_matrix = matrix[x_min:x_max+1, y_min:y_max+1]
     return sous_matrix
 
 
 def domaine_to_matrix(matrix, sous_matrix, domaine):
     """ NB modifie par reference (retour inutile donc) """
-    (x_min, y_min, x_max, y_max) = domaine
+    # Recuperation des informations
+    (x_min, y_min) = domaine[0]
+    (x_max, y_max) = domaine[1]
+
+    # Fusion de la sous-matrice avec la matrice complète
     matrix[x_min:x_max+1, y_min:y_max+1] = sous_matrix[:]
     return matrix
 
 
 def get_domaine_n_points(domaine, old_n_points):
-    (x_min, y_min, x_max, y_max) = domaine
+    # Recuperation des informations
+    (x_min, y_min) = domaine[0]
+    (x_max, y_max) = domaine[1]
 
     # +1 car c'est le nombre de points entre deux points inclus
     lf = (x_max - x_min) + 1
@@ -87,9 +82,12 @@ def get_domaine_n_points(domaine, old_n_points):
 
 
 def get_domaine_dimensions(domaine, old_dimensions, old_maillage):
-    (x_min, y_min, x_max, y_max) = domaine
+    # Recuperation des informations
+    (x_min, y_min) = domaine[0]
+    (x_max, y_max) = domaine[1]
     (old_maillage_x, old_maillage_y, old_maillage_z) = old_maillage
-    
+
+    # Calcul des dimensions
     Lx = old_maillage_x[x_max] - old_maillage_x[x_min]
     Ly = old_maillage_y[y_max] - old_maillage_y[y_min]
     Lz = old_dimensions[2]
@@ -99,7 +97,11 @@ def get_domaine_dimensions(domaine, old_dimensions, old_maillage):
 
 
 def get_domaine_sources(domaine, sources):
-    (x_min, y_min, x_max, y_max) = domaine
+    # Recuperation des informations
+    (x_min, y_min) = domaine[0]
+    (x_max, y_max) = domaine[1]
+
+    # Convertion du sous-vecteur des sources
     domaine_sources = []
     
     for source in sources:
@@ -110,6 +112,17 @@ def get_domaine_sources(domaine, sources):
 
 def get_domaine_HU_array(domaine, old_HU_array):
     return matrix_to_domaine(old_HU_array, domaine)
+
+
+def get_coord_domaine(domaine, maillage):
+    # Recuperation des informations
+    (x_min, y_min) = domaine[0]
+    (x_max, y_max) = domaine[1]    
+    (maillage_x, maillage_y, maillage_z) = maillage
+
+    return [[maillage_x[x_min], maillage_y[y_min]],
+            [maillage_x[x_max], maillage_y[y_max]]]
+                                        
     
                                 
         

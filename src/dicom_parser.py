@@ -43,6 +43,8 @@ class DicomParser:
         self.n_points = self.get_DICOM_npoints()
         self.dimensions = self.get_DICOM_dimensions()
         self.maillage = self.get_DICOM_maillage()
+        self.is_prone = 'p' in self.slices[0].PatientPosition.lower()
+        self.is_feetfirst = 'ff' in self.slices[0].PatientPosition.lower()
 
         # Lecture du fichier RT (RT_structure, RS_xxxx)
         if (RT_structure_id is not None):
@@ -85,7 +87,7 @@ class DicomParser:
         n_points = (lf, mf, nf)
     
         return n_points
-
+ 
 
     def get_DICOM_dimensions(self):
         """ Recupere les metadata (on prend la premiere slice arbitrairement)
@@ -240,9 +242,9 @@ class DicomParser:
         for polygone in self.set_ROI[ROI_id]["contours"]:
             UID = polygone.ContourImages[0].ReferencedSOPInstanceUID
             # NB : On considere que polygone.ContourGeometric = CLOSED_PLANAR
-            contourage = self.get_contour_points(polygone.ContourData)
-            # TODO : convertir de maniere plus fine coord -> pixel
-            contourages[UID] = contourage
+            contourage_coordinate = self.get_contour_points(polygone.ContourData)
+            contourage_pixel = self.convert_coord_to_pixel_contourage(contourage_coordinate)
+            contourages[UID] = contourage_pixel
 
         return contourages
     
@@ -272,7 +274,6 @@ class DicomParser:
     def get_contour_points(self, array):
         """ Convertit un tableau de la forme [x1, y1, z1...] en tableau [(x1, y1, z1), (x2, y2, z2)...]
         [Return] Un tableau de points correspondant à une sequence (contourage)
-
         [Params] array : un tableau de points dont les coordonnées sont à plat
         [Complexité] O(n)
 
@@ -285,7 +286,6 @@ class DicomParser:
         array_3D = zip(*[iter(array)]*3) # Tricky
         array_3D.append(array_3D[0]) # Pour fermer le polygone (on relie le dernier et le premier point)
         array_3D = np.array(array_3D)
-        array_3D = 256 + array_3D
         return array_3D
 
 
@@ -310,7 +310,6 @@ class DicomParser:
 
 ###################### Pixel to patient coordinate (Part 3 - C.7.6.2.1) ######################
 # Useful help : http://nipy.org/nibabel/dicom/dicom_orientation.html
-# Inutile dans les cas academiques traites
 
     def get_patient_to_pixel_LUT(self):
         """ Permet d'obtenir la matrice de transformation faisant le lien entre les pixels et
@@ -325,41 +324,55 @@ class DicomParser:
         orientation = self.slices[0].ImageOrientationPatient
         position = self.slices[0].ImagePositionPatient
 
-        patient_to_pixel_LUT = np.matrix(
+        m = np.matrix(
             [[orientation[0]*dx, orientation[3]*dy, 0, position[0]],
              [orientation[1]*dx, orientation[4]*dy, 0, position[1]],
              [orientation[2]*dx, orientation[5]*dy, 0, position[2]],
              [0, 0, 0, 1]])
 
+        # On applique la transformation pour chaque coordonnée du maillage afin d'avoir une LUT
+        (lf, mf, nf) = self.n_points
+
+        x = []
+        y = []
+        
+        for i in range(0, lf):
+            imat = m * np.matrix([[i], [0], [0], [1]])
+            x.append(float(imat[0]))
+            
+        for j in range(0, mf):
+            jmat = m * np.matrix([[0], [j], [0], [1]])
+            y.append(float(jmat[1]))
+
+        patient_to_pixel_LUT = (np.array(x), np.array(y))
+        
         return patient_to_pixel_LUT
 
 
     def convert_coord_to_pixel(self, point):
         """
         """
-        # Determine if the patient is prone or supine
-        supine = -1 if 's' in self.slices[0].PatientPosition.lower() else 1
-        headfirst = 1 if 'hf' in self.slices[0].PatientPosition.lower() else -1
-        position = self.slices[0].ImagePositionPatient
+        # Recuperation des informations
+        prone = self.is_prone
+        feetfirst = self.is_feetfirst
         
-        # Get the pixel spacing
-        spacing = self.slices[0].PixelSpacing
-        
-        vector = np.array([[point[0]],
-                           [point[1]],
-                           [0],
-                           [1]])
+        # On cherche les coordonnees du maillage (pixel) associees aux coord reelles
+        for (x, x_val) in enumerate(self.patient_to_pixel_LUT[0]):
+            if (x_val > point[0] and not prone and not feetfirst):
+                break
+            elif (x_val < point[0]):
+                if feetfirst or prone:
+                    break
 
-        # Coordonnees du pixel dans un plan en mm
-        coord_pixel_mm = self.patient_to_pixel_LUT * vector
-
-        # On recupere ses coordonnees dans le tableau pixel_array de la forme [x, y, z]
-        x = 512 - int((coord_pixel_mm[0][0]) * supine * headfirst / spacing[0])
-        y = 512 - int((coord_pixel_mm[1][0]) * supine / spacing[1])
-        z = point[2]
-        coord_pixel_array = (x, y, z)
+        for (y, y_val) in enumerate(self.patient_to_pixel_LUT[1]):
+            if (y_val > point[1] and not prone):
+                break
+            elif (y_val < point[1] and prone):
+                break
+            
+        coord_pixel = (x, y)
         
-        return coord_pixel_array
+        return coord_pixel
         
 
     def convert_coord_to_pixel_contourage(self, contourage_coordinate):
@@ -367,8 +380,8 @@ class DicomParser:
         contourage_pixel = []
         
         for point in contourage_coordinate:
-            point_pixel = self.convert_coord_to_pixel(point)
-            contourage_pixel.append(point_pixel)
+            coord_pixel = self.convert_coord_to_pixel(point)
+            contourage_pixel.append(coord_pixel)
 
         return np.array(contourage_pixel)
 
@@ -414,9 +427,7 @@ class DicomParser:
 
         # Affichage des sources et du domaine
         if (affichage):
-            coord_sources = get_coord_sources(sources, self.maillage)
-            polygon_domaine = get_polygon_domaine_minimal(self.maillage, domaine)
-            self.afficher_DICOM("Placement des sources", slice_id, contourage=contourage, coord_sources=coord_sources, polygon_domaine=polygon_domaine)
+            self.afficher_DICOM("Placement des sources", slice_id, contourage=contourage, sources=sources, domaine=domaine)
 
         # Reduction des calculs sur le domaine        
         domaine_n_points = get_domaine_n_points(domaine, self.n_points)
@@ -458,7 +469,7 @@ class DicomParser:
             print (i, file)
 
 
-    def afficher_DICOM(self, title, slice_id, dose_matrix=None, contourage=None, contourages_array=None, coord_sources=None, polygon_domaine=None):
+    def afficher_DICOM(self, title, slice_id, dose_matrix=None, contourage=None, contourages_array=None, sources=None, domaine=None):
         """ Trace une figure representant un fichier DICOM avec eventuellement des doses et contourages
         [Params]
         - title : titre de la figure
@@ -474,97 +485,169 @@ class DicomParser:
         title = title + " - Depth (mm) : " + str(depth)
 
         pixel_array = self.slices[slice_id].pixel_array
-        plot_DICOM_pixel_array(ax, pixel_array)
+        plot_DICOM_pixel_array(ax, pixel_array, self.dimensions)
 
         if (dose_matrix is not None):
-            plot_DICOM_dose(ax, dose_matrix)
+            plot_DICOM_dose(ax, dose_matrix, self.dimensions)
 
         if (contourages_array is not None):
-            plot_DICOM_contourages_array(ax, contourages_array)
+            plot_DICOM_contourages_array(ax, contourages_array, self.n_points, self.maillage)
         elif (contourage is not None):
-            plot_DICOM_contourage(ax, contourage, 'orange')
+            plot_DICOM_contourage(ax, contourage, self.n_points, self.maillage, 'orange')
         
-        if (coord_sources is not None):
-            plot_DICOM_sources(ax, coord_sources)
+        if (sources is not None):
+            plot_DICOM_sources(ax, sources, self.n_points, self.maillage)
 
-        if (polygon_domaine is not None):
-            plot_DICOM_domaine(ax, polygon_domaine)
+        if (domaine is not None):
+            plot_DICOM_domaine(ax, domaine, self.n_points, self.maillage)
 
         # Configuration de la figure
         ax.set_title(title, fontsize=20, y=1.02)
         ax.set_xlabel("x (pixels)", fontsize=20)
         ax.set_ylabel("y (pixels)", fontsize=20)
-        (lf, mf, nf) = self.n_points
-        ax.set_xlim([0, lf])
-        ax.set_ylim([mf, 0])
 
+        #DEBUG
+        (Lx, Ly, Lz) = self.dimensions
+        (maillage_x, maillage_y, maillage_z) = self.maillage
+
+        # Affichage source
+        point_source = (51+184, 61+199)
+        point_source = get_point_upper(point_source, self.n_points)
+        ax.plot(maillage_x[point_source[0]], maillage_y[point_source[1]], 'bo')
+        #ax.scatter([maillage_x[51+184]], [maillage_y[61+199]], c='c')
+        ax.scatter([maillage_x[51+184]], [maillage_y[61+199]], zorder=2, c='g', marker='o')
+        #print str(maillage_x[51+184]) + ", " + str(maillage_y[61+199])
+
+        # Affichage points min/max
+        point_min = (179, 194)
+        point_min = get_point_upper(point_min, self.n_points)
+        ax.plot(maillage_x[point_min[0]], maillage_y[point_min[1]], 'ro')
+
+        point_max = (326, 336)
+        point_max = get_point_upper(point_max, self.n_points)
+        ax.plot(maillage_x[point_max[0]], maillage_y[point_max[1]], 'go')
+        #ENDDEBUG
+        
         fig.show()
 
 
 ###################### Plot informations  ######################
 
 
-def plot_DICOM_pixel_array(ax, pixel_array):
+def plot_DICOM_pixel_array(ax, pixel_array, dimensions):
     """ Ajoute l'image DICOM à la figure
     [Params]
     - ax : l'axe correspondant à la figure
     - pixel_array : un tableau de pixel obtenu grace à DICOM_slice.pixel_array
     """
-    ax.imshow(pixel_array, origin='lower', cmap=plt.cm.bone)
+    (Lx, Ly, Lz) = dimensions
+    ax.imshow(pixel_array, origin='upper', extent=[0, Lx, 0, Ly], cmap=plt.cm.bone)
 
 
-def plot_DICOM_dose(ax, dose_matrix):
+def plot_DICOM_dose(ax, dose_matrix, dimensions):
     """ Ajoute la visualisation de la dose sur la figure
     [Params]
     - ax : l'axe correspondant à la figure
     - dose_matrix : une matrice 2D correspondant à la répartition de la dose
+    - dimensions : un triplet (Lx, Ly, Lz) qui définit les dimensions en mm
     """
+    (Lx, Ly, Lz) = dimensions
     levelsXZ = (0.05, 0.25, 0.5, 0.85, 0.95)
     maxhom = np.amax(dose_matrix)
-    CS = ax.contour(dose_matrix/maxhom, levelsXZ, linewidths=2)
+    CS = ax.contour(dose_matrix/maxhom, levelsXZ, origin='upper', extent=[0, Lx, 0, Ly], linewidths=2)
     ax.clabel(CS, inline=1, fontsize=15, inline_spacing=0, linestyles='dashed')
 
 
-def plot_DICOM_contourage(ax, contourage, color):
+def plot_DICOM_contourage(ax, contourage, n_points, maillage, color):
     """ Ajoute la visualisation du contourage sur la figure
     [Params]
     - ax : l'axe correspondant à la figure
     - contourage : une sequence de points representant un polygone fermé
     - color : couleur du contourage
     """
-    contourage_2D = contourage[:,(0,1)] # On garde seulement 2D pour utiliser mp.Path
-    contourage_path = mp.Path(contourage_2D)
+    # Convertion des coordonnees du maillage vers les coordonnees reelles (+ origine upper)
+    contourage = set_origin_upper(contourage, n_points)
+    coord_contourage = get_coord_contourage(contourage, maillage)
+
+    # Creation du polygone
+    coord_contourage_2D = coord_contourage[:,(0,1)] # On garde seulement 2D pour utiliser mp.Path
+    contourage_path = mp.Path(coord_contourage_2D)
     patch = patches.PathPatch(contourage_path, facecolor=color, linewidth=0)
+
+    # Affichage
     ax.add_patch(patch)
 
 
-def plot_DICOM_contourages_array(ax, contourages_array):
+def plot_DICOM_contourages_array(ax, contourages_array, n_points, maillage):
     """ Ajoute la visualisation de plusieurs contourages sur la figure
     [Params]
     - ax : l'axe correspondant à la figure
     - contourages_array : un tableau de contourages
     """
     for contourage in contourages_array:
-        plot_DICOM_contourage(ax, contourage['array'], contourage['color'])
+        plot_DICOM_contourage(ax, contourage['array'], n_points, maillage, contourage['color'])
 
 
-def plot_DICOM_sources(ax, coord_sources):
+def plot_DICOM_sources(ax, sources, n_points, maillage):
     """ Ajoute la visualisation des sources sur la figure
     [Params]
     - ax : l'axe correspondant à la figure
-    - coord_sources : un tableau de points indiquant le positionnement des sources
+    - sources : un tableau de points indiquant le positionnement des sources (coord maillage)
     """
+    # Convertion des coordonnees du maillage vers les coordonnees reelles (+ origine upper)
+    sources = set_origin_upper(sources, n_points)
+    coord_sources = get_coord_sources(sources, maillage)
+
+    # Affichage
     ax.plot(coord_sources[:,0], coord_sources[:,1], color='b', marker=',', linestyle='None')
 
 
-def plot_DICOM_domaine(ax, polygon_domaine):
+def plot_DICOM_domaine(ax, domaine, n_points, maillage):
     """ Ajoute la visualisation du domaine sur la figure
     [Params]
     - ax : l'axe correspondant à la figure
-    - polygon_domaine : une sequence de cinq points (rectangle) representant le domaine minimal
-                        (les coordonnees doivent etre reelles et pas les indices de maillage)
+    - domaine : quadruplet (x_min, y_min, x_max, y_max) representant le domaine
     """
-    domaine_path = mp.Path(polygon_domaine)
+    # Convertion des coordonnees du maillage vers les coordonnees reelles (+ origine upper)
+    domaine = set_origin_upper(domaine, n_points)
+    coord_domaine = get_coord_domaine(domaine, maillage)
+
+    # Recuperation des informations
+    (x_min, y_min) = coord_domaine[0]
+    (x_max, y_max) = coord_domaine[1]    
+
+    # Creation du polygone
+    polygone_domaine = np.array([[x_min, y_min],
+                                 [x_min, y_max],
+                                 [x_max, y_max],
+                                 [x_max, y_min],
+                                 [x_min, y_min]])
+
+    domaine_path = mp.Path(polygone_domaine)
     patch_domaine = patches.PathPatch(domaine_path, facecolor='none', edgecolor='white', lw=2)
+
+    # Affichage
     ax.add_patch(patch_domaine)
+
+
+def get_point_upper(point, n_points):
+    (lf, mf, nf) = n_points
+    (x, y) = point
+    point_upper = (x, mf - y)
+
+    return point_upper
+
+
+def set_origin_upper(sequence_point, n_points):
+    sequence_upper = []
+
+    for point in sequence_point:
+        point_upper = get_point_upper(point, n_points)
+        sequence_upper.append(point_upper)
+
+    return np.array(sequence_upper)
+
+    
+        
+    
     

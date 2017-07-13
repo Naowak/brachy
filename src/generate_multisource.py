@@ -21,8 +21,8 @@ def get_maillage(n_points, dimensions):
     dimensions : triplet (x, y, z) qui définit les dimensions (cm/mm)
     """
     # Recuperation des informations
-    (lf, mf, nf) = self.n_points
-    (Lx, Ly, Lz) = self.dimensions
+    (lf, mf, nf) = n_points
+    (Lx, Ly, Lz) = dimensions
     taille_maille_x = Lx / lf
     taille_maille_y = Ly / mf
 
@@ -233,6 +233,7 @@ def lancer_generation(filename_header, sources, n_points, dimensions, rayon, dir
     (lf, mf, nf) = n_points
     (Lx, Ly, Lz) = dimensions
     (rx, ry, rz) = rayon
+    (maillage_x, maillage_y, maillage_z) = get_maillage(n_points, dimensions)
 
     # ID slice (choix arbitraire)
     z = Lx/2.0
@@ -250,7 +251,7 @@ def lancer_generation(filename_header, sources, n_points, dimensions, rayon, dir
     # On ajoute les sources dans le fichier .don
     groupe = 1
     for source in sources:
-        volume_sphere = (source[0], source[1], z, rx, ry, rz)
+        volume_sphere = (maillage_x[source[0]], maillage_y[source[1]], z, rx, ry, rz)
         ajouter_source(f, groupe, "g", direction_M1, volume_sphere, spectre_mono)
         groupe += 1
                     

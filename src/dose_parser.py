@@ -86,10 +86,10 @@ def get_dose(f, n_points):
             a = a[:].split()
             a = np.asanyarray(a)
             a = a.astype(np.float)
-            d[j] = round(a[3], 5) # On arrondit a cause de precision machine fausse KIDS
+            d[j] = a[3]
 
         dose_matrix[i,:]= d[:]
-
+        
         # Formatage different Python/Fortran lors de l'écriture de la fusion (saut de ligne)
         last_pos = f.tell()
         a = f.readline()

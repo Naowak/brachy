@@ -106,8 +106,6 @@ def test_7():
     granularite_source = 5
     (lf, mf, nf) = DP.n_points
 
-    print DP.maillage
-
     # Contourage prostate
     contourage = DP.get_DICOM_contourage(ROI_id=5, slice_id=149)
 
@@ -121,6 +119,7 @@ def test_7():
 
     # Domaine minimal
     domaine = get_domaine_minimal(sources, DP.n_points, DP.dimensions, DP.maillage, zone_influence)
+    print domaine
 
     # Recuperation de la dose
     filename = "./data_tests/resultats_prostate/prostate_dose_source_001.dat"
@@ -128,15 +127,17 @@ def test_7():
     get_header_info(f)
     domaine_n_points = get_domaine_n_points(domaine, DP.n_points)
     domaine_dose_matrix = get_dose(f, domaine_n_points)
+    print domaine_dose_matrix[51, 61]
+    #domaine_dose_matrix = np.fliplr(domaine_dose_matrix)
+    #domaine_dose_matrix = np.flipud(domaine_dose_matrix)
     dose_matrix = np.zeros([lf, mf])
     dose_matrix = domaine_to_matrix(dose_matrix, domaine_dose_matrix, domaine)
-    dose_matrix = np.fliplr(dose_matrix)
-    dose_matrix = np.flipud(dose_matrix)
+    #dose_matrix = np.flipud(dose_matrix)
+    #dose_matrix = np.fliplr(dose_matrix)
+    print dose_matrix[51+184, 61+199]
 
     # Affichage
-    coord_sources = get_coord_sources(sources, DP.maillage)
-    polygon_domaine = get_polygon_domaine_minimal(DP.maillage, domaine)
-    DP.afficher_DICOM("Affichage des doses", slice_id, dose_matrix=dose_matrix, contourage=contourage, coord_sources=coord_sources, polygon_domaine=polygon_domaine)    
+    DP.afficher_DICOM("Affichage des doses", slice_id, dose_matrix=dose_matrix, contourage=contourage, sources=sources, domaine=domaine)    
         
 
 def main():
@@ -145,8 +146,8 @@ def main():
     #test_3()
     #test_4()
     #test_5()
-    test_6()
-    #test_7()
+    #test_6()
+    test_7()
     
 if __name__ == "__main__":
     main()
