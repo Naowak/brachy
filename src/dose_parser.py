@@ -88,7 +88,7 @@ def get_dose(f, n_points):
             a = a.astype(np.float)
             d[j] = a[3]
 
-        dose_matrix[i,:]= d[:]
+        dose_matrix[i,:] = d[:]
         
         # Formatage different Python/Fortran lors de l'écriture de la fusion (saut de ligne)
         last_pos = f.tell()

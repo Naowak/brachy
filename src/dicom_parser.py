@@ -57,6 +57,10 @@ class DicomParser:
 
         # Matrice de convertion pixel -> coordinate
         self.patient_to_pixel_LUT = self.get_patient_to_pixel_LUT()
+
+        # Parametres arbitraires
+        self.granularite_source = 5
+        self.zone_influence = 50
         
 
 ########################### Metadata ###########################
@@ -469,7 +473,18 @@ class DicomParser:
             print (i, file)
 
 
-    def afficher_DICOM(self, title, slice_id, dose_matrix=None, contourage=None, contourages_array=None, sources=None, domaine=None):
+
+    def get_DICOM_figure(self):
+        (lf, mf, nf) = self.n_points
+        
+        fig, ax = plt.subplots()
+        ax.set_xlim([0, lf])
+        ax.set_ylim([mf, 0])
+        
+        return (fig, ax)
+
+
+    def update_DICOM_figure(self, fig, ax, title, slice_id, dose_matrix=None, contourage=None, contourages_array=None, sources=None, sources_points=None, domaine=None):
         """ Trace une figure representant un fichier DICOM avec eventuellement des doses et contourages
         [Params]
         - title : titre de la figure
@@ -479,142 +494,150 @@ class DicomParser:
         - contourages_array : un tableau de contourage
         - coord_sources : les coordonnees reelles des sources
         """
-        fig, ax = plt.subplots()
-
-        depth = self.slices[slice_id].SliceLocation
-        title = title + " - Depth (mm) : " + str(depth)
-
-        pixel_array = self.slices[slice_id].pixel_array
-        plot_DICOM_pixel_array(ax, pixel_array, self.dimensions)
-
-        if (dose_matrix is not None):
-            plot_DICOM_dose(ax, dose_matrix, self.dimensions)
-
-        if (contourages_array is not None):
-            plot_DICOM_contourages_array(ax, contourages_array, self.n_points, self.maillage)
-        elif (contourage is not None):
-            plot_DICOM_contourage(ax, contourage, self.n_points, self.maillage, 'orange')
+        # Preservation du zoom (1)
+        x_lim = ax.get_xlim()
+        y_lim = ax.get_ylim()
         
-        if (sources is not None):
-            plot_DICOM_sources(ax, sources, self.n_points, self.maillage)
+        # On nettoie le graphe
+        ax.clear()
 
-        if (domaine is not None):
-            plot_DICOM_domaine(ax, domaine, self.n_points, self.maillage)
+        # Preservation du zoom (2)
+        ax.set_xlim(x_lim)
+        ax.set_ylim(y_lim)
 
         # Configuration de la figure
-        ax.set_title(title, fontsize=20, y=1.02)
-        ax.set_xlabel("x (pixels)", fontsize=20)
-        ax.set_ylabel("y (pixels)", fontsize=20)
+        depth = self.slices[slice_id].SliceLocation
+        title = title + " - Depth (mm) : " + str(depth)
+        (lf, mf, nf) = self.n_points
+        ax.set_title(title, fontsize=20, y=1.07)
+        ax.set_xlabel("x (pixels)", fontsize=12)
+        ax.set_ylabel("y (pixels)", fontsize=12)
+        ax.xaxis.set_label_position('top')
+        ax.xaxis.tick_top()
+        pixel_array = self.slices[slice_id].pixel_array
+        plot_DICOM_pixel_array(ax, pixel_array)
+
+        if (dose_matrix is not None):
+            plot_DICOM_dose(ax, dose_matrix, self.n_points)
+
+        if (contourages_array is not None):
+            plot_DICOM_contourages_array(ax, contourages_array)
+        elif (contourage is not None):
+            plot_DICOM_contourage(ax, contourage, 'orange')
+        
+        if (sources is not None):
+            plot_DICOM_sources(ax, sources)
+
+        if (sources_points is not None):
+            plot_DICOM_sources_points(ax, sources_points)
+
+        if (domaine is not None):
+            plot_DICOM_domaine(ax, domaine)
 
         #DEBUG
-        (Lx, Ly, Lz) = self.dimensions
-        (maillage_x, maillage_y, maillage_z) = self.maillage
 
         # Affichage source
-        point_source = (51+184, 61+199)
-        point_source = get_point_upper(point_source, self.n_points)
-        ax.plot(maillage_x[point_source[0]], maillage_y[point_source[1]], 'bo')
-        #ax.scatter([maillage_x[51+184]], [maillage_y[61+199]], c='c')
-        ax.scatter([maillage_x[51+184]], [maillage_y[61+199]], zorder=2, c='g', marker='o')
-        #print str(maillage_x[51+184]) + ", " + str(maillage_y[61+199])
+        point_source = (51+179, 61+194)
+        ax.plot(point_source[0], point_source[1], 'bo', zorder=3)
+
+        point_source_2 = (51+179, 66+194)
+        ax.plot(point_source_2[0], point_source_2[1], 'go', zorder=3)
 
         # Affichage points min/max
         point_min = (179, 194)
-        point_min = get_point_upper(point_min, self.n_points)
-        ax.plot(maillage_x[point_min[0]], maillage_y[point_min[1]], 'ro')
+        ax.plot(point_min[0], point_min[1], 'ro')
 
         point_max = (326, 336)
-        point_max = get_point_upper(point_max, self.n_points)
-        ax.plot(maillage_x[point_max[0]], maillage_y[point_max[1]], 'go')
+        ax.plot(point_max[0], point_max[1], 'go')
         #ENDDEBUG
-        
-        fig.show()
 
+
+    def afficher_DICOM(self, title, slice_id, dose_matrix=None, contourage=None, contourages_array=None, sources=None, domaine=None):
+        (fig, ax) = self.get_DICOM_figure()
+        self.update_DICOM_figure(fig, ax, title, slice_id, dose_matrix, contourage, contourages_array, sources, domaine)
+        fig.show()
+    
 
 ###################### Plot informations  ######################
 
 
-def plot_DICOM_pixel_array(ax, pixel_array, dimensions):
+def plot_DICOM_pixel_array(ax, pixel_array):
     """ Ajoute l'image DICOM à la figure
     [Params]
     - ax : l'axe correspondant à la figure
     - pixel_array : un tableau de pixel obtenu grace à DICOM_slice.pixel_array
     """
-    (Lx, Ly, Lz) = dimensions
-    ax.imshow(pixel_array, origin='upper', extent=[0, Lx, 0, Ly], cmap=plt.cm.bone)
+    ax.imshow(pixel_array, origin='upper', cmap=plt.cm.bone)
 
 
-def plot_DICOM_dose(ax, dose_matrix, dimensions):
+def plot_DICOM_dose(ax, dose_matrix, n_points):
     """ Ajoute la visualisation de la dose sur la figure
     [Params]
     - ax : l'axe correspondant à la figure
     - dose_matrix : une matrice 2D correspondant à la répartition de la dose
-    - dimensions : un triplet (Lx, Ly, Lz) qui définit les dimensions en mm
     """
-    (Lx, Ly, Lz) = dimensions
+    (lf, mf, nf) = n_points
+    dose_matrix = dose_matrix.T
     levelsXZ = (0.05, 0.25, 0.5, 0.85, 0.95)
     maxhom = np.amax(dose_matrix)
-    CS = ax.contour(dose_matrix/maxhom, levelsXZ, origin='upper', extent=[0, Lx, 0, Ly], linewidths=2)
-    ax.clabel(CS, inline=1, fontsize=15, inline_spacing=0, linestyles='dashed')
+
+    #isodose = dose_matrix/maxhom
+    #print isodose[179+51, 194+61]
+    #ax.imshow(dose_matrix, origin='upper', zorder=2, cmap='hot')
+    
+    CS = ax.contour(dose_matrix/maxhom, levelsXZ, origin='upper', extent=[0, lf, mf, 0], linewidths=2, zorder=3)
+    ax.clabel(CS, inline=1, fontsize=15, inline_spacing=0, linestyles='dashed', zorder=3)
 
 
-def plot_DICOM_contourage(ax, contourage, n_points, maillage, color):
+def plot_DICOM_contourage(ax, contourage, color):
     """ Ajoute la visualisation du contourage sur la figure
     [Params]
     - ax : l'axe correspondant à la figure
     - contourage : une sequence de points representant un polygone fermé
     - color : couleur du contourage
     """
-    # Convertion des coordonnees du maillage vers les coordonnees reelles (+ origine upper)
-    contourage = set_origin_upper(contourage, n_points)
-    coord_contourage = get_coord_contourage(contourage, maillage)
-
     # Creation du polygone
-    coord_contourage_2D = coord_contourage[:,(0,1)] # On garde seulement 2D pour utiliser mp.Path
-    contourage_path = mp.Path(coord_contourage_2D)
+    contourage_2D = contourage[:,(0,1)] # On garde seulement 2D pour utiliser mp.Path
+    contourage_path = mp.Path(contourage_2D)
     patch = patches.PathPatch(contourage_path, facecolor=color, linewidth=0)
 
     # Affichage
     ax.add_patch(patch)
 
 
-def plot_DICOM_contourages_array(ax, contourages_array, n_points, maillage):
+def plot_DICOM_contourages_array(ax, contourages_array):
     """ Ajoute la visualisation de plusieurs contourages sur la figure
     [Params]
     - ax : l'axe correspondant à la figure
     - contourages_array : un tableau de contourages
     """
     for contourage in contourages_array:
-        plot_DICOM_contourage(ax, contourage['array'], n_points, maillage, contourage['color'])
+        plot_DICOM_contourage(ax, contourage['array'], contourage['color'])
 
 
-def plot_DICOM_sources(ax, sources, n_points, maillage):
+def plot_DICOM_sources(ax, sources):
     """ Ajoute la visualisation des sources sur la figure
     [Params]
     - ax : l'axe correspondant à la figure
     - sources : un tableau de points indiquant le positionnement des sources (coord maillage)
     """
-    # Convertion des coordonnees du maillage vers les coordonnees reelles (+ origine upper)
-    sources = set_origin_upper(sources, n_points)
-    coord_sources = get_coord_sources(sources, maillage)
-
-    # Affichage
-    ax.plot(coord_sources[:,0], coord_sources[:,1], color='b', marker=',', linestyle='None')
+    ax.plot(sources[:,0], sources[:,1], color='b', marker=',', linestyle='None')
 
 
-def plot_DICOM_domaine(ax, domaine, n_points, maillage):
+def plot_DICOM_sources_points(ax, sources_points):
+    for point in sources_points:
+        ax.plot(point[0], point[1], 'bo')
+
+
+def plot_DICOM_domaine(ax, domaine):
     """ Ajoute la visualisation du domaine sur la figure
     [Params]
     - ax : l'axe correspondant à la figure
     - domaine : quadruplet (x_min, y_min, x_max, y_max) representant le domaine
     """
-    # Convertion des coordonnees du maillage vers les coordonnees reelles (+ origine upper)
-    domaine = set_origin_upper(domaine, n_points)
-    coord_domaine = get_coord_domaine(domaine, maillage)
-
     # Recuperation des informations
-    (x_min, y_min) = coord_domaine[0]
-    (x_max, y_max) = coord_domaine[1]    
+    (x_min, y_min) = domaine[0]
+    (x_max, y_max) = domaine[1]    
 
     # Creation du polygone
     polygone_domaine = np.array([[x_min, y_min],
@@ -630,6 +653,7 @@ def plot_DICOM_domaine(ax, domaine, n_points, maillage):
     ax.add_patch(patch_domaine)
 
 
+# Useless now
 def get_point_upper(point, n_points):
     (lf, mf, nf) = n_points
     (x, y) = point
@@ -648,6 +672,6 @@ def set_origin_upper(sequence_point, n_points):
     return np.array(sequence_upper)
 
     
-        
-    
+
+
     

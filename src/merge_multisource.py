@@ -4,6 +4,47 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+def get_merged_file(filename_head, vecteur_sources):    
+    # Premiere source
+    current_filename = filename_head + "_dose_source_" + \
+                       str(vecteur_sources[0]).zfill(3) + ".dat"
+    res = np.genfromtxt(current_filename)
+    sum_dose = res[:,3]
+
+    # On parcourt les sources et on fait leur fusion
+    for source_number in vecteur_sources:
+        current_filename = filename_head + "_dose_source_" + \
+                           str(source_number).zfill(3) + ".dat"
+        sum_dose += np.genfromtxt(current_filename)[:,3]
+
+    # Mise a jour avec la somme de dose de toutes les sources
+
+    res[:,3] = sum_dose
+
+    return res
+
+
+def get_dose_matrix_merged(filename_head, vecteur_sources, n_points):
+    merged_file = get_merged_file(filename_head, vecteur_sources)
+    
+    (lf, mf, nf) = n_points
+    dose_matrix = np.zeros([lf, mf])
+    index_merged_file = 0
+
+    for i in range (lf):
+        
+        d = np.zeros([mf])
+
+        for j in range (mf):
+            a = merged_file[index_merged_file]
+            d[j] = a[3]
+            index_merged_file += 1
+
+        dose_matrix[i,:] = d[:]
+
+    return dose_matrix
+
+
 def lancer_fusion(filename_head, vecteur_sources):
     """ Fusionne des fichiers de données .dat représentant des dépots de source
 
@@ -13,20 +54,8 @@ def lancer_fusion(filename_head, vecteur_sources):
      de la forme filename_head_dose_source_xxx)
     vecteur_sources : vecteur dont les valeurs representent les sources à fusionner
     """
-    # Premiere source
-    current_filename = filename_head + "_dose_source_" + \
-                       str(vecteur_sources[0]).zfill(3) + ".dat"
-    res = np.genfromtxt(current_filename)
-    sum_dose = res[:,3]
-
-    # On parcourt les sources et on fait leur fusion
-    for source_number in vecteur_sources[1:]:
-        current_filename = filename_head + "_dose_source_" + \
-                           str(source_number).zfill(3) + ".dat"
-        sum_dose += np.genfromtxt(current_filename)[:,3]
-
-    # Mise a jour avec la somme de dose de toutes les sources
-    res[:,3] = sum_dose
+    # On fusionne les matrices correspondant aux sources dans vecteur sources
+    merged_file = get_merged_file(filename_head, vecteur_sources)
 
     # Recuperation de l'en-tete
     fd_lecture = open(current_filename, "r")
@@ -37,7 +66,7 @@ def lancer_fusion(filename_head, vecteur_sources):
 
     # Sauvegarde de la fusion
     filename = filename_head + "_dose_fusion.dat"
-    np.savetxt(filename, res, header=head, footer='\n', comments='', newline='\n')
+    np.savetxt(filename, merged_file, header=head, footer='\n', comments='', newline='\n')
 
     print filename + " successfully generated"
 

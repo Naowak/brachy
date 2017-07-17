@@ -3,6 +3,7 @@ import sys
 sys.path.append("..")
 from dicom_parser import *
 from dose_parser import *
+from merge_multisource import *
 
 
 def test_1():
@@ -134,8 +135,46 @@ def test_7():
     dose_matrix = domaine_to_matrix(dose_matrix, domaine_dose_matrix, domaine)
     #dose_matrix = np.flipud(dose_matrix)
     #dose_matrix = np.fliplr(dose_matrix)
-    print dose_matrix[51+184, 61+199]
+    print dose_matrix[51+179, 61+194]
 
+    # Affichage
+    DP.afficher_DICOM("Affichage des doses", slice_id, dose_matrix=dose_matrix, contourage=contourage, sources=sources, domaine=domaine)
+
+
+def test_8():
+    """ Après avoir calculé la matrice des doses, on l'affiche """
+    # Parametres et instanciation
+    filename_header = "prostate"
+    DICOM_path = "/home/thibault/stage_CELIA/src/tests/data_tests/prostate"
+    RT_structure_id = 158
+    DP = DicomParser(DICOM_path, RT_structure_id)
+    slice_id=149
+    zone_influence = 50 # 50 pixels ~ 50 mm ~ 5 cm
+    granularite_source = 5
+    (lf, mf, nf) = DP.n_points
+
+    # Contourage prostate
+    contourage = DP.get_DICOM_contourage(ROI_id=5, slice_id=149)
+
+    # Densite
+    HU_array = DP.get_DICOM_hounsfield(slice_id)
+    densite = DP.get_DICOM_densite(slice_id)
+
+    # Sources
+    appartenance_contourage = get_appartenance_contourage(DP.n_points, DP.maillage, contourage)
+    sources = get_sources(granularite_source, DP.n_points, appartenance_contourage, densite)
+
+    # Domaine minimal
+    domaine = get_domaine_minimal(sources, DP.n_points, DP.dimensions, DP.maillage, zone_influence)
+    domaine_n_points = get_domaine_n_points(domaine, DP.n_points)
+    
+    # Recuperation et fusion de doses
+    filename_head = "/home/thibault/stage_CELIA/src/tests/data_tests/resultats_prostate/prostate"
+    vecteur_sources = [1, 2, 3]
+    domaine_dose_matrix = get_dose_matrix_merged(filename_head, vecteur_sources, domaine_n_points)
+    dose_matrix = np.zeros([lf, mf])
+    dose_matrix = domaine_to_matrix(dose_matrix, domaine_dose_matrix, domaine)
+    
     # Affichage
     DP.afficher_DICOM("Affichage des doses", slice_id, dose_matrix=dose_matrix, contourage=contourage, sources=sources, domaine=domaine)    
         
@@ -147,7 +186,8 @@ def main():
     #test_4()
     #test_5()
     #test_6()
-    test_7()
+    #test_7()
+    test_8()
     
 if __name__ == "__main__":
     main()
