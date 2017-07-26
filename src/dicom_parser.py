@@ -18,7 +18,6 @@ from slice import *
 class DicomParser:
     """ DicomParser est une classe permettant de manipuler (parser) un fichier DICOM
     Ses champs initialisés lors de l'instanciation de l'objet sont :
-
     - DICOM_files : un tableau de fichiers DICOM
     - slices : l'ensemble des coupes
     - n_points : un triplet (lf, mf, nf) qui represente le nombre de points par axe
@@ -26,7 +25,6 @@ class DicomParser:
     - maillage : un triplet de trois tableaux (xm, ym, zm) correspondant au maillage 
     - RT_structure : un fichier DICOM (RS_xxxxx) representant les infos des slices
     - set_ROI : un ensemble de contourages (prostate, vessie...)
-
     [Complexité] O(n * log(n))
     """
 
@@ -327,11 +325,9 @@ class DicomParser:
     def get_DICOM_contourage(self, ROI_id, slice_id):
         """ Recupere le contourage ROI_id d'une coupe s'il existe
         [Return] Un tableau de points (x, y, z) correspondant à une sequence (contourage)
-
         [Params]
         - ROI_id : identifiant du type de contourage
         - slice_id : identifiant de la coupe
-
         [Complexité] O(n)
         """
         UID = self.slices[slice_id].dicom_slice.SOPInstanceUID
@@ -351,7 +347,6 @@ class DicomParser:
         [Return] Un tableau de points correspondant à une sequence (contourage)
         [Params] array : un tableau de points dont les coordonnées sont à plat
         [Complexité] O(n)
-
         [NB]
         - Les coordonnées des points sont données en fonction de la position relative (mm)
         - Utilisé dans get_DICOM_contourage
@@ -368,7 +363,6 @@ class DicomParser:
         """ Retourne un dictionnaire de matrices d'appartenance à un contourage pour un ROI donné
         [Return] Un dictionnaire dont l'indexation correspond aux UID des slices contourées pour cet ROI
         ex. : {'1.2.840.113619.2.278.3.176243969.786.1462166632.515.88': matrice2D_appartenance_contourage, ... }
-
         [Params] ROI_id : identifiant du type de contourage
         [Complexité] O(n)
         """
@@ -391,7 +385,6 @@ class DicomParser:
         les coordonnées du patient (translation + rotation + pixel_space)
         
         [Return] La matrice de transormation permettant pixel -> coordinate
-
         NB : la première slice est prise arbitrairement (toutes les slices ont mm metadata)"""
 
         dx = self.slices_info.PixelSpacing[0]
@@ -685,7 +678,7 @@ def plot_DICOM_contourage(ax, contourage, color):
 
     patch = patches.PathPatch(contourage_path, facecolor=rgb_face, edgecolor=rgb_edge, linewidth=1)
 
-    # Affichage
+    # Affichage
     ax.add_patch(patch)
 
 
@@ -695,7 +688,7 @@ def plot_DICOM_contourages_array(ax, contourages_array):
     - ax : l'axe correspondant à la figure
     - contourages_array : un tableau de contourages
     """
-    for contourage in contourages_array.iteritems():
+    for (ROI_id, contourage) in contourages_array.iteritems():
         plot_DICOM_contourage(ax, contourage['array'], contourage['color'])
 
 

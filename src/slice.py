@@ -47,7 +47,7 @@ class Slice:
         self.contourages = contourages
 
         # On lit les contourages
-        for (ROI_id, contourage) in contourages:
+        for (ROI_id, contourage) in contourages.iteritems():
             contourage['array'] = self.dicomparser.get_DICOM_contourage(ROI_id, self.slice_id)
         #self.appartenance_contourage = get_appartenance_contourage(self.dicomparser.n_points, \
         #                                                           self.dicomparser.maillage, \
@@ -64,6 +64,10 @@ class Slice:
                                            self.dicomparser.zone_influence)
         self.domaine_n_points = get_domaine_n_points(self.domaine, self.dicomparser.n_points)
 
+
+    def get_dose_matrix(self):
+        return self.dose_matrix
+    
 
     def get_closest_source(self, point, seuil):        
         closest_source_id = 1
@@ -164,7 +168,7 @@ class Slice:
                                              "Affichage de la dose",
                                              self.slice_id,
                                              dose_matrix = self.dose_matrix,
-                                             contourage = self.contourage,
+                                             contourages_array = self.contourages,
                                              sources = self.sources,
                                              sources_points = sources_points, 
                                              domaine = self.domaine)

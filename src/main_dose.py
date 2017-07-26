@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 sys.path.append("../resources/")
+sys.path.append("../code_cyrille/")
 
 import Tkinter as tk
 import tkFileDialog
@@ -9,9 +10,10 @@ import tkColorChooser as tkc
 
 from functools import partial
 from PIL import Image, ImageTk
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.backends.backend_tkagg import Figure, FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from dicom_parser import *
 from slice import *
+from PONT import *
 
 
 # Monkey Patching
@@ -78,29 +80,12 @@ class DicomNavigation:
     def select_current_slice(self, slice_id):
         self.slice_id = slice_id
         self.slice = self.dicom_parser.get_slice(slice_id)
-        self.slice.set_contourages(self.contourages)
         self.dose_mode = False
-
-
-    def update_contourage(self, ROI_id):
-        if (self.checkbox_state == 1):
-            self.add_contourage(ROI_id, name, contourage, color)
-        elif (self.checkbox_state == 0):
-            self.remove_contourage(ROI_id)
-        else:
-            return
-        
-                
-    def add_contourage(self, ROI_id, name, color):
-        self.contourages[ROI_id] = { 'name': name, 'color': color }
-
-
-    def remove_contourage(self, ROI_id):
-        if ROI_id in self.contourages:
-            del self.contourages[ROI_id]
+        self.slice.set_contourages(self.contourages)
         
 
     def refresh(self):
+        self.parent.dicom_left_window.frame1.refresh_contourage()
         self.parent.dicom_right_window.frame1.refresh_window()
         
 
@@ -166,7 +151,7 @@ class DicomLeftWindow(ttk.Notebook):
 
     def initialize(self):
         self.frame1 = DicomContourage(self)
-        self.frame2 = tk.Frame(self)
+        self.frame2 = DicomPrevisualisation(self)
         self.add(self.frame1, text="Contourage")
         self.add(self.frame2, text="Prévisualisation")
     
@@ -331,15 +316,42 @@ class DicomDVH(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg="black")
         self.parent = parent
-        self.initialize()
+        self.dicom_navigation = self.parent.parent.dicom_navigation
+        #self.initialize()
 
     def initialize(self):
-        # Drawing initial empty canvas
-        self.blank_canvas = True
-        self.canvas = tk.Canvas(self, bg="white", width=600, height=600)
-        self.canvas.pack(side="bottom", fill="both", expand=True)
-        self.label_NW = None
-        self.label_SW = None
+        label = tk.Label(self, text="Histogramme dose/volume", font=("Verdana", 14))
+        label.grid(row=0, column=0, columnspan=7)
+
+        self.ddc = None
+
+        self.dict_graph = {}
+        self.dict_plot = {}
+        self.dict_doses_max = {}
+        self.dict_volumes_max = {}
+
+
+        fig = Figure(figsize=(7,6), dpi=100)
+
+
+        self.canvas = FigureCanvasTkAgg(fig, self)
+
+        self.objet_doses = Doses_from_matrice(self.dicom_navigation.slice.get_dose_matrix())
+
+        self.fig = fig.add_subplot(111)
+        self.fig.plot([],[]) # Initialisation d'un plot vide
+        self.fig.grid(True)
+        self.x_lim = 100
+        self.y_lim = 100
+        self.fig.set_xlim([-0.01*self.x_lim, 1.02*self.x_lim])
+        self.fig.set_ylim([0, 1.02*self.y_lim])
+        self.canvas.draw()  # Action similaire à plt.show() avec matplotlib. C'est ce qui permet d'afficher le canvas à l'écran tel qu'il a été créé ou modifié.
+        self.canvas.get_tk_widget().grid(row=1, column=self.col_graph, rowspan=8, columnspan=6)
+
+        toolbar_frame = Frame(self)  # La barre d'outil au bas du graphique.
+        toolbar_frame.grid(row=9,column=self.col_graph)
+        NavigationToolbar2TkAgg(self.canvas, toolbar_frame)
+
                          
 
 class DicomContourage(tk.Frame):
@@ -352,6 +364,7 @@ class DicomContourage(tk.Frame):
 
     def initialize(self):
         self.dict_lines = {}
+
 
     def load_contourage(self):
         self.set_ROI = self.dicom_navigation.dicom_parser.get_set_ROI()
@@ -377,20 +390,23 @@ class DicomContourage(tk.Frame):
             self.dict_lines[ROI_id]['button'].grid(row=row_id, column=0, padx=3, pady=2)
 
             # Text
-            w = tk.Label(self, text=contourages['name'])
-            w.grid(row=row_id, column=1)
+            self.dict_lines[ROI_id]['name'] = contourages['name']
+            tk.Label(self, text=self.dict_lines[ROI_id]['name']).grid(row=row_id, column=1)
 
             # Checkboxes
-            checkbox = tk.Checkbutton(self, variable=self.dict_lines[ROI_id]['cum'])#, \
-                                      #command=lambda: self.dicom_navigation.update_contourage(self.dict_checkboxes[ROI_id])
+            checkbox = tk.Checkbutton(self, variable=self.dict_lines[ROI_id]['cum'], \
+                                      command=partial(self.OnUpdateContourage, ROI_id))
+                                                                                           
+                                                                                        
             checkbox.grid(row=row_id, column=2)
             
             checkbox = tk.Checkbutton(self, variable=self.dict_lines[ROI_id]['diff'], \
-                                      command=None)
+                                      command=partial(self.OnUpdateContourage, ROI_id))
             checkbox.grid(row=row_id, column=3)
             
 
             row_id += 1
+
 
     def OnSelectColor(self, ROI_id):
         color = tkc.askcolor(title="Couleur du contourage")[1]
@@ -400,7 +416,118 @@ class DicomContourage(tk.Frame):
         
         self.dict_lines[ROI_id]['color'] = color
         self.dict_lines[ROI_id]['button'].config(background=color)
+        self.modifier_contourage(ROI_id, color)
         
+        self.dicom_navigation.refresh()
+
+
+    def OnUpdateContourage(self, ROI_id):
+        if (self.dict_lines[ROI_id]['cum'].get() == 1 or self.dict_lines[ROI_id]['diff'].get() == 1):
+            self.add_contourage(ROI_id, \
+                                self.dict_lines[ROI_id]['name'], \
+                                self.dict_lines[ROI_id]['color'])
+        elif (self.dict_lines[ROI_id]['cum'].get() == 0 and self.dict_lines[ROI_id]['diff'].get() == 0):
+            self.remove_contourage(ROI_id)
+        else:
+            return
+
+        self.dicom_navigation.refresh()
+        
+                
+    def add_contourage(self, ROI_id, name, color):
+        if ROI_id in self.dicom_navigation.contourages:
+            return
+
+        self.dicom_navigation.contourages[ROI_id] = { 'name': name, 'color': color }
+
+
+    def remove_contourage(self, ROI_id):
+        if ROI_id in self.dicom_navigation.contourages:
+            del self.dicom_navigation.contourages[ROI_id]
+
+
+    def modifier_contourage(self, ROI_id, color):
+        if ROI_id in self.dicom_navigation.contourages:
+            self.dicom_navigation.contourages[ROI_id]['color'] = color
+
+
+    def refresh_contourage(self):
+        self.dicom_navigation.slice.set_contourages(self.dicom_navigation.contourages)
+
+
+class DicomPrevisualisation(tk.Frame):
+    def __init__(self, parent):
+        tk.Frame.__init__(self, parent)
+        self.parent = parent
+        self.dicom_navigation = self.parent.parent.dicom_navigation
+        self.initialize()
+
+    def initialize(self):
+        # Repertoire de travail
+        tk.Label(self, text="Répertoire de travail").grid(row=0, column=0, sticky=tk.W)
+        
+        img = Image.open("../resources/table_multiple.png")
+        self.button_table_multiple = ImageTk.PhotoImage(img)
+        open_button = tk.Button(self, image=self.button_table_multiple, \
+                                relief=tk.FLAT, command=self.OnSelectWorkingDirectory)
+        open_button.grid(row=0, column=1, sticky=tk.E)
+        
+        # Choix algorithme
+        tk.Label(self, text="Algorithme").grid(row=1, column=0, sticky=tk.W)
+                 
+        liste_options = ('M1', 'M2')
+        self.algorithme = tk.StringVar(value=liste_options[0])
+        om = tk.OptionMenu(self, self.algorithme, *liste_options)
+        om.grid(row=1, column=1, sticky=tk.E)
+
+        # Choix rayon
+        self.rayon = tk.DoubleVar(value=0.6)
+        tk.Label(self, text="Rayon").grid(row=2, column=0, stick=tk.W)
+        e = tk.Entry(self, justify=tk.RIGHT, textvariable=self.rayon, width=7)
+        e.grid(row=2, column=1, sticky=tk.E)
+
+        # Choix energie
+        self.energie = tk.DoubleVar(value=1E20)
+        tk.Label(self, text="Energie").grid(row=3, column=0, stick=tk.W)
+        e = tk.Entry(self, justify=tk.RIGHT, textvariable=self.energie, width=7)
+        e.grid(row=3, column=1, sticky=tk.E)
+
+        # Granularité source
+        self.granularite = tk.IntVar(value=5)
+        tk.Label(self, text="Granularité source").grid(row=4, column=0, stick=tk.W)
+        e = tk.Entry(self, justify=tk.RIGHT, textvariable=self.granularite, width=7)
+        e.grid(row=4, column=1, sticky=tk.E)
+
+        # Zone d'influence (mm)
+        self.zone_influence = tk.DoubleVar(value=50)
+        tk.Label(self, text="Zone d'influence (mm)").grid(row=5, column=0, stick=tk.W)
+        e = tk.Entry(self, justify=tk.RIGHT, textvariable=self.zone_influence, width=7)
+        e.grid(row=5, column=1, sticky=tk.E)
+
+        # Contourage cible
+        tk.Label(self, text="Contourage cible").grid(row=6, column=0, sticky=tk.W)
+                 
+        liste_options = ('M1', 'M2')
+        self.contourage_cible = tk.StringVar(value=liste_options[0])
+        om = tk.OptionMenu(self, self.contourage_cible, *liste_options)
+        om.grid(row=6, column=1, sticky=tk.E)
+
+        # Bouton pour lancer la previsualisation
+        img = Image.open("../resources/cog.gif")
+        self.button_previsualisation = ImageTk.PhotoImage(img)
+        open_button = tk.Button(self, text="Lancer la previsualisation", image=self.button_previsualisation, \
+                                relief=tk.RAISED, compound="right", command=None)
+        open_button.grid(row=7, padx=2, pady=2)
+
+
+    def OnSelectWorkingDirectory(self):
+        str = tkFileDialog.askdirectory()
+        
+        if (str == ""):
+            return
+    
+        self.working_directory = str
+
 
 class OldMainWindow(tk.Frame):
     def __init__(self, parent):
