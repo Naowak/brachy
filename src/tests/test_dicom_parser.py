@@ -128,14 +128,12 @@ def test_7():
     get_header_info(f)
     domaine_n_points = get_domaine_n_points(domaine, DP.n_points)
     domaine_dose_matrix = get_dose(f, domaine_n_points)
-    print domaine_dose_matrix[51, 61]
     #domaine_dose_matrix = np.fliplr(domaine_dose_matrix)
     #domaine_dose_matrix = np.flipud(domaine_dose_matrix)
     dose_matrix = np.zeros([lf, mf])
     dose_matrix = domaine_to_matrix(dose_matrix, domaine_dose_matrix, domaine)
     #dose_matrix = np.flipud(dose_matrix)
     #dose_matrix = np.fliplr(dose_matrix)
-    print dose_matrix[51+179, 61+194]
 
     # Affichage
     DP.afficher_DICOM("Affichage des doses", slice_id, dose_matrix=dose_matrix, contourage=contourage, sources=sources, domaine=domaine)
@@ -176,7 +174,13 @@ def test_8():
     dose_matrix = domaine_to_matrix(dose_matrix, domaine_dose_matrix, domaine)
     
     # Affichage
-    DP.afficher_DICOM("Affichage des doses", slice_id, dose_matrix=dose_matrix, contourage=contourage, sources=sources, domaine=domaine)    
+    DP.afficher_DICOM("Affichage des doses", slice_id, dose_matrix=dose_matrix, contourage=contourage, sources=sources, domaine=domaine)
+
+
+def test_9():
+    """ Test import """
+    DICOM_path = "/home/thibault/stage_CELIA/src/tests/data_tests/prostate"
+    DP = DicomParser(DICOM_path)
         
 
 def main():
@@ -187,7 +191,8 @@ def main():
     #test_5()
     #test_6()
     #test_7()
-    test_8()
+    #test_8()
+    #test_9()
     
 if __name__ == "__main__":
     main()

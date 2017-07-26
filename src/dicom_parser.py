@@ -5,10 +5,12 @@ import pylab
 import dicom
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mpc
 
 from generate_multisource import *
 from dose_parser import *
 from zone_influence import *
+from slice import *
 
 # Useful help https://pyscience.wordpress.com/2014/09/08/dicom-in-python-importing-medical-image-data-into-numpy-with-pydicom-and-vtk/
 
@@ -28,30 +30,33 @@ class DicomParser:
     [Complexité] O(n * log(n))
     """
 
-    def __init__(self, DICOM_path, RT_structure_id=None):
-        # Lecture de toutes les slices
+    def __init__(self, DICOM_path):
+        # TOCHANGE
+        self.filename_head = "/home/thibault/stage_CELIA/src/tests/data_tests/resultats_prostate/prostate"
+        
+        # Lecture des fichiers DICOM
         self.DICOM_files = self.get_DICOM_files(DICOM_path)
-        n_slices = len(self.DICOM_files)
-    
-        self.slices = []
-        for slice in self.DICOM_files:
-            self.slices.append(dicom.read_file(slice))
-            
-        self.slices = np.array(self.slices)
 
         # Lecture des metadatas
+        self.slices_info = self.get_slices_info()
         self.n_points = self.get_DICOM_npoints()
         self.dimensions = self.get_DICOM_dimensions()
         self.maillage = self.get_DICOM_maillage()
-        self.is_prone = 'p' in self.slices[0].PatientPosition.lower()
-        self.is_feetfirst = 'ff' in self.slices[0].PatientPosition.lower()
+        self.is_prone = 'p' in self.slices_info.PatientPosition.lower()
+        self.is_feetfirst = 'ff' in self.slices_info.PatientPosition.lower()
 
-        # Lecture du fichier RT (RT_structure, RS_xxxx)
-        if (RT_structure_id is not None):
-            self.RT_structure = self.slices[RT_structure_id]
+        # Slices
+        self.slices = self.get_slices()
+        self.n_slices = len(self.slices)
+
+        # Fichier RT (RT_structure, RS_xxxx)
+        self.RT_structure = self.get_RT_structure()
+        
+        if (self.RT_structure):
             # Lecture de l'ensemble des contourages (prostate, vessie, ...)
             self.set_ROI = self.get_DICOM_set_ROI()
         else:
+            print "RT_structure file wasn't found"
             self.RT_structure = None
             self.set_ROI = None
 
@@ -75,17 +80,70 @@ class DicomParser:
         for (dir_name, sub_dir_list, file_list) in os.walk(DICOM_path):
             for filename in sorted(file_list):
                 if ".dcm" in filename.lower():  
-                    DICOM_files.append(os.path.join(dir_name, filename))
-                
-        return sorted(DICOM_files)
+                    DICOM_file = dicom.read_file(os.path.join(dir_name, filename))
+                    DICOM_files.append(DICOM_file)
+            
+        return DICOM_files
+
+
+    def get_RT_structure(self):
+        for file in self.DICOM_files:
+            if self.get_SOP_classUID(file) == 'rtss':
+                return file
+        return None
+
+
+    def get_slices_info(self):
+        # Arbitrairement la premiere
+        for file in self.DICOM_files:
+            if self.get_SOP_classUID(file) == 'ct':
+                return file
+
+
+    def get_slices(self):
+        # On recupere les fichiers CT (slices)
+        slices = []
+
+        for file in self.DICOM_files:
+            if self.get_SOP_classUID(file) == 'ct':
+                slices.append(file)
+
+        # Tri des indices
+        unsorted_id = []
+        
+        for slice in slices:
+            unsorted_id.append(slice.ImagePositionPatient[2])
+
+        if ('hf' in slices[0].PatientPosition.lower()):
+            # Head-first : tri decroissant
+            sorted_id = sorted(unsorted_id, reverse=True)
+        else:
+            # Feet-first : tri croissant
+            sorted_id = sorted(unsorted_id)
+
+
+        # Tri des slices et instanciation
+        sorted_slices = []
+        
+        for (slice_id, ind) in enumerate(sorted_id):
+            for slice in slices:
+                if (ind == slice.ImagePositionPatient[2]):
+                    object = Slice(self, slice, slice_id, self, self.filename_head)
+                    sorted_slices.append(object)
+
+        return sorted_slices
+
+
+    def get_slice(self, slice_id):
+        return self.slices[slice_id]
 
 
     def get_DICOM_npoints(self):
         """ Recupere les metadata (on prend la premiere slice arbitrairement)
         [Return] un triplet (lf, mf, nf) qui represente le nombre de points par axe
         """
-        lf = int(self.slices[0].Rows)
-        mf = int(self.slices[0].Columns)
+        lf = int(self.slices_info.Rows)
+        mf = int(self.slices_info.Columns)
         nf = 1
         # nf = len(DICOM_files - 1)
         n_points = (lf, mf, nf)
@@ -101,8 +159,8 @@ class DicomParser:
         (lf, mf, nf) = n_points
 
         # Dimensions qu'on convertit de mm vers cm
-        Lx = float(self.slices[0].PixelSpacing[0]) * lf * 10E-1
-        Ly = float(self.slices[0].PixelSpacing[1]) * mf * 10E-1
+        Lx = float(self.slices_info.PixelSpacing[0]) * lf * 10E-1
+        Ly = float(self.slices_info.PixelSpacing[1]) * mf * 10E-1
         Lz = 1
         # Lz = float(DICOM_slice.SliceThickness)
         
@@ -128,6 +186,20 @@ class DicomParser:
         maillage = (xm, ym, zm)
     
         return maillage
+
+
+    def get_SOP_classUID(self, dicom_file):
+        """Determine the SOP Class UID of the current file."""
+        if (dicom_file.SOPClassUID == '1.2.840.10008.5.1.4.1.1.481.2'):
+            return 'rtdose'
+        elif (dicom_file.SOPClassUID == '1.2.840.10008.5.1.4.1.1.481.3'):
+            return 'rtss'
+        elif (dicom_file.SOPClassUID == '1.2.840.10008.5.1.4.1.1.481.5'):
+            return 'rtplan'
+        elif (dicom_file.SOPClassUID == '1.2.840.10008.5.1.4.1.1.2'):
+            return 'ct'
+        else:
+            return None
 
 
 ########################### Convertion densité et HU ###########################
@@ -164,12 +236,12 @@ class DicomParser:
                (pixel - association_pixel_densite[ig][0]) + association_pixel_densite[ig][1]
     
 
-    def get_DICOM_densite(self, slice_id):
+    def get_DICOM_densite(self, dicom_slice):
         """ Permet de recuperer les informations sur la densité d'une image DICOM
         [Return] Une matrice 2D indiquant la densité en chaque point
-        [Params] slice_id : identifiant de la coupe
+        [Params] dicom_slice_id : identifiant de la coupe
         """
-        pixel_array = self.slices[slice_id].pixel_array
+        pixel_array = dicom_slice.pixel_array
         (lf, mf, nf) = self.n_points
         
         densite = np.zeros([lf, mf])
@@ -181,17 +253,16 @@ class DicomParser:
         return densite
 
 
-    def get_DICOM_hounsfield(self, slice_id):
+    def get_DICOM_hounsfield(self, dicom_slice):
         """ Permet de convertir la matrice de pixels au format Hounsfield Unit
         [Return] Une matrice 2D indiquant la valeur sur l'échelle de hounsfield en chaque point
-        [Params] - slice_id : identifiant de la coupe
+        [Params] - dicom_slice_id : identifiant de la coupe
         [NB] Formule : hu = pixel_value * slope + intercept
         """
         # Recuperation des informations
-        DICOM_slice = self.slices[slice_id]
-        pixel_array = DICOM_slice.pixel_array
-        slope = DICOM_slice.RescaleSlope
-        intercept = DICOM_slice.RescaleIntercept
+        pixel_array = dicom_slice.pixel_array
+        slope = dicom_slice.RescaleSlope
+        intercept = dicom_slice.RescaleIntercept
         (lf, mf, nf) = self.n_points
         HU_array = np.zeros([lf, mf])
 
@@ -263,14 +334,14 @@ class DicomParser:
 
         [Complexité] O(n)
         """
-        UID = self.slices[slice_id].SOPInstanceUID
+        UID = self.slices[slice_id].dicom_slice.SOPInstanceUID
         DICOM_ROI = self.get_DICOM_ROI(ROI_id)
     
         if not(UID in DICOM_ROI):
             msg = "Erreur : la coupe " + str(UID) + " ne possède pas d'informations pour le "
             msg += "contourage choisi\n"
             sys.stderr.write(msg)
-            sys.exit(1)
+            #sys.exit(1)
 
         return DICOM_ROI[UID]
         
@@ -323,10 +394,10 @@ class DicomParser:
 
         NB : la première slice est prise arbitrairement (toutes les slices ont mm metadata)"""
 
-        dx = self.slices[0].PixelSpacing[0]
-        dy = self.slices[0].PixelSpacing[1]
-        orientation = self.slices[0].ImageOrientationPatient
-        position = self.slices[0].ImagePositionPatient
+        dx = self.slices_info.PixelSpacing[0]
+        dy = self.slices_info.PixelSpacing[1]
+        orientation = self.slices_info.ImageOrientationPatient
+        position = self.slices_info.ImagePositionPatient
 
         m = np.matrix(
             [[orientation[0]*dx, orientation[3]*dy, 0, position[0]],
@@ -419,8 +490,8 @@ class DicomParser:
         spectre_mono = (1e20, 0.03)
 
         # Densite
-        HU_array = self.get_DICOM_hounsfield(slice_id)
-        densite = self.get_DICOM_densite(slice_id)
+        HU_array = self.get_DICOM_hounsfield(self.slices[slice_id].dicom_slice)
+        densite = self.get_DICOM_densite(self.slices[slice_id].dicom_slice)
 
         # Sources
         appartenance_contourage = get_appartenance_contourage(self.n_points, self.maillage, contourage)
@@ -432,7 +503,7 @@ class DicomParser:
         # Affichage des sources et du domaine
         if (affichage):
             self.afficher_DICOM("Placement des sources", slice_id, contourage=contourage, sources=sources, domaine=domaine)
-
+            
         # Reduction des calculs sur le domaine        
         domaine_n_points = get_domaine_n_points(domaine, self.n_points)
         domaine_dimensions = get_domaine_dimensions(domaine, self.dimensions, self.maillage)
@@ -466,6 +537,10 @@ class DicomParser:
             print (ROI_id, contourages['name'])
 
 
+    def get_set_ROI(self):
+        return self.set_ROI
+
+
     def afficher_DICOM_files(self):
         """ Affiche les couples (slice_id, file) """
         n_slices = len(self.DICOM_files)
@@ -477,14 +552,14 @@ class DicomParser:
     def get_DICOM_figure(self):
         (lf, mf, nf) = self.n_points
         
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(facecolor="black")
         ax.set_xlim([0, lf])
         ax.set_ylim([mf, 0])
         
         return (fig, ax)
 
 
-    def update_DICOM_figure(self, fig, ax, title, slice_id, dose_matrix=None, contourage=None, contourages_array=None, sources=None, sources_points=None, domaine=None):
+    def update_DICOM_figure(self, fig, ax, title, slice_id, dose_matrix=None, contourage=None, contourages_array=None, sources=None, sources_points=None, domaine=None, details=False):
         """ Trace une figure representant un fichier DICOM avec eventuellement des doses et contourages
         [Params]
         - title : titre de la figure
@@ -505,15 +580,19 @@ class DicomParser:
         ax.set_xlim(x_lim)
         ax.set_ylim(y_lim)
 
-        # Configuration de la figure
-        depth = self.slices[slice_id].SliceLocation
-        title = title + " - Depth (mm) : " + str(depth)
-        (lf, mf, nf) = self.n_points
-        ax.set_title(title, fontsize=20, y=1.07)
-        ax.set_xlabel("x (pixels)", fontsize=12)
-        ax.set_ylabel("y (pixels)", fontsize=12)
-        ax.xaxis.set_label_position('top')
-        ax.xaxis.tick_top()
+        # Affichage des details
+        if details:
+            depth = self.slices[slice_id].SliceLocation
+            title = title + " - Depth (mm) : " + str(depth)
+            (lf, mf, nf) = self.n_points
+            ax.set_title(title, fontsize=15, y=1.07)
+            ax.set_xlabel("x (pixels)", fontsize=12)
+            ax.set_ylabel("y (pixels)", fontsize=12)
+            ax.xaxis.set_label_position('top')
+            ax.xaxis.tick_top()
+        else:
+            plt.axis('off')
+            
         pixel_array = self.slices[slice_id].pixel_array
         plot_DICOM_pixel_array(ax, pixel_array)
 
@@ -538,23 +617,23 @@ class DicomParser:
 
         # Affichage source
         point_source = (51+179, 61+194)
-        ax.plot(point_source[0], point_source[1], 'bo', zorder=3)
+        #ax.plot(point_source[0], point_source[1], 'bo', zorder=3)
 
         point_source_2 = (51+179, 66+194)
-        ax.plot(point_source_2[0], point_source_2[1], 'go', zorder=3)
+        #ax.plot(point_source_2[0], point_source_2[1], 'go', zorder=3)
 
         # Affichage points min/max
         point_min = (179, 194)
-        ax.plot(point_min[0], point_min[1], 'ro')
+        #ax.plot(point_min[0], point_min[1], 'ro')
 
         point_max = (326, 336)
-        ax.plot(point_max[0], point_max[1], 'go')
+        #ax.plot(point_max[0], point_max[1], 'go')
         #ENDDEBUG
 
 
     def afficher_DICOM(self, title, slice_id, dose_matrix=None, contourage=None, contourages_array=None, sources=None, domaine=None):
         (fig, ax) = self.get_DICOM_figure()
-        self.update_DICOM_figure(fig, ax, title, slice_id, dose_matrix, contourage, contourages_array, sources, domaine)
+        self.update_DICOM_figure(fig, ax, title, slice_id, dose_matrix=dose_matrix, contourage=contourage, contourages_array=contourages_array, sources=sources, domaine=domaine)
         fig.show()
     
 
@@ -586,7 +665,7 @@ def plot_DICOM_dose(ax, dose_matrix, n_points):
     #ax.imshow(dose_matrix, origin='upper', zorder=2, cmap='hot')
     
     CS = ax.contour(dose_matrix/maxhom, levelsXZ, origin='upper', extent=[0, lf, mf, 0], linewidths=2, zorder=3)
-    ax.clabel(CS, inline=1, fontsize=15, inline_spacing=0, linestyles='dashed', zorder=3)
+    #ax.clabel(CS, inline=1, fontsize=15, inline_spacing=0, linestyles='dashed', zorder=3)
 
 
 def plot_DICOM_contourage(ax, contourage, color):
@@ -599,7 +678,12 @@ def plot_DICOM_contourage(ax, contourage, color):
     # Creation du polygone
     contourage_2D = contourage[:,(0,1)] # On garde seulement 2D pour utiliser mp.Path
     contourage_path = mp.Path(contourage_2D)
-    patch = patches.PathPatch(contourage_path, facecolor=color, linewidth=0)
+
+    # Opacite differente entre face et edge
+    rgb_face = mpc.colorConverter.to_rgba(color, alpha=0.2)
+    rgb_edge = mpc.colorConverter.to_rgba(color, alpha=1)
+
+    patch = patches.PathPatch(contourage_path, facecolor=rgb_face, edgecolor=rgb_edge, linewidth=1)
 
     # Affichage
     ax.add_patch(patch)
@@ -611,7 +695,7 @@ def plot_DICOM_contourages_array(ax, contourages_array):
     - ax : l'axe correspondant à la figure
     - contourages_array : un tableau de contourages
     """
-    for contourage in contourages_array:
+    for contourage in contourages_array.iteritems():
         plot_DICOM_contourage(ax, contourage['array'], contourage['color'])
 
 
@@ -626,7 +710,7 @@ def plot_DICOM_sources(ax, sources):
 
 def plot_DICOM_sources_points(ax, sources_points):
     for point in sources_points:
-        ax.plot(point[0], point[1], 'bo')
+        ax.plot(point[0], point[1], 'ro')
 
 
 def plot_DICOM_domaine(ax, domaine):

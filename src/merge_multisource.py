@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
+from dose_parser import *
 
 def get_merged_file(filename_head, vecteur_sources):    
     # Premiere source
@@ -43,6 +44,32 @@ def get_dose_matrix_merged(filename_head, vecteur_sources, n_points):
         dose_matrix[i,:] = d[:]
 
     return dose_matrix
+
+
+def dose_matrix_add_source(filename_head, dose_matrix, source_id):    
+    # On recupere la matrice des doses de la source a ajouter
+    filename_dose = filename_head + "_dose_source_" + str(source_id).zfill(3) + ".dat"
+    f = open(filename_dose, "r")
+    (coord, dim_vector, n_points, maillage) = get_header_info(f)
+    dose_matrix_toadd = get_dose(f, n_points)
+
+    # Fusion a proprement parler (ajout de la source a dose_matrix)
+    merged_dose_matrix = dose_matrix + dose_matrix_toadd
+
+    return merged_dose_matrix
+
+
+def dose_matrix_remove_source(filename_head, dose_matrix, source_id):
+    # On recupere la matrice des doses de la source a ajouter
+    filename_dose = filename_head + "_dose_source_" + str(source_id).zfill(3) + ".dat"
+    f = open(filename_dose, "r")
+    (coord, dim_vector, n_points, maillage) = get_header_info(f)
+    dose_matrix_toremove = get_dose(f, n_points)
+
+    # On retire la source de dose_matrix
+    merged_dose_matrix = dose_matrix - dose_matrix_toremove
+
+    return merged_dose_matrix
 
 
 def lancer_fusion(filename_head, vecteur_sources):
