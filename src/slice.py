@@ -9,12 +9,11 @@ from generate_multisource import *
 from merge_multisource import *
 
 class Slice:
-    def __init__(self, parent, dicom_slice, slice_id, dicomparser, filename_head):
+    def __init__(self, parent, dicom_slice, slice_id, dicomparser):
         self.parent = parent
         self.dicom_slice = dicom_slice
         self.slice_id = slice_id
         self.dicomparser = dicomparser
-        self.filename_head = filename_head
         self.initialize()
 
 
@@ -32,12 +31,20 @@ class Slice:
         self.contourage = None
         self.appartenance_contourage = None
 
+        # Affichage ou non
+        self.dose_mode = 0
+
         # Sources, domaine, matrice dose
         self.sources = None
+        self.slice_directory = None
         self.dic_sources_displayed = {}
         self.domaine = None
         self.dose_matrix = None
 
+
+    def set_working_directory(self, working_directory):
+        self.slice_directory = working_directory + "/slice_" + str(self.slice_id).zfill(3) + "/"
+        
 
     def set_contourages(self, contourages):
         if len(contourages) == 0:
@@ -49,13 +56,16 @@ class Slice:
         # On lit les contourages
         for (ROI_id, contourage) in contourages.iteritems():
             contourage['array'] = self.dicomparser.get_DICOM_contourage(ROI_id, self.slice_id)
-        #self.appartenance_contourage = get_appartenance_contourage(self.dicomparser.n_points, \
-        #                                                           self.dicomparser.maillage, \
-        #                                                           self.contourage)
+
+        
 
     def preparatifs_precalculs(self):
         self.densite = self.dicomparser.get_DICOM_densite(self.dicom_slice)
         self.HU_array = self.dicomparser.get_DICOM_hounsfield(self.dicom_slice)
+
+        self.appartenance_contourage = get_appartenance_contourage(self.dicomparser.n_points, \
+                                                                   self.dicomparser.maillage, \
+                                                                   self.contourages[self.dicomparser.contourage_cible_id]['array'])
         
         self.sources = get_sources(self.dicomparser.granularite_source, self.dicomparser.n_points,
                                    self.appartenance_contourage, self.densite)
@@ -65,9 +75,48 @@ class Slice:
         self.domaine_n_points = get_domaine_n_points(self.domaine, self.dicomparser.n_points)
 
 
+    def refresh_sources(self):
+        # First time
+        if (self.densite is None or self.HU_array is None):
+            self.densite = self.dicomparser.get_DICOM_densite(self.dicom_slice)
+            self.HU_array = self.dicomparser.get_DICOM_hounsfield(self.dicom_slice)
+
+        self.appartenance_contourage = get_appartenance_contourage(self.dicomparser.n_points, \
+                                                                   self.dicomparser.maillage, \
+                                                                   self.contourages[self.dicomparser.get_contourage_cible_id()]['array'])
+
+        self.sources = get_sources(self.dicomparser.granularite_source, self.dicomparser.n_points,
+                                   self.appartenance_contourage, self.densite)
+        
+
+    def refresh_domaine(self):
+        self.domaine = get_domaine_minimal(self.sources, self.dicomparser.n_points,
+                                           self.dicomparser.dimensions, self.dicomparser.maillage,
+                                           self.dicomparser.zone_influence)
+        
+        
+    def set_dose_mode_ON(self):
+        self.dose_mode = 1
+        
+
+    def get_dose_mode(self):
+        return self.dose_mode
+    
+
     def get_dose_matrix(self):
         return self.dose_matrix
     
+
+    def dose_already_calculated(self):
+        n_sources_calculated = 0
+        
+        for (dir_name, sub_dir_list, file_list) in os.walk(self.slice_directory):
+            for filename in file_list:
+                if ".dat" in filename.lower():  
+                    n_sources_calculated += 1
+
+        return (n_sources_calculated == len(self.sources))
+            
 
     def get_closest_source(self, point, seuil):        
         closest_source_id = 1
@@ -102,7 +151,7 @@ class Slice:
 
         # Calcul de la nouvelle matrice de doses
         domaine_dose_matrix = matrix_to_domaine(self.dose_matrix, self.domaine)
-        domaine_merged_dose_matrix = dose_matrix_add_source(self.filename_head,
+        domaine_merged_dose_matrix = dose_matrix_add_source(self.slice_directory,
                                                             domaine_dose_matrix,
                                                             source_id)
         
@@ -122,7 +171,7 @@ class Slice:
 
         # Calcul de la nouvelle matrice de doses
         domaine_dose_matrix = matrix_to_domaine(self.dose_matrix, self.domaine)
-        domaine_merged_dose_matrix = dose_matrix_remove_source(self.filename_head,
+        domaine_merged_dose_matrix = dose_matrix_remove_source(self.slice_directory,
                                                                domaine_dose_matrix,
                                                                source_id)
 
@@ -130,6 +179,7 @@ class Slice:
         maxhom = np.amax(domaine_merged_dose_matrix)
         if (maxhom < 1): # 1 est choisi arbitrairement pour eviter les residus
             self.dose_matrix = None
+            self.sources_points = None
             return
 
         # On met la matrice de doses aux bonnes dimensions
@@ -147,7 +197,7 @@ class Slice:
         vector_sources = self.dic_sources_displayed.keys()
 
         # Fusion des sources dans le vecteur
-        domaine_dose_matrix = get_dose_matrix_merged(self.filename_head,
+        domaine_dose_matrix = get_dose_matrix_merged(self.slice_directory,
                                                      vector_sources,
                                                      self.domaine_n_points)
 
@@ -156,22 +206,36 @@ class Slice:
         self.dose_matrix = domaine_to_matrix(self.dose_matrix, domaine_dose_matrix, self.domaine)
         
 
-    def update_DICOM_figure(self, figure, ax):
-        # Get real sources points
-        if is_empty(self.dic_sources_displayed):
-            sources_points = None
+    def update_DICOM_figure(self, figure, ax, display_settings):
+        # On regle l'affichage (car ou on cose puis decoche...)
+        if display_settings["sources"] == 0:
+            sources_displayed = None
         else:
-            sources_points = self.dic_sources_displayed.values()
-        
+            sources_displayed = self.sources
+
+        if display_settings["domaine"] == 0:
+            domaine_displayed = None
+        else:
+            domaine_displayed = self.domaine
+
+        if self.dose_mode == 0:
+            dose_matrix_displayed = None
+            sources_points_displayed = None
+        else:
+            dose_matrix_displayed = self.dose_matrix
+            sources_points_displayed = self.dic_sources_displayed.values()
+            
+
+        # Affichage
         self.dicomparser.update_DICOM_figure(figure,
                                              ax,
                                              "Affichage de la dose",
                                              self.slice_id,
-                                             dose_matrix = self.dose_matrix,
+                                             dose_matrix = dose_matrix_displayed,
                                              contourages_array = self.contourages,
-                                             sources = self.sources,
-                                             sources_points = sources_points, 
-                                             domaine = self.domaine)
+                                             sources = sources_displayed,
+                                             sources_points = sources_points_displayed,
+                                             domaine = domaine_displayed)
 
 def distance(A, B):
     return np.linalg.norm(A - B)

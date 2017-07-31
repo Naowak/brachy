@@ -61,12 +61,29 @@ class DicomParser:
         # Matrice de convertion pixel -> coordinate
         self.patient_to_pixel_LUT = self.get_patient_to_pixel_LUT()
 
-        # Parametres arbitraires
-        self.granularite_source = 5
-        self.zone_influence = 50
+        # Placement sources
+        self.granularite_source = None
+        self.zone_influence = None
+        self.contourage_cible_id = None
         
 
 ########################### Metadata ###########################
+
+    def set_granularite_source(self, granularite_source):
+        self.granularite_source = granularite_source
+
+
+    def set_zone_influence(self, zone_influence):
+        self.zone_influence = zone_influence
+
+
+    def set_contourage_cible_id(self, contourage_cible_id):
+        self.contourage_cible_id = contourage_cible_id
+
+
+    def get_contourage_cible_id(self):
+        return self.contourage_cible_id
+    
 
     def get_DICOM_files(self, DICOM_path):
         """ Permet de recuperer l'ensemble des fichiers DICOM (slices) dans un tableau
@@ -126,7 +143,7 @@ class DicomParser:
         for (slice_id, ind) in enumerate(sorted_id):
             for slice in slices:
                 if (ind == slice.ImagePositionPatient[2]):
-                    object = Slice(self, slice, slice_id, self, self.filename_head)
+                    object = Slice(self, slice, slice_id, self)
                     sorted_slices.append(object)
 
         return sorted_slices
@@ -458,18 +475,18 @@ class DicomParser:
 ###################### Generation des fichiers pour le calcul de dose ######################
 
 
-    def generate_DICOM_hounsfield(self, filename_header, HU_array):
+    def generate_DICOM_hounsfield(self, HU_array):
         """ Permet la génération du fichier coeff_name.don contenant les données HU lues par KIDS
         [Params]
         - filename_header : le nom du cas traité
         - HU_array : matrice 2D retournée par get_DICOM_hounsfield
         """
-        filename_coeff = "densite_hu_" + filename_header + ".don"
+        filename_coeff = "densite_hu.don"
         np.savetxt(filename_coeff, HU_array,  fmt='%i')
         print filename_coeff + " successfully generated"
 
     
-    def generate_DICOM_don(self, filename_header, slice_id, contourage, zone_influence, affichage=True):
+    def generate_DICOM_don(self, slice_id, contourage, zone_influence, affichage=True):
         """ Lance la generation d'un fichier .don pour un fichier DICOM avec contourage donné
         [Params]
         - filename_header : le nom du cas traité
@@ -504,8 +521,9 @@ class DicomParser:
         domaine_HU_array = get_domaine_HU_array(domaine, HU_array)
 
         # Generation (coefficients HU et fichier de config .don)
-        self.generate_DICOM_hounsfield(filename_header, domaine_HU_array)
-        lancer_generation(filename_header, domaine_sources, domaine_n_points, domaine_dimensions, rayon, direction_M1, spectre_mono, densite_lu=True)
+        self.generate_DICOM_hounsfield(domaine_HU_array)
+        filename = self.working_directory + "slice_" + str(slice_id).zfill(3) + "/dicom_KIDS.don"
+        lancer_generation(filename, domaine_sources, domaine_n_points, domaine_dimensions, rayon, direction_M1, spectre_mono, densite_lu=True)
 
 
 ########################### Affichage ###########################
@@ -698,7 +716,7 @@ def plot_DICOM_sources(ax, sources):
     - ax : l'axe correspondant à la figure
     - sources : un tableau de points indiquant le positionnement des sources (coord maillage)
     """
-    ax.plot(sources[:,0], sources[:,1], color='b', marker=',', linestyle='None')
+    ax.plot(sources[:,0], sources[:,1], color='red', marker=',', linestyle='None')
 
 
 def plot_DICOM_sources_points(ax, sources_points):

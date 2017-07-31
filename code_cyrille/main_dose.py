@@ -13,7 +13,10 @@ from PIL import Image, ImageTk
 from matplotlib.backends.backend_tkagg import Figure, FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from dicom_parser import *
 from slice import *
+
 from PONT import *
+from classes_primaires import *
+
 
 
 # Monkey Patching
@@ -30,17 +33,16 @@ class MainApplication(tk.Tk):
         self.initialize()
 
     def initialize(self):
-        self.dicom_navigation = DicomNavigation(self)
-        self.menu = Menu(self, self.dicom_navigation)
+        self.menu = Menu(self)
         self.configure(menu=self.menu)
-        self.toolbar = Toolbar(self, self.dicom_navigation)
-        self.dicom_right_window = DicomRightWindow(self, self.dicom_navigation)
-        self.dicom_left_window = DicomLeftWindow(self, self.dicom_navigation)
+        self.toolbar = Toolbar(self)
+        self.dicom_navigation = DicomNavigation(self)
+        self.dicom_right_window = DicomRightWindow(self)
+        self.dicom_left_window = DicomLeftWindow(self)
 
         self.toolbar.pack(side="top", fill="both", expand=False)
         self.dicom_right_window.pack(side="right", fill="both", expand=True)
         self.dicom_left_window.pack(side="left", fill="both", expand=False)
-
 
 
 class DicomNavigation:
@@ -51,6 +53,7 @@ class DicomNavigation:
     def initialize(self):
         self.dicom_path = None
         self.dicom_parser = None
+        self.dose_mode = False
         self.checkbox_state = -1
 
         # Current_slice
@@ -59,9 +62,6 @@ class DicomNavigation:
 
         # Contourages
         self.contourages = {}
-
-        # Affichae
-        self.display_settings = { "sources": 0, "domaine": 0 }
 
         # Note Style
         self.note_style = ttk.Style()
@@ -75,48 +75,27 @@ class DicomNavigation:
         self.dicom_parser = DicomParser(self.dicom_path)
         self.select_current_slice(90)
         (self.figure, self.ax) = self.dicom_parser.get_DICOM_figure()
-        self.get_dicom_contourage().load_contourage()
+        self.parent.dicom_left_window.frame1.load_contourage()
         self.refresh()
 
 
     def select_current_slice(self, slice_id):
         self.slice_id = slice_id
         self.slice = self.dicom_parser.get_slice(slice_id)
+        self.dose_mode = False
+        self.slice.set_contourages(self.contourages)
         
 
-    def refresh(self):            
-        self.get_dicom_contourage().refresh_contourage()
-
-        if self.display_settings["sources"] == 1:
-            self.slice.refresh_sources()
-
-        if self.display_settings["domaine"] == 1:
-            self.slice.refresh_domaine()
-            
-        self.get_dicom_view().refresh_window()
-
-
-    def get_dicom_contourage(self):
-        return self.parent.dicom_left_window.dicom_contourage
-
-
-    def get_dicom_view(self):
-        return self.parent.dicom_right_window.dicom_view
-
-
-    def set_working_directory(self, working_directory):
-        self.working_directory = working_directory
-
-        # Updating working directory into each slices
-        for slice in self.dicom_parser.slices:
-            slice.set_working_directory(working_directory)
+    def refresh(self):
+        self.parent.dicom_left_window.frame1.refresh_contourage()
+        self.parent.dicom_right_window.frame1.refresh_window()
         
+
 
 class Menu(tk.Menu):
-    def __init__(self, parent, dicom_navigation):
+    def __init__(self, parent):
         tk.Menu.__init__(self, parent)
         self.parent = parent
-        self.dicom_navigation = dicom_navigation
         self.initialize()
 
     def initialize(self):
@@ -150,10 +129,9 @@ class Menu(tk.Menu):
 
 
 class Toolbar(tk.Frame):
-    def __init__(self, parent, dicom_navigation):
+    def __init__(self, parent):
         tk.Frame.__init__(self, parent, bd=1, relief=tk.RAISED)
         self.parent = parent
-        self.dicom_navigation = dicom_navigation
         self.initialize()
 
     def initialize(self):
@@ -167,25 +145,23 @@ class Toolbar(tk.Frame):
         
         
 class DicomLeftWindow(ttk.Notebook):
-    def __init__(self, parent, dicom_navigation):
+    def __init__(self, parent):
         # Notebook
         ttk.Notebook.__init__(self, parent, style='TNotebook')
         self.parent = parent
-        self.dicom_navigation = dicom_navigation
         self.initialize() 
 
     def initialize(self):
-        self.dicom_contourage = DicomContourage(self, self.dicom_navigation)
-        self.dicom_previsualisation = DicomPrevisualisation(self, self.dicom_navigation)
-        self.add(self.dicom_contourage, text="Contourage")
-        self.add(self.dicom_previsualisation, text="Prévisualisation")
+        self.frame1 = DicomContourage(self)
+        self.frame2 = DicomPrevisualisation(self)
+        self.add(self.frame1, text="Contourage")
+        self.add(self.frame2, text="Prévisualisation")
     
 
 class DicomRightWindow(tk.Frame):
-    def __init__(self, parent, dicom_navigation):
+    def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg="black")
         self.parent = parent
-        self.dicom_navigation = dicom_navigation
         self.initialize()
 
 
@@ -194,20 +170,20 @@ class DicomRightWindow(tk.Frame):
         self.top_canvas = tk.Canvas(self, width=600, height=40, borderwidth=1, relief=tk.RAISED)#, highlightbackground="black")
         self.top_canvas.pack(side="top", fill="both", expand=False)
 
-        # Notebook (dicom window + hdv)
+        # Notebook (dicom window + dvh)
         self.notebook = ttk.Notebook(self, style='TNotebook')
         self.notebook.pack(side="left", fill="both", expand=True)
-        self.dicom_view = DicomView(self, self.dicom_navigation)
-        self.dicom_hdv = DicomHDV(self, self.dicom_navigation)
-        self.notebook.add(self.dicom_view, text="Dicom View")
-        self.notebook.add(self.dicom_hdv, text="HDV")
+        self.frame1 = DicomView(self)
+        self.frame2 = DicomDVH(self)
+        self.notebook.add(self.frame1, text="Dicom View")
+        self.notebook.add(self.frame2, text="DVH")
 
 
 class DicomView(tk.Frame):
-    def __init__(self, parent, dicom_navigation):
+    def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg="black")
         self.parent = parent
-        self.dicom_navigation = dicom_navigation
+        self.dicom_navigation = self.parent.parent.dicom_navigation
         self.initialize()
 
     def initialize(self):
@@ -233,27 +209,22 @@ class DicomView(tk.Frame):
             self.OnRightClick(event)
         else:
             return
-
-        # Refresh
-        dicom_hdv = self.dicom_navigation.parent.dicom_right_window.dicom_hdv
-        dicom_hdv.refresh_hdv()
-        self.refresh_window()
         
 
     def OnLeftClick(self, event):
-        if (self.dicom_navigation.slice.get_dose_mode() == 0):
+        if not(self.dicom_navigation.dose_mode):
             return
-
+        
         self.curseur = (event.xdata, event.ydata)
         slice = self.dicom_navigation.slice
         
         closest_source = slice.get_closest_source(self.curseur, self.seuil)
         slice.add_source_displayed(self.curseur, closest_source)
-
+        self.refresh_window()
 
 
     def OnRightClick(self, event):
-        if (self.dicom_navigation.slice.get_dose_mode() == 0):
+        if not(self.dicom_navigation.dose_mode):
             return
         
         self.curseur = (event.xdata, event.ydata)
@@ -261,6 +232,7 @@ class DicomView(tk.Frame):
         
         closest_source = slice.get_closest_source(self.curseur, self.seuil)
         slice.remove_source_displayed(closest_source)
+        self.refresh_window()
 
 
     def OnMouseScroll(self, event):
@@ -279,7 +251,7 @@ class DicomView(tk.Frame):
             return
         
         self.dicom_navigation.select_current_slice(new_slice_id)
-        self.dicom_navigation.refresh()
+        self.refresh_window()
 
     
     def OnScrollUp(self, event):
@@ -289,16 +261,16 @@ class DicomView(tk.Frame):
             return
         
         self.dicom_navigation.select_current_slice(new_slice_id)
-        self.dicom_navigation.refresh()
+        self.refresh_window()
         
 
     def refresh_window(self):
+        #self.slice.update_dose_matrix()
         self.dicom_navigation.slice.update_DICOM_figure(self.dicom_navigation.figure, \
-                                                        self.dicom_navigation.ax, \
-                                                        self.dicom_navigation.display_settings)
+                                                       self.dicom_navigation.ax)
         self.afficher_figure()
-
     
+
     def afficher_figure(self):
         figure = self.dicom_navigation.figure
         
@@ -310,8 +282,7 @@ class DicomView(tk.Frame):
             self.canvas.mpl_connect('scroll_event', self.OnMouseScroll)
             self.canvas.show()
             self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
-            self.canvas.get_tk_widget().configure(background='black',  highlightcolor='black',\
-                                                  highlightbackground='black')
+            self.canvas.get_tk_widget().configure(background='black',  highlightcolor='black', highlightbackground='black')
             self.canvas.get_tk_widget().pack_propagate(False) 
             self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
             self.toolbar.update()
@@ -343,11 +314,11 @@ class DicomView(tk.Frame):
         self.label_SW.config(text=message)
 
 
-class DicomHDV(tk.Frame):
-    def __init__(self, parent, dicom_navigation):
+class DicomDVH(tk.Frame):
+    def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg="white")
         self.parent = parent
-        self.dicom_navigation = dicom_navigation
+        self.dicom_navigation = self.parent.parent.dicom_navigation
         self.initialize()
 
     def initialize(self):
@@ -383,26 +354,26 @@ class DicomHDV(tk.Frame):
         self.fig.set_xlim([-0.01*self.x_lim, 1.02*self.x_lim])
         self.fig.set_ylim([0, 1.02*self.y_lim])
         self.canvas.draw()  # Action similaire à plt.show() avec matplotlib. C'est ce qui permet d'afficher le canvas à l'écran tel qu'il a été créé ou modifié.
-        self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+        self.canvas.get_tk_widget().grid(row=0, column=0, rowspan=8, columnspan=6)
 
-        self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
-        self.toolbar.update
-        self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        toolbar_frame = tk.Frame(self)  # La barre d'outil au bas du graphique.
+        toolbar_frame.grid(row=8,column=0, sticky=tk.W)
+        NavigationToolbar2TkAgg(self.canvas, toolbar_frame)
 
 
         ### CODÉ EN DUR POUR L'INSTANT (on a besoin d'un dict du genre {'nom_ROI' : objet de la classe Contourage_from_matrice du fichier PONT, ...} )
 
 
-    def update_hdv(self, ROI_id, type_hdv="cum"):  # permet de mettre à jour le HDV d'après les checkboxes cochées. Prend en argument le nom de la ROI et le type de HDV voulu.
-        self.infos_checkboxes = self.dicom_navigation.dicom_left_window.dicom_contourages.dict_lines[ROI_id]  # On récupère les infos des checkboxes associés à la ROI donnée en argument
 
-        appartenance_contourage = get_appartenance_contourage(self.dicom_navigation.dicomparser.n_points, \
-                                                              self.dicom_navigation.dicomparser.maillage, \
-                                                              self.dicom_navigation.contourages[ROI_id]['array'])
-        
-        contourage = Contourage_from_matrice(appartenance_contourage, ROI_id)  # on récupère le contourage associé à la ROI donnée en argument
+    def update_hdv(self, ROI_id, type_hdv='cum'):  # permet de mettre à jour le HDV d'après les checkboxes cochées. Prend en argument le nom de la ROI et le type de HDV voulu.
 
-        doses = Doses_from_matrice(self.dicom_navigation.slice.get_dose_matrix())
+        self.infos_checkboxes = app.dicom_left_window.frame1.dict_lines[ROI_id]  # On récupère les infos des checkboxes associés à la ROI donnée en argument
+
+        LA_MATRICE_BOOLEENNE_DU_CONTOURAGE = None  ### C'EST ICI QUE TU CHOPES LA MATRICE BOOLÉENNE DU CONTOURAGE ASSOCIÉ À ROI_id
+        contourage = Contourage_from_matrice(LA_MATRICE_BOOLEENNE_DU_CONTOURAGE, ROI_id)  # on récupère le contourage associé à la ROI donnée en argument
+
+        LA_MATRICE_DE_DEPOT_DE_DOSE_ADAPTEE_AU_CONTOURAGE = None  ### C'EST ICI QUE TU CHOPES LA MATRICE DE DÉPÔT DE DOSE ADAPTÉE AU CONTOURAGE
+        doses = Doses_from_matrice(LA_MATRICE_DE_DEPOT_DE_DOSE_ADAPTEE_AU_CONTOURAGE)
 
         var = tk.StringVar()
         var.set('r')
@@ -484,7 +455,7 @@ class DicomHDV(tk.Frame):
         self.fig.set_xlim([-0.01*self.x_lim, 1.02*self.x_lim])  # dimension de l'axe des x
         self.fig.set_ylim([0, 1.02*self.y_lim])  # dimension de l'axe des y
         self.canvas.draw()
-        #self.canvas.get_tk_widget().grid(row=0, column=0, rowspan=8, columnspan=6)
+        self.canvas.get_tk_widget().grid(row=0, column=0, rowspan=8, columnspan=6)
 
 
         if self.got_contraintes:  # SERA INITALISÉE À 'TRUE' LORSQUE L'ON AURA RÉCUPÉRER LE FICHIER DE CONTRAINTES
@@ -570,13 +541,14 @@ class DicomHDV(tk.Frame):
                 self.dict_respect_contraintes[ROI_id][contrainte] = False
         # ajouter commande qui affiche un message et qui met le titre de la ROI en rouge
 
+
                          
 
 class DicomContourage(tk.Frame):
-    def __init__(self, parent, dicom_navigation):
+    def __init__(self, parent):
         tk.Frame.__init__(self, parent)
         self.parent = parent
-        self.dicom_navigation = dicom_navigation
+        self.dicom_navigation = self.parent.parent.dicom_navigation
         self.initialize()
 
 
@@ -586,7 +558,7 @@ class DicomContourage(tk.Frame):
 
     def load_contourage(self):
         self.set_ROI = self.dicom_navigation.dicom_parser.get_set_ROI()
-        
+
         # Loading res
         img = Image.open("../resources/color_button.gif")
         self.color_button = ImageTk.PhotoImage(img)
@@ -613,19 +585,17 @@ class DicomContourage(tk.Frame):
 
             # Checkboxes
             checkbox = tk.Checkbutton(self, variable=self.dict_lines[ROI_id]['cum'], \
-                                      command=partial(self.OnUpdateContourage, ROI_id, "cum"))
+                                      command=partial(self.OnUpdateContourage, ROI_id))
                                                                                            
                                                                                         
             checkbox.grid(row=row_id, column=2)
             
             checkbox = tk.Checkbutton(self, variable=self.dict_lines[ROI_id]['diff'], \
-                                      command=partial(self.OnUpdateContourage, ROI_id, "diff"))
+                                      command=partial(self.OnUpdateContourage, ROI_id))
             checkbox.grid(row=row_id, column=3)
             
 
             row_id += 1
-
-        self.dicom_navigation.parent.dicom_left_window.dicom_previsualisation.create_contourage_cible_menu()
 
 
     def OnSelectColor(self, ROI_id):
@@ -641,24 +611,16 @@ class DicomContourage(tk.Frame):
         self.dicom_navigation.refresh()
 
 
-    def OnUpdateContourage(self, ROI_id, type_hdv):
+    def OnUpdateContourage(self, ROI_id):
         if (self.dict_lines[ROI_id]['cum'].get() == 1 or self.dict_lines[ROI_id]['diff'].get() == 1):
-            # Une checkbox cochee
-            self.add_contourage(ROI_id, self.dict_lines[ROI_id]['name'], self.dict_lines[ROI_id]['color'])
+            self.add_contourage(ROI_id, \
+                                self.dict_lines[ROI_id]['name'], \
+                                self.dict_lines[ROI_id]['color'])
         elif (self.dict_lines[ROI_id]['cum'].get() == 0 and self.dict_lines[ROI_id]['diff'].get() == 0):
-            # Les deux checbox decochees
             self.remove_contourage(ROI_id)
+        else:
+            return
 
-        # Dose mode, on met a jour l'HDV
-        dicom_hdv = self.dicom_navigation.parent.dicom_right_window.dicom_hdv
-        
-        if self.dicom_navigation.slice.get_dose_mode() == 1:
-            if (self.dict_lines[ROI_id]['cum'].get() == 1 or self.dict_lines[ROI_id]['diff'].get() == 1):
-                dicom_hdv.add_hdv(ROI_id, type_hdv)
-        
-            if (self.dict_lines[ROI_id]['cum'].get() == 0 or self.dict_lines[ROI_id]['diff'].get() == 0):
-                dicom_hdv.remove_hdv(ROI_id, type_hdv)
-        
         self.dicom_navigation.refresh()
         
                 
@@ -684,10 +646,10 @@ class DicomContourage(tk.Frame):
 
 
 class DicomPrevisualisation(tk.Frame):
-    def __init__(self, parent, dicom_navigation):
+    def __init__(self, parent):
         tk.Frame.__init__(self, parent)
         self.parent = parent
-        self.dicom_navigation = dicom_navigation
+        self.dicom_navigation = self.parent.parent.dicom_navigation
         self.initialize()
 
     def initialize(self):
@@ -708,164 +670,53 @@ class DicomPrevisualisation(tk.Frame):
         om = tk.OptionMenu(self, self.algorithme, *liste_options)
         om.grid(row=1, column=1, sticky=tk.E)
 
-        # Choix rayon 
-        self.rayon_x = tk.DoubleVar(value=0.6)
-        tk.Label(self, text="Rayon (x, y)").grid(row=2, column=0, stick=tk.W)
-        e = tk.Entry(self, justify=tk.RIGHT, textvariable=self.rayon_x, width=3)
-        e.grid(row=2, column=1)
-
-        self.rayon_y = tk.DoubleVar(value=0.6)
-        e = tk.Entry(self, justify=tk.RIGHT, textvariable=self.rayon_y, width=3)
+        # Choix rayon
+        self.rayon = tk.DoubleVar(value=0.6)
+        tk.Label(self, text="Rayon").grid(row=2, column=0, stick=tk.W)
+        e = tk.Entry(self, justify=tk.RIGHT, textvariable=self.rayon, width=7)
         e.grid(row=2, column=1, sticky=tk.E)
 
         # Choix energie
-        self.energie = tk.DoubleVar(value=0.03)
+        self.energie = tk.DoubleVar(value=1E20)
         tk.Label(self, text="Energie").grid(row=3, column=0, stick=tk.W)
         e = tk.Entry(self, justify=tk.RIGHT, textvariable=self.energie, width=7)
         e.grid(row=3, column=1, sticky=tk.E)
 
-        # Choix intensite
-        self.energie = tk.DoubleVar(value=1E20)
-        tk.Label(self, text="Intensité").grid(row=4, column=0, stick=tk.W)
-        e = tk.Entry(self, justify=tk.RIGHT, textvariable=self.energie, width=7)
-        e.grid(row=4, column=1, sticky=tk.E)
-
         # Granularité source
-        self.granularite_source = tk.IntVar(value=5)
-        tk.Label(self, text="Granularité source").grid(row=5, column=0, stick=tk.W)
-        e = tk.Entry(self, justify=tk.RIGHT, textvariable=self.granularite_source, width=7)
-        e.grid(row=5, column=1, sticky=tk.E)
-
-        # Raffinement source
-        self.raffinement = tk.IntVar(value=1)
-        tk.Label(self, text="Raffinement").grid(row=6, column=0, stick=tk.W)
-        e = tk.Entry(self, justify=tk.RIGHT, textvariable=self.raffinement, width=7)
-        e.grid(row=6, column=1, sticky=tk.E)
+        self.granularite = tk.IntVar(value=5)
+        tk.Label(self, text="Granularité source").grid(row=4, column=0, stick=tk.W)
+        e = tk.Entry(self, justify=tk.RIGHT, textvariable=self.granularite, width=7)
+        e.grid(row=4, column=1, sticky=tk.E)
 
         # Zone d'influence (mm)
         self.zone_influence = tk.DoubleVar(value=50)
-        tk.Label(self, text="Zone d'influence (mm)").grid(row=7, column=0, stick=tk.W)
+        tk.Label(self, text="Zone d'influence (mm)").grid(row=5, column=0, stick=tk.W)
         e = tk.Entry(self, justify=tk.RIGHT, textvariable=self.zone_influence, width=7)
-        e.grid(row=7, column=1, sticky=tk.E)
+        e.grid(row=5, column=1, sticky=tk.E)
 
         # Contourage cible
-        tk.Label(self, text="Contourage cible").grid(row=8, column=0, sticky=tk.W)
-        liste_options = [""]
-
-        self.contourage_cible_id = None
-        self.contourage_cible_name = tk.StringVar(value="ROI")
-        
-        om = tk.OptionMenu(self, self.contourage_cible_name, *liste_options)
-        om.config(width=5)
-        om.grid(row=8, column=1, sticky=tk.E)
-
-        # Affichage sources precalculees
-        tk.Label(self, text="Affichage des sources précalculées").grid(row=9, column=0, sticky=tk.W)
-        self.checkbox_display_sources = tk.IntVar()
-        checkbox = tk.Checkbutton(self, variable=self.checkbox_display_sources, \
-                                  command=self.OnUpdateAfficherSources)
-        checkbox.grid(row=9, column=1, sticky=tk.E)
-
-        # Affichage de la zone d'influence
-        tk.Label(self, text="Affichage de la zone d'influence").grid(row=10, column=0, sticky=tk.W)
-        self.checkbox_display_area = tk.IntVar()
-        self.grey_checkbox = tk.Checkbutton(self, variable=self.checkbox_display_area, \
-                                  state=tk.DISABLED, \
-                                  command=self.OnUpdateAfficherZoneInfluence)
-        self.grey_checkbox.grid(row=10, column=1, sticky=tk.E)
-
-        # Prévisualisation plusieurs slices
-        tk.Label(self, text="Prévisualisation plusieurs slices").grid(row=11, column=0, sticky=tk.W)
-        self.checkbox_all_slices = tk.IntVar()
-        checkbox = tk.Checkbutton(self, variable=self.checkbox_all_slices, \
-                                  command=None)
-        checkbox.grid(row=11, column=1, sticky=tk.E)
+        tk.Label(self, text="Contourage cible").grid(row=6, column=0, sticky=tk.W)
+                 
+        liste_options = ('M1', 'M2')
+        self.contourage_cible = tk.StringVar(value=liste_options[0])
+        om = tk.OptionMenu(self, self.contourage_cible, *liste_options)
+        om.grid(row=6, column=1, sticky=tk.E)
 
         # Bouton pour lancer la previsualisation
         img = Image.open("../resources/cog.gif")
         self.button_previsualisation = ImageTk.PhotoImage(img)
         open_button = tk.Button(self, text="Lancer la previsualisation", image=self.button_previsualisation, \
-                                relief=tk.RAISED, compound="right", command=self.OnLancerPrevisualisation)
-        open_button.grid(row=12, padx=2, pady=2, sticky=tk.W)
-
-        # Bouton pour lancer les calculs finaux
-        img = Image.open("../resources/cog.gif")
-        self.button_calculs = ImageTk.PhotoImage(img)
-        open_button = tk.Button(self, text="Lancer calculs finaux", image=self.button_calculs, \
                                 relief=tk.RAISED, compound="right", command=None)
-        open_button.grid(row=13, padx=2, pady=2, sticky=tk.W)
+        open_button.grid(row=7, padx=2, pady=2)
 
 
     def OnSelectWorkingDirectory(self):
-        working_directory = tkFileDialog.askdirectory(initialdir="~/tmp/")
+        str = tkFileDialog.askdirectory()
         
-        if (working_directory == ""):
+        if (str == ""):
             return
     
-        self.dicom_navigation.set_working_directory(working_directory)
-
-
-    def OnUpdateAfficherSources(self):
-        if self.checkbox_display_sources.get() == 1:
-            self.grey_checkbox.config(state=tk.NORMAL)
-        else:
-            self.checkbox_display_area.set(0)
-            self.grey_checkbox.config(state=tk.DISABLED)
-
-        self.dicom_navigation.dicom_parser.set_granularite_source(self.granularite_source.get())
-        self.dicom_navigation.display_settings["sources"] = self.checkbox_display_sources.get()
-        self.dicom_navigation.refresh()
-
-
-    def OnUpdateAfficherZoneInfluence(self):
-        self.dicom_navigation.dicom_parser.set_zone_influence(self.zone_influence.get())
-        self.dicom_navigation.display_settings["domaine"] = self.checkbox_display_area.get()
-        self.dicom_navigation.refresh()
-
-
-    def OnLancerPrevisualisation(self):
-        slice = self.dicom_navigation.slice
-        dicom_hdv = self.dicom_navigation.parent.dicom_right_window.dicom_hdv
-
-        self.dicom_navigation.dicom_parser.set_granularite_source(self.granularite_source.get())
-        self.dicom_navigation.dicom_parser.set_zone_influence(self.zone_influence.get())
-        slice.preparatifs_precalculs()
-        
-        if slice.dose_already_calculated():
-            slice.set_dose_mode_ON()
-            return
-
-
-    def OnUpdateContourageCible(self, ROIname):
-        # On enleve le precedant contourage cible s'il etait present
-        if self.contourage_cible_id != None:
-            self.dicom_navigation.parent.dicom_left_window.dicom_contourage.remove_contourage(self.contourage_cible_id)
-        
-        # Puis on le met a jour
-        self.contourage_cible_id = self.ROIname_to_ROIid(ROIname)
-        self.dicom_navigation.dicom_parser.set_contourage_cible_id(self.contourage_cible_id)
-        self.dicom_navigation.parent.dicom_left_window.dicom_contourage.add_contourage(self.contourage_cible_id, ROIname, "orange")
-        self.dicom_navigation.refresh()
-
-
-    def create_contourage_cible_menu(self):
-        # Reverse ROI dictionnary for optionmenu
-        set_ROI = self.dicom_navigation.dicom_parser.get_set_ROI()
-        self.ROI_name_LUT = dict((v['name'], k) for k, v in set_ROI.iteritems())
-        
-        liste_options = self.ROI_name_LUT.keys()
-        initial_ROI_name = "ROI"
-        self.contourage_cible_name.set(initial_ROI_name)
-        
-        om = tk.OptionMenu(self, self.contourage_cible_name, *liste_options, command=self.OnUpdateContourageCible)
-        om.config(width=5, anchor='w')
-        om.grid(row=8, column=1, sticky=tk.E)
-
-
-    def ROIname_to_ROIid(self, ROIname):
-        return self.ROI_name_LUT[ROIname]
-        
-        
+        self.working_directory = str
 
 
 class OldMainWindow(tk.Frame):

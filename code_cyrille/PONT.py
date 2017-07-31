@@ -23,10 +23,10 @@ class Doses_from_matrice:
 
 
 class Contourage_from_matrice:
-    def __init__(self, matrice_booleenne, nom_ROI, ROI_id):
+    def __init__(self, matrice_booleenne, ROI_id):
         self.matrice = matrice_booleenne
         self.dim = matrice_booleenne.shape
-        self.nom = nom_ROI
+        self.nom = 'ROI : ' + str(ROI_id)
         self.ROI_id = ROI_id
     def afficher(self):
         plt.imshow(self.matrice, origin='lower')

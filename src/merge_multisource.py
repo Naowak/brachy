@@ -5,16 +5,16 @@ import matplotlib.pyplot as plt
 
 from dose_parser import *
 
-def get_merged_file(filename_head, vecteur_sources):    
+def get_merged_file(filename_header, vecteur_sources):    
     # Premiere source
-    current_filename = filename_head + "_dose_source_" + \
+    current_filename = filename_header + "dose_source_" + \
                        str(vecteur_sources[0]).zfill(3) + ".dat"
     res = np.genfromtxt(current_filename)
     sum_dose = res[:,3]
 
     # On parcourt les sources et on fait leur fusion
     for source_number in vecteur_sources:
-        current_filename = filename_head + "_dose_source_" + \
+        current_filename = filename_head + "dose_source_" + \
                            str(source_number).zfill(3) + ".dat"
         sum_dose += np.genfromtxt(current_filename)[:,3]
 
@@ -48,7 +48,7 @@ def get_dose_matrix_merged(filename_head, vecteur_sources, n_points):
 
 def dose_matrix_add_source(filename_head, dose_matrix, source_id):    
     # On recupere la matrice des doses de la source a ajouter
-    filename_dose = filename_head + "_dose_source_" + str(source_id).zfill(3) + ".dat"
+    filename_dose = filename_head + "dose_source_" + str(source_id).zfill(3) + ".dat"
     f = open(filename_dose, "r")
     (coord, dim_vector, n_points, maillage) = get_header_info(f)
     dose_matrix_toadd = get_dose(f, n_points)
@@ -61,7 +61,7 @@ def dose_matrix_add_source(filename_head, dose_matrix, source_id):
 
 def dose_matrix_remove_source(filename_head, dose_matrix, source_id):
     # On recupere la matrice des doses de la source a ajouter
-    filename_dose = filename_head + "_dose_source_" + str(source_id).zfill(3) + ".dat"
+    filename_dose = filename_head + "dose_source_" + str(source_id).zfill(3) + ".dat"
     f = open(filename_dose, "r")
     (coord, dim_vector, n_points, maillage) = get_header_info(f)
     dose_matrix_toremove = get_dose(f, n_points)

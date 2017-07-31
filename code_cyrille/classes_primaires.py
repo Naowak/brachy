@@ -62,8 +62,8 @@ class contourage_a_partir_de_fichier:
 
 
 
-class doses:
-    ''' Classe contenant les infos pertinentes sur une matrice de doses donnée en argument
+class Doses:
+    """ Classe contenant les infos pertinentes sur une matrice de doses donnée en argument
     *** DOIT PRÉALABLEMENT AVOIR ÉTÉ AJUSTÉE À LA TAILLLE DE LA MATRICE DE CONTOURAGE (ne pas prendre la matrice réduite) ***
 
     Arguments :
@@ -78,7 +78,7 @@ class doses:
     - slice_id : identifiant de la slice (donnée en argument) de laquelle a été tiré les doses
     - dim : doublet (y,x) donnant le nombre de points en x et y de la matrice
 
-    À AJOUTER : D'AUTRES CARACTÉRISTIQUES SUR LA MATRICE DE DOSES, COMME LA TAILLE DES VOXELS, etc'''
+    À AJOUTER : D'AUTRES CARACTÉRISTIQUES SUR LA MATRICE DE DOSES, COMME LA TAILLE DES VOXELS, etc"""
     def __init__(self,matrice_doses, slice_id=None):
         self.matrice = array([matrice_doses])
         self.slice_id = slice_id
@@ -90,7 +90,7 @@ class doses:
 
 
 class classe_contourage:
-    ''' Classe contenant les infos pertinentes sur une matrice booléenne du contourage donnée en argument
+    """ Classe contenant les infos pertinentes sur une matrice booléenne du contourage donnée en argument
 
     Arguments :
 
@@ -104,7 +104,7 @@ class classe_contourage:
     - nom : nom de l'organe donné en argument.
     - matrice : matrice adaptée au contourage et qui contient les doses.
     - id : identifiant de la région d'intérêt dans la slice donnée. ex : 1.2.840.113619.2.278.3.176243969.786.1462166632.515.88. None par défaut.
-    - couleur : couleur de la courbe qui sera tracée pour cet organe.'''
+    - couleur : couleur de la courbe qui sera tracée pour cet organe."""
     def __init__(self,matrice_contourage,nom_organe='Écrire nom organe',decoupage_id=None, couleur='Entrer couleur'):
         self.nom = nom_organe
         self.matrice = array([matrice_contourage])
@@ -118,7 +118,7 @@ class classe_contourage:
 
 
 
-class doses_dans_contourage:
+class Doses_dans_contourage:
 
     """ Permet de comparer un dépôt de dose et un contourage et d'extraire les doses qui font parti de ce même contourage
 
@@ -174,7 +174,7 @@ class doses_dans_contourage:
 
 
 
-class hdv_cumulatif:
+class HDV_cumulatif:
 
     """ Permet de créer les données nécessaire au traçage d'une HDV cumulatif à partir de la liste des doses contenues dans un contourage.
         NOTE : LES DONNÉES CRÉÉES DANS L'AXE DES VOLUMES SONT EN NOMBRE DE VOXELS. POUR AVOIR UN VOLUME RELATIF OU ABSOLU, IL FAUT MULTIPLIER
@@ -201,32 +201,39 @@ class hdv_cumulatif:
     def __init__(self,classe_doses_dans_contourage,n):
         self.v_voxel = classe_doses_dans_contourage.v_voxel
 
-        dose_max = classe_doses_dans_contourage.dose_max
-        nb_voxels = classe_doses_dans_contourage.nb_voxels        # Nombre de voxels contenus dans le découpage
-        axe_doses = linspace(0,dose_max,n+1)  # On crée l'axe des points contenant les doses
-        axe_volume = [nb_voxels]  # On crée d'abord l'axe des volumes en nombre de voxels. On multipliera ensuite par le facteur approprié
-                                  # tout dépendant si l'on veut le volume relatif ou absolu.
+        self.dose_max = classe_doses_dans_contourage.dose_max
+        self.nb_voxels = classe_doses_dans_contourage.nb_voxels        # Nombre de voxels contenus dans le découpage
         liste_doses_dans_contourage = classe_doses_dans_contourage.liste
-
-        iddc = 0
-
-        for iad in range(1,n+1):  # On lance une boucle 'FOR' sur tous les éléments dans la liste 'axe_dose'.
-            while True:
-                if liste_doses_dans_contourage[iddc] < axe_doses[iad]:  # On compte le nombre de doses
-                                                                                                            #  dans le découpage qui sont
-                                                                                                            #  inférieures à une certaine valeur
-                                                                                                # d'indice 'i' dans l'axe des doses créée plus tôt.
-                    iddc += 1
-                else :
-                    axe_volume.append(nb_voxels-iddc)
-                    break  # On arrête la boucle si on excède un certaine valeur
-        axe_volume = array(append(axe_volume,[0]),dtype=float)
-        self.axe_volume = axe_volume
-        self.axe_doses = append(axe_doses,[dose_max])
-        self.dose_max = dose_max
-        self.nb_voxels = nb_voxels
         self.n = n
         self.nom = classe_doses_dans_contourage.nom
+
+        if self.dose_max != 0:
+            axe_doses = linspace(0,self.dose_max,n+1)  # On crée l'axe des points contenant les doses
+            axe_volume = [self.nb_voxels]  # On crée d'abord l'axe des volumes en nombre de voxels. On multipliera ensuite par le facteur approprié
+                                      # tout dépendant si l'on veut le volume relatif ou absolu.
+
+
+            iddc = 0
+
+            for iad in range(1,n+1):  # On lance une boucle 'FOR' sur tous les éléments dans la liste 'axe_dose'.
+                while True:
+                    if liste_doses_dans_contourage[iddc] < axe_doses[iad]:  # On compte le nombre de doses
+                                                                                                                #  dans le découpage qui sont
+                                                                                                                #  inférieures à une certaine valeur
+                                                                                                    # d'indice 'i' dans l'axe des doses créée plus tôt.
+                        iddc += 1
+                    else :
+                        axe_volume.append(self.nb_voxels-iddc)
+                        break  # On arrête la boucle si on excède un certaine valeur
+            axe_volume = array(append(axe_volume,[0]),dtype=float)
+            self.axe_volume = axe_volume
+            self.axe_doses = append(axe_doses,[self.dose_max])
+
+        else:
+            self.axe_doses = array([])
+            self.axe_volume = array([])
+            print 'Contourage de la ROI ' + self.nom + """ situé à l'extérieur de la zone réduite."""
+
 
     def afficher(self):
         plt.plot(self.axe_doses,self.axe_volume)
@@ -236,7 +243,7 @@ class hdv_cumulatif:
 
 
 
-class hdv_differentiel:
+class HDV_differentiel:
 
     """ Permet de créer les données nécessaire au traçage d'une HDV différentiel à partir de la liste des doses contenues dans un contourage.
         NOTE : LES DONNÉES CRÉÉES DANS L'AXE DES VOLUMES SONT EN NOMBRE DE VOXELS. POUR AVOIR UN VOLUME RELATIF OU ABSOLU, IL FAUT MULTIPLIER
@@ -263,52 +270,78 @@ class hdv_differentiel:
 
     def __init__(self,classe_doses_dans_contourage,n):
         self.v_voxel = classe_doses_dans_contourage.v_voxel
-        dose_max = classe_doses_dans_contourage.dose_max
-        nb_voxels = len(classe_doses_dans_contourage.liste)
-        axe_doses = linspace(0,dose_max,n+1)
-        axe_volume = []
-
-        self.nb_voxels = nb_voxels
-
-        a = 1  # Indice dans l'axe des doses reçues (linspace)
-        c = 0  # Compteur du nombre de doses dans un certain intervalle
-        d = 0  # Indice dans la liste de doses dans le volume (ex: de 1 à 822)
-
-        while True:
-            if classe_doses_dans_contourage.liste[d] <= axe_doses[a]:
-                c += 1
-                d += 1
-                if d == nb_voxels:
-                    axe_volume.append(c)
-                    break
-            else:
-                axe_volume.append(c)
-                a += 1
-                c = 0
-
-        def doubler_elements_liste(liste):
-            nouvelle_liste = []
-            for element in liste:
-                nouvelle_liste += [element]*2
-            return nouvelle_liste
-
-        self.axe_doses = array(doubler_elements_liste(axe_doses)[1:])
-        self.axe_volume = array(doubler_elements_liste(axe_volume) + [0])
-
-
         self.dose_max = classe_doses_dans_contourage.dose_max
+        self.nb_voxels = classe_doses_dans_contourage.nb_voxels
+
         self.n = n
         self.nom = classe_doses_dans_contourage.nom
+
+        if self.dose_max != 0:
+            axe_doses = linspace(0,self.dose_max,n+1)
+            axe_volume = []
+
+            a = 1  # Indice dans l'axe des doses reçues (linspace)
+            c = 0  # Compteur du nombre de doses dans un certain intervalle
+            d = 0  # Indice dans la liste de doses dans le volume (ex: de 1 à 822)
+
+            while True:
+                if classe_doses_dans_contourage.liste[d] <= axe_doses[a]:
+                    c += 1
+                    d += 1
+                    if d == self.nb_voxels:
+                        axe_volume.append(c)
+                        break
+                else:
+                    axe_volume.append(c)
+                    a += 1
+                    c = 0
+
+            def doubler_elements_liste(liste):
+                nouvelle_liste = []
+                for element in liste:
+                    nouvelle_liste += [element]*2
+                return nouvelle_liste
+
+            self.axe_doses = array(doubler_elements_liste(axe_doses)[1:])
+            self.axe_volume = array(doubler_elements_liste(axe_volume) + [0])
+
+        else:
+            self.axe_doses = array([])
+            self.axe_volume = array([])
+            print 'Contourage de la ROI ' + self.nom + """ situé à l'extérieur de la zone réduite."""
+
 
     def afficher(self):
         plt.plot(self.axe_doses, self.axe_volume)
         plt.show()
 
 
+class Lecteur_fichier_contraintes:
+    def __init__(self, fichier_contraintes):
+        col_start = 0
+        self.dict_contraintes = {}
+        lignes_fichier = fichier_contraintes.readlines()[col_start:]
+
+        get_ROI_id = True
+        for ligne in lignes_fichier:
+            if get_ROI_id == True:
+                ROI_id = int(ligne[:-1])
+                self.dict_contraintes[ROI_id] = {}
+                get_ROI_id = False
+            elif ligne != '\n':
+                mots = ligne.split(':')
+                dp = mots[0].split()[0]
+                contrainte = float(mots[1].split()[0])
+                self.dict_contraintes[ROI_id][dp] = contrainte
+            else:
+                get_ROI_id = True
+        fichier_contraintes.close()
 
 
 if __name__ == '__main__':
 
     # TESTS
-    pass
+    f = open('cf.txt', 'r')
+    t = Lecteur_fichier_contraintes(f)
+    print t.dict_contraintes
 

@@ -144,11 +144,11 @@ def ajouter_header(f, n_points, dimensions):
     f.write(res)
 
 
-def ajouter_densite(f, filename_header="constante"):
-    if (filename_header == "constante"):
+def ajouter_densite(f, densite_lu):
+    if not(densite_lu):
         res = "-densite constante 1.0\n"
     else:
-        res = "-densite lu_HU " + "densite_hu_" + filename_header + ".don\n"
+        res = "-densite lu_HU densite_hu.don\n"
 
     f.write(res)
 
@@ -212,7 +212,7 @@ def ajouter_source(f, groupe, type_particule, direction_M1, volume_sphere, spect
     f.write(res)
     
 
-def lancer_generation(filename_header, sources, n_points, dimensions, rayon, direction_M1, spectre_mono, densite_lu=False):
+def lancer_generation(filename, sources, n_points, dimensions, rayon, direction_M1, spectre_mono, densite_lu=False):
     """ Lance la generation d'un fichier de configuration .don
     On place n_sources sources réparties uniformement sur le maillage
     Une source est placée si elle est située dans la zone contourée avec une densité cohérente
@@ -239,14 +239,10 @@ def lancer_generation(filename_header, sources, n_points, dimensions, rayon, dir
     z = Lx/2.0
 
     # Ecriture du fichier de configuration .don
-    f  = open(filename_header + ".don", "w")
+    f  = open(filename, "w")
 
     ajouter_header(f, n_points, dimensions)
-
-    if (densite_lu):
-        ajouter_densite(f, filename_header=filename_header)
-    else:
-        ajouter_densite(f, filename_header="constante")
+    ajouter_densite(f, densite_lu)
 
     # On ajoute les sources dans le fichier .don
     groupe = 1
