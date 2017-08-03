@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import dicom
 import numpy as np
 import matplotlib.pyplot as plt
@@ -28,7 +29,7 @@ class Slice:
 
         # Contourage
         self.ROI_id = None
-        self.contourage = None
+        self.contourages = None
         self.appartenance_contourage = None
 
         # Affichage ou non
@@ -42,8 +43,44 @@ class Slice:
         self.dose_matrix = None
 
 
+    def get_slice_id(self):
+        return self.slice_id
+
+
+    def get_HU_array(self):
+        return self.HU_array
+
+
+    def get_densite(self):
+        return self.densite
+
+
+    def get_sources(self):
+        return self.sources
+
+    
+    def get_dic_sources_displayed(self):
+        return self.dic_sources_displayed
+
+
+    def get_appartenance_contourage(self):
+        return self.appartenance_contourage
+
+
+    def get_domaine(self):
+        return self.domaine
+
+
+    def get_slice_directory(self):
+        return self.slice_directory
+    
+
     def set_working_directory(self, working_directory):
         self.slice_directory = working_directory + "/slice_" + str(self.slice_id).zfill(3) + "/"
+
+        # Creation du repertoire pour la slice s'il n'existe pas deja
+        if not os.path.exists(self.slice_directory):
+            os.makedirs(self.slice_directory)
         
 
     def set_contourages(self, contourages):
@@ -56,12 +93,11 @@ class Slice:
         # On lit les contourages
         for (ROI_id, contourage) in contourages.iteritems():
             contourage['array'] = self.dicomparser.get_DICOM_contourage(ROI_id, self.slice_id)
-
         
 
     def preparatifs_precalculs(self):
-        self.densite = self.dicomparser.get_DICOM_densite(self.dicom_slice)
-        self.HU_array = self.dicomparser.get_DICOM_hounsfield(self.dicom_slice)
+        self.densite = self.dicomparser.get_DICOM_densite(self.slice_id)
+        self.HU_array = self.dicomparser.get_DICOM_hounsfield(self.slice_id)
 
         self.appartenance_contourage = get_appartenance_contourage(self.dicomparser.n_points, \
                                                                    self.dicomparser.maillage, \
@@ -78,8 +114,8 @@ class Slice:
     def refresh_sources(self):
         # First time
         if (self.densite is None or self.HU_array is None):
-            self.densite = self.dicomparser.get_DICOM_densite(self.dicom_slice)
-            self.HU_array = self.dicomparser.get_DICOM_hounsfield(self.dicom_slice)
+            self.densite = self.dicomparser.get_DICOM_densite(self.slice_id)
+            self.HU_array = self.dicomparser.get_DICOM_hounsfield(self.slice_id)
 
         self.appartenance_contourage = get_appartenance_contourage(self.dicomparser.n_points, \
                                                                    self.dicomparser.maillage, \

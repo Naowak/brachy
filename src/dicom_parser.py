@@ -251,11 +251,12 @@ class DicomParser:
                (pixel - association_pixel_densite[ig][0]) + association_pixel_densite[ig][1]
     
 
-    def get_DICOM_densite(self, dicom_slice):
+    def get_DICOM_densite(self, slice_id):
         """ Permet de recuperer les informations sur la densité d'une image DICOM
         [Return] Une matrice 2D indiquant la densité en chaque point
         [Params] dicom_slice_id : identifiant de la coupe
         """
+        dicom_slice = self.slices[slice_id].dicom_slice
         pixel_array = dicom_slice.pixel_array
         (lf, mf, nf) = self.n_points
         
@@ -268,13 +269,14 @@ class DicomParser:
         return densite
 
 
-    def get_DICOM_hounsfield(self, dicom_slice):
+    def get_DICOM_hounsfield(self, slice_id):
         """ Permet de convertir la matrice de pixels au format Hounsfield Unit
         [Return] Une matrice 2D indiquant la valeur sur l'échelle de hounsfield en chaque point
         [Params] - dicom_slice_id : identifiant de la coupe
         [NB] Formule : hu = pixel_value * slope + intercept
         """
         # Recuperation des informations
+        dicom_slice = self.slices[slice_id].dicom_slice
         pixel_array = dicom_slice.pixel_array
         slope = dicom_slice.RescaleSlope
         intercept = dicom_slice.RescaleIntercept
@@ -475,18 +477,17 @@ class DicomParser:
 ###################### Generation des fichiers pour le calcul de dose ######################
 
 
-    def generate_DICOM_hounsfield(self, HU_array):
+    def generate_DICOM_hounsfield(self, filename_hounsfield, HU_array):
         """ Permet la génération du fichier coeff_name.don contenant les données HU lues par KIDS
         [Params]
         - filename_header : le nom du cas traité
         - HU_array : matrice 2D retournée par get_DICOM_hounsfield
         """
-        filename_coeff = "densite_hu.don"
-        np.savetxt(filename_coeff, HU_array,  fmt='%i')
-        print filename_coeff + " successfully generated"
+        np.savetxt(filename_hounsfield, HU_array,  fmt='%i')
+        print filename_hounsfield + " successfully generated"
 
     
-    def generate_DICOM_don(self, slice_id, contourage, zone_influence, affichage=True):
+    def generate_DICOM_don_old(self, slice_id, contourage, zone_influence, affichage=True):
         """ Lance la generation d'un fichier .don pour un fichier DICOM avec contourage donné
         [Params]
         - filename_header : le nom du cas traité
@@ -500,8 +501,8 @@ class DicomParser:
         spectre_mono = (1e20, 0.03)
 
         # Densite
-        HU_array = self.get_DICOM_hounsfield(self.slices[slice_id].dicom_slice)
-        densite = self.get_DICOM_densite(self.slices[slice_id].dicom_slice)
+        HU_array = self.get_DICOM_hounsfield(slice_id)
+        densite = self.get_DICOM_densite(slice_id)
 
         # Sources
         appartenance_contourage = get_appartenance_contourage(self.n_points, self.maillage, contourage)
@@ -522,8 +523,53 @@ class DicomParser:
 
         # Generation (coefficients HU et fichier de config .don)
         self.generate_DICOM_hounsfield(domaine_HU_array)
-        filename = self.working_directory + "slice_" + str(slice_id).zfill(3) + "/dicom_KIDS.don"
+        filename = self.working_directory + "/slice_" + str(slice_id).zfill(3) + "/KIDS.don"
         lancer_generation(filename, domaine_sources, domaine_n_points, domaine_dimensions, rayon, direction_M1, spectre_mono, densite_lu=True)
+
+
+    def generate_DICOM_previsualisation(self, slice_id, working_directory, options):
+        """ Lance la generation d'un fichier .don pour un fichier DICOM avec contourage donné
+        [Params]
+        - filename_header : le nom du cas traité
+        - slice_id : identifiant de la coupe
+        - contourage : une sequence de points representant un polygone ferme
+        """
+        slice = self.slices[slice_id]
+        
+        # Parametres arbitraires (a changer)
+        #rayon = (0.6, 0.6, 0.6)
+        #direction_M1 = (0., 0., 0.)
+        #spectre_mono = (1e20, 0.03)
+
+        # Densite
+        HU_array = slice.get_HU_array()
+
+        # Sources
+        sources = slice.get_sources()
+
+        # Domaine minimal
+        domaine = slice.get_domaine()
+            
+        # Reduction des calculs sur le domaine        
+        domaine_n_points = get_domaine_n_points(domaine, self.n_points)
+        domaine_dimensions = get_domaine_dimensions(domaine, self.dimensions, self.maillage)
+        domaine_sources = get_domaine_sources(domaine, sources)
+        domaine_HU_array = get_domaine_HU_array(domaine, HU_array)
+
+        # Generation du fichier correspondant a la densite HU
+        filename_hounsfield = working_directory + "/slice_" + str(slice_id).zfill(3) + "/densite_hu.don"
+        self.generate_DICOM_hounsfield(filename_hounsfield, domaine_HU_array)
+
+        # Generation fichier configuration DON
+        filename = working_directory + "/slice_" + str(slice_id).zfill(3) + "/config_KIDS.don"
+        lancer_generation(filename, domaine_sources, domaine_n_points, domaine_dimensions, options, densite_lu=True)
+
+
+    def generate_DICOM_calculs_finaux(self):
+        return 1
+
+
+    
 
 
 ########################### Affichage ###########################

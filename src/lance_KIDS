@@ -1,0 +1,11 @@
+trap ' ' 1 2 3
+
+KIDS_SOURCE=$(dirname $0)/Source_KIDS
+
+KDON=${1:-KIDS.don}
+
+${KIDS_SOURCE}/../lance_cepxs $KDON
+
+${KIDS_SOURCE}/KIDS.out $KDON
+
+rm -f *_to_*.dat *_edep_*.dat n_materiaux.dat energie.don

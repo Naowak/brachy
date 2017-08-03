@@ -212,7 +212,7 @@ def ajouter_source(f, groupe, type_particule, direction_M1, volume_sphere, spect
     f.write(res)
     
 
-def lancer_generation(filename, sources, n_points, dimensions, rayon, direction_M1, spectre_mono, densite_lu=False):
+def lancer_generation(filename, sources, n_points, dimensions, options, densite_lu=False):
     """ Lance la generation d'un fichier de configuration .don
     On place n_sources sources réparties uniformement sur le maillage
     Une source est placée si elle est située dans la zone contourée avec une densité cohérente
@@ -232,8 +232,11 @@ def lancer_generation(filename, sources, n_points, dimensions, rayon, direction_
     # Recuperation parametres
     (lf, mf, nf) = n_points
     (Lx, Ly, Lz) = dimensions
-    (rx, ry, rz) = rayon
     (maillage_x, maillage_y, maillage_z) = get_maillage(n_points, dimensions)
+
+    (rx, ry, rz) = options['rayon']
+    direction_M1 = options['direction_M1']
+    spectre_mono = options['spectre_mono']
 
     # ID slice (choix arbitraire)
     z = Lx/2.0
@@ -253,7 +256,7 @@ def lancer_generation(filename, sources, n_points, dimensions, rayon, direction_
                     
     ajouter_footer(f)
 
-    print filename_header + ".don successfully generated"
+    print filename + " successfully generated"
     f.close()
 
 

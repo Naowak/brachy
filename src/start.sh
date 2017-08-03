@@ -24,25 +24,11 @@ else
     EXEC="$(pwd)/lance_KIDS"
 
     # Nettoyage et creation du repertoire contenant les resultats
-    rm -rf $RESDIR 2> /dev/null
-    mkdir $RESDIR
-    mkdir $RESDIR/stock
-
-    # On copie le fichier densite_lu_filename s'il existe
-    if [ $# -eq 3 ]
-    then
-        cp $WORKDIR/$3 $RESDIR/stock
-    fi
+    rm -rf $SLICE_DIRECTORY/* 2> /dev/null
 
     # Lancement de M1
-    cd $RESDIR
-    $EXEC $WORKDIR/KIDS.don
-
-    # On renomme avec le header
-    for file in *.dat
-    do
-        mv $file $1_$file
-    done
+    cd $SLICE_DIRECTORY/
+    $EXEC $SLICE_DIRECTORY/config_KIDS.don
 
     exit 0
 fi
