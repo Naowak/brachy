@@ -47,6 +47,10 @@ class Slice:
         return self.slice_id
 
 
+    def get_pixel_array(self):
+        return self.dicom_slice.pixel_array
+
+
     def get_HU_array(self):
         return self.HU_array
 
@@ -242,7 +246,7 @@ class Slice:
         self.dose_matrix = domaine_to_matrix(self.dose_matrix, domaine_dose_matrix, self.domaine)
         
 
-    def update_DICOM_figure(self, figure, ax, display_settings):
+    def update_DICOM_figure(self, figure, ax, display_settings, vmin=None, vmax=None):
         # On regle l'affichage (car ou on cose puis decoche...)
         if display_settings["sources"] == 0:
             sources_displayed = None
@@ -267,6 +271,8 @@ class Slice:
                                              ax,
                                              "Affichage de la dose",
                                              self.slice_id,
+                                             vmin = vmin,
+                                             vmax = vmax,                                          
                                              dose_matrix = dose_matrix_displayed,
                                              contourages_array = self.contourages,
                                              sources = sources_displayed,

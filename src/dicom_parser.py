@@ -612,11 +612,12 @@ class DicomParser:
         fig, ax = plt.subplots(facecolor="black")
         ax.set_xlim([0, lf])
         ax.set_ylim([mf, 0])
+        fig.tight_layout() 
         
         return (fig, ax)
 
 
-    def update_DICOM_figure(self, fig, ax, title, slice_id, dose_matrix=None, contourage=None, contourages_array=None, sources=None, sources_points=None, domaine=None, details=False):
+    def update_DICOM_figure(self, fig, ax, title, slice_id, vmin=None, vmax=None, dose_matrix=None, contourage=None, contourages_array=None, sources=None, sources_points=None, domaine=None, details=False):
         """ Trace une figure representant un fichier DICOM avec eventuellement des doses et contourages
         [Params]
         - title : titre de la figure
@@ -651,7 +652,7 @@ class DicomParser:
             plt.axis('off')
             
         pixel_array = self.slices[slice_id].pixel_array
-        plot_DICOM_pixel_array(ax, pixel_array)
+        plot_DICOM_pixel_array(ax, pixel_array, vmin, vmax)
 
         if (dose_matrix is not None):
             plot_DICOM_dose(ax, dose_matrix, self.n_points)
@@ -697,13 +698,13 @@ class DicomParser:
 ###################### Plot informations  ######################
 
 
-def plot_DICOM_pixel_array(ax, pixel_array):
+def plot_DICOM_pixel_array(ax, pixel_array, vmin=None, vmax=None):
     """ Ajoute l'image DICOM à la figure
     [Params]
     - ax : l'axe correspondant à la figure
     - pixel_array : un tableau de pixel obtenu grace à DICOM_slice.pixel_array
     """
-    ax.imshow(pixel_array, origin='upper', cmap=plt.cm.bone)
+    ax.imshow(pixel_array, origin='upper', cmap=plt.cm.bone, vmin=vmin, vmax=vmax)
 
 
 def plot_DICOM_dose(ax, dose_matrix, n_points):

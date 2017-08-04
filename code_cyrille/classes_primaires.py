@@ -232,7 +232,7 @@ class HDV_cumulatif:
         else:
             self.axe_doses = array([])
             self.axe_volume = array([])
-            print 'Contourage de la ROI ' + self.nom + """ situé à l'extérieur de la zone réduite."""
+            #print 'Contourage de la ROI ' + self.nom + """ situé à l'extérieur de la zone réduite."""
 
 
     def afficher(self):

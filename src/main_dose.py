@@ -69,8 +69,16 @@ class DicomNavigation:
         self.contourages = {}
 
         # Affichage
-        self.figure = None
+        self.figure_dicom = None
+        self.figure_HDV = None
         self.display_settings = { "sources": 0, "domaine": 0, "miniature": 0 }
+
+        # Current state
+        self.var_etat_abs_rel = tk.StringVar(value="r")  # variable d'etat relatif/absolu
+
+        # Luminosite
+        self.vmin = tk.IntVar(value=0)
+        self.vmax = tk.IntVar(value=3000)
 
         # Note Style
         self.note_style = ttk.Style()
@@ -83,7 +91,7 @@ class DicomNavigation:
         # Loading
         self.dicom_parser = DicomParser(self.dicom_path)
         self.select_current_slice(90)
-        (self.figure, self.ax) = self.dicom_parser.get_DICOM_figure()
+        (self.figure_dicom, self.ax) = self.dicom_parser.get_DICOM_figure()
         self.get_dicom_contourage().load_contourage()
         self.refresh()
 
@@ -103,10 +111,15 @@ class DicomNavigation:
             self.slice.refresh_domaine()
             
         self.get_dicom_view().refresh_window()
+        self.get_dicom_info().refresh_info()
 
 
     def get_dicom_contourage(self):
         return self.parent.dicom_left_window.dicom_contourage
+
+
+    def get_dicom_info(self):
+        return self.parent.dicom_right_window.top_info
 
 
     def get_dicom_view(self):
@@ -189,12 +202,12 @@ class Toolbar(tk.Frame):
             if current_tab == "Dicom View":
                 self.dicom_navigation.parent.dicom_right_window.top_info.canvas_HDV.get_tk_widget().pack(side=tk.RIGHT, fill=tk.Y, expand=False)
             elif current_tab == "HDV":
-                self.dicom_navigation.parent.dicom_right_window.top_info.canvas_dicom.pack(side=tk.RIGHT, fill=tk.Y, expand=False)
+                self.dicom_navigation.parent.dicom_right_window.top_info.canvas_dicom.get_tk_widget().pack(side=tk.RIGHT, fill=tk.Y, expand=False)
 
             #self.dicom_navigation.parent.dicom_right_window.top_info.update()
         elif self.dicom_navigation.display_settings['miniature'] == 1:
             self.dicom_navigation.display_settings['miniature'] = 0
-            self.dicom_navigation.parent.dicom_right_window.top_info.canvas_dicom.pack_forget()
+            self.dicom_navigation.parent.dicom_right_window.top_info.canvas_dicom.get_tk_widget().pack_forget()
             self.dicom_navigation.parent.dicom_right_window.top_info.canvas_HDV.get_tk_widget().pack_forget()
             self.dicom_navigation.parent.dicom_right_window.top_info.top_canvas.config(width=600, height=50)
         
@@ -221,7 +234,7 @@ class DicomRightWindow(tk.Frame):
         self.initialize()
 
 
-    def initialize(self):
+    def initialize(self):        
         # Notebook (dicom window + hdv)
         self.notebook = ttk.Notebook(self, style='TNotebook')
         self.notebook.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
@@ -251,40 +264,45 @@ class DicomInfo(tk.Frame):
         figure_hdv = self.dicom_navigation.figure_hdv
         self.top_canvas = tk.Canvas(self, width=600, height=50, borderwidth=1, relief=tk.RAISED)
         self.top_canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=False)
-    
+        
         # Figure DVH
         self.canvas_HDV = FigureCanvasTkAgg(figure_hdv, self.top_canvas)
         self.canvas_HDV.show()
-        #self.canvas_HDV.get_tk_widget().pack(anchor=tk.E, fill=tk.Y, expand=False)
         self.canvas_HDV.get_tk_widget().configure(background='black',  highlightcolor='black',\
                                                   highlightbackground='black')
-        #self.canvas_HDV.get_tk_widget().pack_propagate(False)
-        self.canvas_HDV.get_tk_widget().config(width=500, height=300)
+        self.canvas_HDV.get_tk_widget().config(width=600, height=270)
         self.canvas_HDV._tkcanvas.config(highlightthickness=1, relief=tk.RAISED)
-        #self.canvas_HDV._tkcanvas.pack(fill=tk.Y, expand=False)
 
         # Figure Dicom
-        self.canvas_dicom = tk.Canvas(self.top_canvas, bg="black", width=500, height=300)
-        #self.canvas_dicom.pack(anchor=tk.E, fill=tk.Y, expand=False)
-
-
-    def tmp(self):
-        # Figure Dicom
-        figure_dicom = self.dicom_navigation.figure    
-
-        self.canvas_dicom = FigureCanvasTkAgg(figure_dicom, self.top_canvas)
-        self.canvas_dicom.show()
-        self.canvas_dicom.get_tk_widget().pack(side=tk.TOP)#, fill=tk.BOTH, expand=True)
-        self.canvas_dicom.get_tk_widget().configure(background='black',  highlightcolor='black',\
-                                                    highlightbackground='black')
-        self.canvas_dicom.get_tk_widget().pack_propagate(False)
-        self.canvas_dicom.get_tk_widget().config(width=500, height=300)
+        self.blank_canvas = True
+        (fig, axes) = plt.subplots(facecolor="black")
+        axes.set_axis_bgcolor("black")
+        axes.set_axis_off()
+        self.canvas_dicom = FigureCanvasTkAgg(fig, self.top_canvas)
+        self.canvas_dicom.get_tk_widget().config(width=500, height=270)
         self.canvas_dicom._tkcanvas.config(highlightthickness=1, relief=tk.RAISED)
 
+
+    def refresh_info(self):
+        # Figure Dicom
+        figure_dicom = self.dicom_navigation.figure_dicom    
+
+        # Creation initiale
+        if self.blank_canvas:
+            self.blank_canvas = False
+            self.canvas_dicom.get_tk_widget().destroy()
+            self.canvas_dicom = FigureCanvasTkAgg(figure_dicom, self.top_canvas)
+            self.canvas_dicom.show()
+            #self.canvas_dicom.get_tk_widget().pack(side=tk.TOP)#, fill=tk.BOTH, expand=True)
+            self.canvas_dicom.get_tk_widget().configure(background='black',  highlightcolor='black',\
+                                                        highlightbackground='black')
+            self.canvas_dicom.get_tk_widget().config(width=500, height=270)
+            self.canvas_dicom._tkcanvas.config(highlightthickness=1, relief=tk.RAISED)
+
+        # Update
+        self.canvas_dicom.draw()
+
         
-    
-
-
 class DicomView(tk.Frame):
     def __init__(self, parent, dicom_navigation):
         tk.Frame.__init__(self, parent, bg="black")
@@ -300,16 +318,36 @@ class DicomView(tk.Frame):
         
         # Drawing initial empty canvas
         self.blank_canvas = True
-        self.canvas = tk.Canvas(self, bg="black", width=600, height=600)
-        self.canvas.pack(side="bottom", fill="both", expand=True)
-        self.label_NW = None
-        self.label_SW = None
+        (fig, axes) = plt.subplots(facecolor="black")
+        axes.set_axis_bgcolor("black")
+        axes.set_axis_off()
+        self.canvas = FigureCanvasTkAgg(fig, self)
+        self.canvas.get_tk_widget().config(width=500, height=270)
+        self.canvas._tkcanvas.config(highlightthickness=1, relief=tk.RAISED)
+        #self.canvas = tk.Canvas(self, bg="black", width=600, height=600)
+        self.canvas.get_tk_widget().pack(side="bottom", fill="both", expand=True)
+
+
+        # Affichage des informations
+        widget = self.canvas.get_tk_widget()
+        
+        message = "Slice :\n" + \
+                  "Position :"
+        self.label_NW = tk.Label(widget, text=message, bg="black", fg="white", justify=tk.LEFT)
+        self.label_NW.pack(side=tk.TOP, anchor=tk.NW)
+
+        message = "Patient position :"
+        self.label_SW = tk.Label(widget, text=message, bg="black", fg="white", justify=tk.LEFT)
+        self.label_SW.pack(side=tk.BOTTOM, anchor=tk.SW)
+    
 
 
     def OnSwitchTab(self, event):
         if self.dicom_navigation.display_settings['miniature'] == 1:
-            self.dicom_navigation.parent.dicom_right_window.top_info.canvas_dicom.pack_forget()
+            self.dicom_navigation.parent.dicom_right_window.top_info.canvas_dicom.get_tk_widget().pack_forget()
             self.dicom_navigation.parent.dicom_right_window.top_info.canvas_HDV.get_tk_widget().pack(side=tk.RIGHT, fill=tk.Y, expand=False)
+            self.dicom_navigation.parent.dicom_right_window.dicom_hdv.canvas.draw()
+            self.dicom_navigation.parent.dicom_right_window.dicom_view.canvas.draw()            
 
 
     def OnClick(self, event):
@@ -376,18 +414,20 @@ class DicomView(tk.Frame):
         
 
     def refresh_window(self):
-        self.dicom_navigation.slice.update_DICOM_figure(self.dicom_navigation.figure, \
+        self.dicom_navigation.slice.update_DICOM_figure(self.dicom_navigation.figure_dicom, \
                                                         self.dicom_navigation.ax, \
-                                                        self.dicom_navigation.display_settings)
+                                                        self.dicom_navigation.display_settings, \
+                                                        vmin=self.dicom_navigation.vmin.get(), \
+                                                        vmax=self.dicom_navigation.vmax.get())
         self.afficher_figure()
 
     
     def afficher_figure(self):
-        figure = self.dicom_navigation.figure
+        figure = self.dicom_navigation.figure_dicom
         
         if self.blank_canvas:
             self.blank_canvas = False
-            self.canvas.destroy()
+            self.canvas.get_tk_widget().destroy()
             self.canvas = FigureCanvasTkAgg(figure, self)
             self.canvas.mpl_connect('button_press_event', self.OnClick)
             self.canvas.mpl_connect('scroll_event', self.OnMouseScroll)
@@ -402,7 +442,7 @@ class DicomView(tk.Frame):
 
             # Affichage des informations
             widget = self.canvas.get_tk_widget()
-            
+        
             message = "Slice : " + str(self.dicom_navigation.slice_id + 1) + "/" + \
                       str(self.dicom_navigation.dicom_parser.n_slices) + "\n" + \
                       "Position : " + str(self.dicom_navigation.slice.position) + " mm"
@@ -415,7 +455,7 @@ class DicomView(tk.Frame):
             
 
         # On affiche la figure
-        figure.canvas.draw()  
+        self.canvas.draw()  
 
         # Update des informations
         message = "Slice : " + str(self.dicom_navigation.slice_id + 1) + "/" + \
@@ -432,8 +472,11 @@ class DicomHDV(tk.Frame):
         tk.Frame.__init__(self, parent, bg="white")
         self.parent = parent
         self.dicom_navigation = dicom_navigation
+
+        # Utile lors du switch d'onglet
         self.bind("<Visibility>", self.OnSwitchTab)
-        self.first_time = True
+
+        # Initialisation des variables
         self.initialize()
 
     def initialize(self):
@@ -450,57 +493,41 @@ class DicomHDV(tk.Frame):
         self.dict_contraintes = {}
         self.dict_respect_contraintes = {}
 
-
-        if (self.first_time == True):
-            self.first_time = False
-            fig = Figure(figsize=(7,6), dpi=100)
-            
-            self.canvas = FigureCanvasTkAgg(fig, self)
-            self.dicom_navigation.figure_hdv = fig            
-#self.objet_doses = Doses_from_matrice(self.dicom_navigation.slice.get_dose_matrix())  # RÉCUPÉRER LA MATRICE ADAPTÉE AU CONTOURAGE
-            self.fig = fig.add_subplot(111)
-            self.fig.set_title("Histogramme dose/volume")
-            self.fig.plot([],[]) # Initialisation d'un plot vide
-            self.fig.set_xlabel('Dose absorbee')
-            self.fig.set_ylabel('Pourcentage du volume')
-            self.fig.grid(True)
-            self.x_lim = 100
-            self.y_lim = 100
-            self.fig.set_xlim([-0.01*self.x_lim, 1.02*self.x_lim])
-            self.fig.set_ylim([0, 1.02*self.y_lim])
-            self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
-
-            self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
-            self.toolbar.update()
-            self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        else:
-            # Preservation du zoom (1)
-            x_lim = self.fig.get_xlim()
-            y_lim = self.fig.get_ylim()
+        fig = Figure(figsize=(7,6), dpi=100)
         
-            # On nettoie le graphe
-            self.fig.clear()
+        self.canvas = FigureCanvasTkAgg(fig, self)
+        self.dicom_navigation.figure_hdv = fig            
+        #self.objet_doses = Doses_from_matrice(self.dicom_navigation.slice.get_dose_matrix())  # RÉCUPÉRER LA MATRICE ADAPTÉE AU CONTOURAGE
+        self.fig = fig.add_subplot(111)
+        self.fig.set_title("Histogramme dose/volume")
+        self.fig.plot([],[]) # Initialisation d'un plot vide
+        self.fig.set_xlabel('Dose absorbee')
+        self.fig.set_ylabel('Pourcentage du volume')
+        self.fig.grid(True)
+        self.x_lim = 100
+        self.y_lim = 100
+        self.fig.set_xlim([0, 1.02*self.x_lim])
+        self.fig.set_ylim([0, 1.02*self.y_lim])
+        self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
 
-            # Preservation du zoom (2)
-            self.fig.set_xlim(x_lim)
-            self.fig.set_ylim(y_lim)
-
-            # Infos
-            self.fig.set_title("Histogramme dose/volume")
-            self.fig.set_xlabel('Dose absorbee')
-            self.fig.set_ylabel('Pourcentage du volume')
-            self.fig.grid(True)
-
+        self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
+        self.toolbar.update()
+        self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+            
         self.canvas.draw()
-
-
         ### CODÉ EN DUR POUR L'INSTANT (on a besoin d'un dict du genre {'nom_ROI' : objet de la classe Contourage_from_matrice du fichier PONT, ...} )
         
 
     def OnSwitchTab(self, event):
+        canvas_HDV = self.dicom_navigation.parent.dicom_right_window.top_info.canvas_HDV
+        canvas_dicom = self.dicom_navigation.parent.dicom_right_window.top_info.canvas_dicom
+        
         if (self.dicom_navigation.display_settings['miniature'] == 1):
-            self.dicom_navigation.parent.dicom_right_window.top_info.canvas_HDV.get_tk_widget().pack_forget()
-            self.dicom_navigation.parent.dicom_right_window.top_info.canvas_dicom.pack(side=tk.RIGHT, fill=tk.Y, expand=False)
+            canvas_HDV.get_tk_widget().pack_forget()
+            canvas_dicom.get_tk_widget().pack(side=tk.RIGHT, fill=tk.Y, expand=False)
+            self.dicom_navigation.parent.dicom_right_window.dicom_hdv.canvas.draw()
+            self.dicom_navigation.parent.dicom_right_window.dicom_view.canvas.draw()   
+
         
 
     def update_hdv(self):
@@ -508,13 +535,41 @@ class DicomHDV(tk.Frame):
 
         dict_var_checkboxes = self.parent.parent.dicom_left_window.dicom_contourage.dict_lines
 
-        self.initialize()
+        # Reset figure
+        # Preservation du zoom (1)
+        x_lim = self.fig.get_xlim()
+        y_lim = self.fig.get_ylim()
+        
+        # On nettoie le graphe
+        self.fig.clear()
 
+        # Preservation du zoom (2)
+        self.fig.set_xlim(x_lim)
+        self.fig.set_ylim(y_lim)
+
+        # Infos
+        self.fig.set_title("Histogramme dose/volume")
+        self.fig.set_xlabel('Dose absorbee')
+        self.fig.set_ylabel('Pourcentage du volume')
+        self.fig.grid(True)
+
+        # Cas ou aucune source n'est placee
+        dose_matrix = self.dicom_navigation.slice.get_dose_matrix()      
+        if dose_matrix is None:
+            self.canvas.draw()
+            self.parent.top_info.canvas_HDV.draw()
+            return
+
+        # On calcule le HDV
         for ROI_id in dict_var_checkboxes:
             if dict_var_checkboxes[ROI_id]['cum'].get() == 1:
                 self.add_hdv(ROI_id)
             if dict_var_checkboxes[ROI_id]['diff'].get() == 1:
                 self.add_hdv(ROI_id, type_hdv='diff')
+
+        # Affichage de la version mise a jour
+        self.canvas.draw()
+        self.parent.top_info.canvas_HDV.draw()
 
         
 
@@ -530,9 +585,6 @@ class DicomHDV(tk.Frame):
         contourage = Contourage_from_matrice(appartenance_contourage, ROI_id)  # On crée un objet 'Contourage_from_matrice' à partir du de la matrice booléenne
 
         dose_matrix = self.dicom_navigation.slice.get_dose_matrix()
-        if dose_matrix == None:
-            (x, y, z) = self.dicom_navigation.dicom_parser.n_points
-            dose_matrix = np.zeros([x, y])
         
         doses = Doses_from_matrice(dose_matrix)  # On crée un objet 'Doses_from_matrice' à partir de la matrice de doses mise à jour
 
@@ -549,12 +601,12 @@ class DicomHDV(tk.Frame):
 
         ###
 
-        if var.get() == 'r':  # si on est en mode 'volume relatif', le range des axes sera définit différemment
+        if self.dicom_navigation.var_etat_abs_rel.get() == 'r':  # si on est en mode 'volume relatif', le range des axes sera définit différemment
             facteur = 100.0/self.ddc.nb_voxels  # comme l'instance 'axe_volume' créée par les classes hdv_cumulatif et hdv_differentiel contient des données en NOMBRE DE VOXELS
                                                 # (et non en pourcentage ou en volume réel), il faut multiplier ces données par le facteur de conversion approprié (il dépend
                                                 # de si l'on est en mode 'relatf' ou 'absolu').
 
-        if var.get() == 'a':  # si on est en mode 'volume absolu'.
+        if self.dicom_navigation.var_etat_abs_rel.get() == 'a':  # si on est en mode 'volume absolu'.
             facteur = self.ddc.v_voxel
             self.dict_volumes_max[str(ROI_id) + type_hdv] = self.ddc.v_voxel * self.ddc.nb_voxels
             self.y_lim = self.dict_volumes_max[max(self.dict_volumes_max, key=self.dict_volumes_max.get)]  # on récupère le max en y.
@@ -595,13 +647,16 @@ class DicomHDV(tk.Frame):
         var = tk.StringVar()  #  À VENIR... VARIABLE D'ÉTAT QUI INDIQUE SI ON EST EN MODE 'VOLUME RELATF' OU 'VOLUME ABSOLU'. CODÉ EN DUR POUR LE MOMENT
         var.set('r')
 
+        if not ROI_id in self.dict_graph:  # En cas où une ROI a été cochée mais qu'elle ne se trouve pas dans la zone reduite, on ne trace pas de graph.
+            return                         # Et donc, on essaie pas de retirer un HDV qui n'est pas en mémoire.
+
         del (self.dict_graph[ROI_id][type_hdv])
         self.dict_plot[ROI_id][type_hdv].remove()  # commande 'remove' nécessaire pour effacer le graph correspondant à la case décochée
         del (self.dict_plot[ROI_id][type_hdv])
         del (self.dict_doses_max[ROI_id])
 
 
-        if var.get() == 'a':
+        if self.dicom_navigation.var_etat_abs_rel.get() == 'a':
             del (self.dict_volumes_max[ROI_id])
             if len(self.dict_volumes_max) != 0:  # il faut ajuster l'axe des y en fonction du plus grand volume présent
                 self.y_lim = self.dict_volumes_max[max(self.dict_volumes_max, key=self.dict_volumes_max.get)]
@@ -617,35 +672,46 @@ class DicomHDV(tk.Frame):
         self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
 
 
-    def update_abs_rel(self):  # pour passer de relatif à absolu et vice_versa.
-
-        var = tk.StringVar()  # On récupère si on est en mode relatif ou absolu
-        var.set('r')
-
+    def mode_volume_relatif(self):  # pour passer de relatif à absolu et vice_versa.  ON A PLUS 'update_abs_rel', maintenant on a une fonction différente pour chaque mode.
+        if self.dicom_navigation.slice.get_dose_mode() == 0:
+            return
+        
         self.dict_volumes_max = {}
-        for nom in self.dict_graph:  # on retrace tous les graph présents dans 'dict_graph' (tous ceux affichés à l'écran).
-            self.dict_plot[nom].remove()  # on retire d'abord les anciens graph tracés dans dict_plot.
+        for ROI_id in self.dict_graph:  # on retrace tous les graph présents dans 'dict_graph' (tous ceux affichés à l'écran).
+            for type_hdv in self.dict_graph[ROI_id]:
+                self.dict_plot[ROI_id][type_hdv].remove()  # on retire d'abord les anciens graph tracés dans dict_plot.
 
-            if var.get() == 'r':
-                facteur = 100.0/self.dict_graph[nom].nb_voxels
-                self.dict_plot[nom], = self.fig.plot(self.dict_graph[nom].axe_doses, facteur*self.dict_graph[nom].axe_volume)  # on multiplie 'axe volume'
-                                                                                                                                # par le facteur approprié.
-                self.fig.set_xlabel('Dose absorbee')
-                self.fig.set_ylabel('Pourcentage du volume')
-                self.fig.set_ylim([0, 102])
-            if var.get() == 'a':
-                self.dict_volumes_max[nom] = self.dict_graph[nom].v_voxel*self.dict_graph[nom].nb_voxels
+                facteur = 100.0 / self.dict_graph[ROI_id][type_hdv].nb_voxels
+                self.dict_plot[ROI_id][type_hdv], = self.fig.plot(self.dict_graph[ROI_id][type_hdv].axe_doses,
+                                                                  facteur * self.dict_graph[ROI_id][type_hdv].axe_volume)  # on multiplie 'axe volume' par le facteur approprié.
+        self.y_lim = 100
+        self.fig.set_xlabel('Dose absorbee')
+        self.fig.set_ylabel('Pourcentage du volume')
+        self.fig.set_ylim([0, 1.02*self.y_lim])
 
-                facteur = self.dict_graph[nom].v_voxel
-                self.dict_plot[nom], = self.fig.plot(self.dict_graph[nom].axe_doses, facteur*self.dict_graph[nom].axe_volume)  # on multiplie 'axe volume'
-                                                                                                                                # par le facteur approprié.
-                nom_volume_max = max(self.dict_volumes_max, key=self.dict_volumes_max.get)
-                self.fig.set_xlabel('Dose absorbee')
-                self.fig.set_ylabel('Volume absolu (cm^3)')
-                self.fig.set_ylim([0, 1.02*self.dict_volumes_max[nom_volume_max]])
+        self.canvas.draw()
+        self.parent.top_info.canvas_HDV.draw()
+        self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
 
-            self.canvas.draw()
-            self.canvas.get_tk_widget().grid(row=1, column=0, rowspan=8, columnspan=6)
+
+    def mode_volume_absolu(self):  # MODE VOLUME ABSOLU.
+        if self.dicom_navigation.slice.get_dose_mode() == 0:
+            return
+        
+        for ROI_id in self.dict_graph:  # on retrace tous les graph présents dans 'dict_graph' (tous ceux affichés à l'écran).
+            for type_hdv in self.dict_graph[ROI_id]:
+                self.dict_volumes_max[str(ROI_id) + type_hdv] = self.dict_graph[ROI_id][type_hdv].v_voxel * self.dict_graph[ROI_id][type_hdv].nb_voxels
+                self.dict_plot[ROI_id][type_hdv].remove()  # on retire d'abord les anciens graph tracés dans dict_plot.
+                facteur = self.dict_graph[ROI_id][type_hdv].v_voxel
+                self.dict_plot[ROI_id][type_hdv], = self.fig.plot(self.dict_graph[ROI_id][type_hdv].axe_doses,
+                                                                  facteur * self.dict_graph[ROI_id][type_hdv].axe_volume)  # on multiplie 'axe volume' par le facteur approprié.
+        self.fig.set_xlabel('Dose absorbee')
+        self.fig.set_ylabel('Volume absolu (cm^3)')
+        self.fig.set_ylim([0, 1.02 * self.dict_volumes_max[max(self.dict_volumes_max, key=self.dict_volumes_max.get)]])
+
+        self.canvas.draw()
+        self.parent.top_info.canvas_HDV.draw()
+        self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
 
 
     def get_contraintes(self, fichier_contraintes):  # À ACTIVER LORSQUE LE FICHIER DE CONTRAINTES EST SAISI
@@ -708,7 +774,7 @@ class DicomContourage(tk.Frame):
 
     def initialize(self):
         self.dict_lines = {}
-
+        
 
     def load_contourage(self):
         self.set_ROI = self.dicom_navigation.dicom_parser.get_set_ROI()
@@ -752,7 +818,21 @@ class DicomContourage(tk.Frame):
 
             row_id += 1
 
+        # Boutons radio
+        rad_button = tk.Radiobutton(self, variable = self.dicom_navigation.var_etat_abs_rel, \
+                                    value = 'r', text='Volume relatif', \
+                                    command=self.dicom_navigation.parent.dicom_right_window.dicom_hdv.mode_volume_relatif)
+        rad_button.grid(row=row_id, column=1)
+        
+        rad_button = tk.Radiobutton(self, variable = self.dicom_navigation.var_etat_abs_rel, \
+                                    value = 'a', text='Volume absolu', \
+                                    command=self.dicom_navigation.parent.dicom_right_window.dicom_hdv.mode_volume_absolu)
+        rad_button.grid(row=row_id, column=2)
+            
+        # Creation du menu deroulant dans l'onglet previsualisation
         self.dicom_navigation.parent.dicom_left_window.dicom_previsualisation.create_contourage_cible_menu()
+
+        self.create_slider(row_id)
 
 
     def OnSelectColor(self, ROI_id):
@@ -805,6 +885,28 @@ class DicomContourage(tk.Frame):
     def modifier_contourage(self, ROI_id, color):
         if ROI_id in self.dicom_navigation.contourages:
             self.dicom_navigation.contourages[ROI_id]['color'] = color
+
+
+    def create_slider(self, current_row_id):
+        row_id = current_row_id + 1
+        
+        tk.Label(self, text="Luminosité min").grid(row=row_id, column=1)
+        self.slider_min = tk.Scale(self, from_=0, to=3000, \
+                                   variable=self.dicom_navigation.vmin, \
+                                   orient=tk.HORIZONTAL, \
+                                   command=None)#lambda x: self.dicom_navigation.refresh())
+        self.slider_min.grid(row=row_id, column=2)
+
+        row_id += 1
+
+        tk.Label(self, text="Luminosité max").grid(row=row_id, column=1)
+        self.slider_max = tk.Scale(self, from_=0, to=3000, \
+                                   variable=self.dicom_navigation.vmax, \
+                                   orient=tk.HORIZONTAL,
+                                   command=None)#lambda x: self.dicom_navigation.refresh())
+        self.slider_max.grid(row=row_id, column=2)
+
+        
 
 
     def refresh_contourage(self):
