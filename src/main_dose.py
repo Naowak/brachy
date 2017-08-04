@@ -204,6 +204,10 @@ class Toolbar(tk.Frame):
             elif current_tab == "HDV":
                 self.dicom_navigation.parent.dicom_right_window.top_info.canvas_dicom.get_tk_widget().pack(side=tk.RIGHT, fill=tk.Y, expand=False)
 
+            # Tricky hack pour ne pas avoir le probleme de zoom lorsqu'on met les mignatures (on retrace les canvas initiaux)
+            self.dicom_navigation.parent.dicom_right_window.dicom_hdv.canvas.get_tk_widget().update_idletasks()
+            self.dicom_navigation.parent.dicom_right_window.dicom_view.canvas.get_tk_widget().update_idletasks()
+
             #self.dicom_navigation.parent.dicom_right_window.top_info.update()
         elif self.dicom_navigation.display_settings['miniature'] == 1:
             self.dicom_navigation.display_settings['miniature'] = 0
@@ -346,8 +350,9 @@ class DicomView(tk.Frame):
         if self.dicom_navigation.display_settings['miniature'] == 1:
             self.dicom_navigation.parent.dicom_right_window.top_info.canvas_dicom.get_tk_widget().pack_forget()
             self.dicom_navigation.parent.dicom_right_window.top_info.canvas_HDV.get_tk_widget().pack(side=tk.RIGHT, fill=tk.Y, expand=False)
-            self.dicom_navigation.parent.dicom_right_window.dicom_hdv.canvas.draw()
-            self.dicom_navigation.parent.dicom_right_window.dicom_view.canvas.draw()            
+            # Tricky hack pour ne pas avoir le probleme de zoom lorsqu'on met les mignatures (on retrace les canvas initiaux)
+            self.dicom_navigation.parent.dicom_right_window.dicom_hdv.canvas.get_tk_widget().update_idletasks()
+            self.dicom_navigation.parent.dicom_right_window.dicom_view.canvas.get_tk_widget().update_idletasks()
 
 
     def OnClick(self, event):
@@ -525,8 +530,9 @@ class DicomHDV(tk.Frame):
         if (self.dicom_navigation.display_settings['miniature'] == 1):
             canvas_HDV.get_tk_widget().pack_forget()
             canvas_dicom.get_tk_widget().pack(side=tk.RIGHT, fill=tk.Y, expand=False)
-            self.dicom_navigation.parent.dicom_right_window.dicom_hdv.canvas.draw()
-            self.dicom_navigation.parent.dicom_right_window.dicom_view.canvas.draw()   
+            # Tricky hack pour ne pas avoir le probleme de zoom lorsqu'on met les mignatures (on retrace les canvas initiaux)
+            self.dicom_navigation.parent.dicom_right_window.dicom_hdv.canvas.get_tk_widget().update_idletasks()
+            self.dicom_navigation.parent.dicom_right_window.dicom_view.canvas.get_tk_widget().update_idletasks()
 
         
 
@@ -585,6 +591,10 @@ class DicomHDV(tk.Frame):
         contourage = Contourage_from_matrice(appartenance_contourage, ROI_id)  # On crée un objet 'Contourage_from_matrice' à partir du de la matrice booléenne
 
         dose_matrix = self.dicom_navigation.slice.get_dose_matrix()
+
+        # Cas ou on ajoute pour la premiere fois un contourage
+        if dose_matrix is None:
+            return
         
         doses = Doses_from_matrice(dose_matrix)  # On crée un objet 'Doses_from_matrice' à partir de la matrice de doses mise à jour
 
@@ -657,7 +667,7 @@ class DicomHDV(tk.Frame):
 
 
         if self.dicom_navigation.var_etat_abs_rel.get() == 'a':
-            del (self.dict_volumes_max[ROI_id])
+            del (self.dict_volumes_max[str(ROI_id) + type_hdv])
             if len(self.dict_volumes_max) != 0:  # il faut ajuster l'axe des y en fonction du plus grand volume présent
                 self.y_lim = self.dict_volumes_max[max(self.dict_volumes_max, key=self.dict_volumes_max.get)]
 
@@ -894,7 +904,7 @@ class DicomContourage(tk.Frame):
         self.slider_min = tk.Scale(self, from_=0, to=3000, \
                                    variable=self.dicom_navigation.vmin, \
                                    orient=tk.HORIZONTAL, \
-                                   command=None)#lambda x: self.dicom_navigation.refresh())
+                                   command=lambda x: self.dicom_navigation.refresh())
         self.slider_min.grid(row=row_id, column=2)
 
         row_id += 1
@@ -903,7 +913,7 @@ class DicomContourage(tk.Frame):
         self.slider_max = tk.Scale(self, from_=0, to=3000, \
                                    variable=self.dicom_navigation.vmax, \
                                    orient=tk.HORIZONTAL,
-                                   command=None)#lambda x: self.dicom_navigation.refresh())
+                                   command=lambda x: self.dicom_navigation.refresh())
         self.slider_max.grid(row=row_id, column=2)
 
         
