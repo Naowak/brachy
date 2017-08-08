@@ -46,6 +46,7 @@ class DicomParser:
         # Slices
         self.slices = self.get_slices()
         self.n_slices = len(self.slices)
+        self.UID_to_sliceid_LUT = self.get_UID_to_sliceid_LUT()
 
         # Fichier RT (RT_structure, RS_xxxx)
         self.RT_structure = self.get_RT_structure()
@@ -359,6 +360,16 @@ class DicomParser:
             #sys.exit(1)
 
         return DICOM_ROI[UID]
+
+
+    def get_UID_to_sliceid_LUT(self):
+        UID_to_sliceid_LUT = {}
+
+        for slice in self.slices:
+            UID = slice.dicom_slice.SOPInstanceUID
+            UID_to_sliceid_LUT[UID] = slice.get_slice_id()
+
+        return UID_to_sliceid_LUT
         
 
     def get_contour_points(self, array):

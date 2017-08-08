@@ -30,7 +30,7 @@ class Slice:
         # Contourage
         self.ROI_id = None
         self.contourages = None
-        self.appartenance_contourage = None
+        self.appartenance_contourage_cible = None
 
         # Affichage ou non
         self.dose_mode = 0
@@ -55,6 +55,10 @@ class Slice:
         return self.HU_array
 
 
+    def get_appartenance_contourage(self, ROI_id):
+        return self.contourages[ROI_id]['appartenance_contourage']
+
+
     def get_densite(self):
         return self.densite
 
@@ -67,8 +71,8 @@ class Slice:
         return self.dic_sources_displayed
 
 
-    def get_appartenance_contourage(self):
-        return self.appartenance_contourage
+    def get_contourages(self):
+        return self.contourages
 
 
     def get_domaine(self):
@@ -87,16 +91,34 @@ class Slice:
             os.makedirs(self.slice_directory)
         
 
-    def set_contourages(self, contourages):
-        if len(contourages) == 0:
-            self.contourages = None
-            return
-        
-        self.contourages = contourages
+    def add_contourage(self, ROI_id, name, color, array):
+        # Cas du premier ajout de contourage
+        if self.contourages is None:
+            self.contourages = {}
 
-        # On lit les contourages
-        for (ROI_id, contourage) in contourages.iteritems():
-            contourage['array'] = self.dicomparser.get_DICOM_contourage(ROI_id, self.slice_id)
+        contourage = { 'name': name, 'color': color, 'array': array, 'appartenance_contourage': None }
+        self.contourages[ROI_id] = contourage
+
+
+    def remove_contourage(self, ROI_id):
+        del self.contourages[ROI_id]
+
+        # Cas du dernier contourage retire
+        if len(self.contourages) == 0:
+            self.contourages = None
+
+
+    def modifier_couleur_contourage(self, ROI_id, color):
+        self.contourages[ROI_id]['color'] = color
+
+
+    def compute_appartenance_contourage(self, ROI_id):
+        appartenance_contourage = get_appartenance_contourage(
+            self.dicomparser.n_points,
+            self.dicomparser.maillage,
+            self.contourages[ROI_id]['array'])
+        
+        self.contourages[ROI_id]['appartenance_contourage'] = appartenance_contourage         
         
 
     def preparatifs_precalculs(self):
@@ -121,12 +143,13 @@ class Slice:
             self.densite = self.dicomparser.get_DICOM_densite(self.slice_id)
             self.HU_array = self.dicomparser.get_DICOM_hounsfield(self.slice_id)
 
-        self.appartenance_contourage = get_appartenance_contourage(self.dicomparser.n_points, \
-                                                                   self.dicomparser.maillage, \
-                                                                   self.contourages[self.dicomparser.get_contourage_cible_id()]['array'])
+            self.appartenance_contourage_cible = get_appartenance_contourage(
+                self.dicomparser.n_points, \
+                self.dicomparser.maillage, \
+                self.contourages[self.dicomparser.get_contourage_cible_id()]['array'])
 
         self.sources = get_sources(self.dicomparser.granularite_source, self.dicomparser.n_points,
-                                   self.appartenance_contourage, self.densite)
+                                   self.appartenance_contourage_cible, self.densite)
         
 
     def refresh_domaine(self):

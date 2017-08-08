@@ -93,30 +93,39 @@ class DicomNavigation:
         self.select_current_slice(90)
         (self.figure_dicom, self.ax) = self.dicom_parser.get_DICOM_figure()
         self.get_dicom_contourage().load_contourage()
+        self.get_dicom_previsualisation().load_initial_values()
         self.refresh()
 
 
     def select_current_slice(self, slice_id):
         self.slice_id = slice_id
         self.slice = self.dicom_parser.get_slice(slice_id)
+        self.refresh_new_slice()
         
 
-    def refresh(self):            
-        self.get_dicom_contourage().refresh_contourage()
+    def refresh(self):                    
+        self.get_dicom_view().refresh_window()
+        self.get_dicom_info().refresh_info()
 
+
+    def refresh_new_slice(self):
         if self.display_settings["sources"] == 1:
             self.slice.refresh_sources()
 
         if self.display_settings["domaine"] == 1:
             self.slice.refresh_domaine()
-            
-        self.get_dicom_view().refresh_window()
-        self.get_dicom_info().refresh_info()
+
+        if self.slice.get_dose_mode() == 1:
+            self.parent.dicom_right_window.dicom_hdv.update_hdv()
 
 
     def get_dicom_contourage(self):
         return self.parent.dicom_left_window.dicom_contourage
 
+
+    def get_dicom_previsualisation(self):
+        return self.parent.dicom_left_window.dicom_previsualisation
+    
 
     def get_dicom_info(self):
         return self.parent.dicom_right_window.top_info
@@ -146,14 +155,8 @@ class Menu(tk.Menu):
         file_menu = tk.Menu(self, tearoff=False)
         self.add_cascade(label="File", menu=file_menu)
         file_menu.add_command(label="Choisir repertoire DICOM", command=self.OnSelectDirectory)
-        file_menu.add_command(label="Quit")#, command=self.on_quit)
-
-        # Create a Edit menu and add it to the menubar
-        #edit_menu = tk.Menu(self.menubar, tearoff=False)
-        #self.menubar.add_cascade(label="Edit", menu=edit_menu)
-        #edit_menu.add_command(label="Cut", underline=2, command=self.on_cut)
-        #edit_menu.add_command(label="Copy", underline=0, command=self.on_copy)
-        #edit_menu.add_command(label="Paste", underline=0, command=self.on_paste)
+        file_menu.add_command(label="Quit")
+        
         
     def OnSelectDirectory(self):
         str = tkFileDialog.askdirectory()
@@ -214,6 +217,7 @@ class Toolbar(tk.Frame):
             self.dicom_navigation.parent.dicom_right_window.top_info.canvas_dicom.get_tk_widget().pack_forget()
             self.dicom_navigation.parent.dicom_right_window.top_info.canvas_HDV.get_tk_widget().pack_forget()
             self.dicom_navigation.parent.dicom_right_window.top_info.top_canvas.config(width=600, height=50)
+
         
 class DicomLeftWindow(ttk.Notebook):
     def __init__(self, parent, dicom_navigation):
@@ -560,7 +564,8 @@ class DicomHDV(tk.Frame):
         self.fig.grid(True)
 
         # Cas ou aucune source n'est placee
-        dose_matrix = self.dicom_navigation.slice.get_dose_matrix()      
+        dose_matrix = self.dicom_navigation.slice.get_dose_matrix()
+        
         if dose_matrix is None:
             self.canvas.draw()
             self.parent.top_info.canvas_HDV.draw()
@@ -574,19 +579,16 @@ class DicomHDV(tk.Frame):
                 self.add_hdv(ROI_id, type_hdv='diff')
 
         # Affichage de la version mise a jour
-        self.canvas.draw()
-        self.parent.top_info.canvas_HDV.draw()
+        self.refresh_HDV()
 
         
 
-    def add_hdv(self, ROI_id, type_hdv='cum'):
-
+    def add_hdv(self, ROI_id, type_hdv='cum', checkbox_mode=False):
+        # Le checkbox_mode sert a definir le moment de l'actualisation de la figure pour
+        # ne pas avoir un effet sacade
         """À APPELER LORSQUE L'ON COCHE UNE CHECKBOX. ON A SEULEMENT BESOIN DE DONNER LA ROI."""
 
-        appartenance_contourage = get_appartenance_contourage(
-            self.dicom_navigation.dicom_parser.n_points,
-            self.dicom_navigation.dicom_parser.maillage,
-            self.dicom_navigation.slice.contourages[ROI_id]['array'])
+        appartenance_contourage = self.dicom_navigation.slice.get_appartenance_contourage(ROI_id)
         
         contourage = Contourage_from_matrice(appartenance_contourage, ROI_id)  # On crée un objet 'Contourage_from_matrice' à partir du de la matrice booléenne
 
@@ -602,12 +604,18 @@ class DicomHDV(tk.Frame):
         var.set('r')
 
         self.ddc = Doses_dans_contourage(doses, contourage)  # Triage des doses qui sont dans le contourage.
-        self.dict_doses_max[ROI_id] = self.ddc.dose_max
 
+        if self.ddc.dose_max == 0:  #  Si la dose max est 0, on sait qu'on est à l'extérieur de la zone réduite. ***                  
+            return
 
-        if not ROI_id in self.dict_graph:
-            self.dict_graph[ROI_id] = {}
-            self.dict_plot[ROI_id] = {}
+        if not ROI_id in self.dict_graph:  
+            self.dict_graph[ROI_id] = {}  
+            self.dict_plot[ROI_id] = {}  
+            self.dict_doses_max[ROI_id] = {} 
+            if self.dicom_navigation.var_etat_abs_rel.get() == 'a':
+                self.dict_volumes_max[ROI_id] = {}  
+
+        self.dict_doses_max[ROI_id][type_hdv] = self.ddc.dose_max
 
         ###
 
@@ -618,8 +626,8 @@ class DicomHDV(tk.Frame):
 
         if self.dicom_navigation.var_etat_abs_rel.get() == 'a':  # si on est en mode 'volume absolu'.
             facteur = self.ddc.v_voxel
-            self.dict_volumes_max[str(ROI_id) + type_hdv] = self.ddc.v_voxel * self.ddc.nb_voxels
-            self.y_lim = self.dict_volumes_max[max(self.dict_volumes_max, key=self.dict_volumes_max.get)]  # on récupère le max en y.
+            self.dict_volumes_max[ROI_id][type_hdv] = self.ddc.v_voxel * self.ddc.nb_voxels 
+            self.y_lim = get_max_2D_dic(self.dict_volumes_max)
 
         ###
 
@@ -635,15 +643,15 @@ class DicomHDV(tk.Frame):
 
         ###
 
-        self.x_lim = self.dict_doses_max[max(self.dict_doses_max, key=self.dict_doses_max.get)]  # On récupère la plus grande valeur en x
+        self.x_lim = get_max_2D_dic(self.dict_doses_max) 
 
         self.fig.set_xlim([0, 1.02*self.x_lim])  # dimension de l'axe des x
         self.fig.set_ylim([0, 1.02*self.y_lim])  # dimension de l'axe des y
 
         # Modifier
-        self.canvas.draw()
-        self.parent.top_info.canvas_HDV.draw()
-        self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+        if checkbox_mode:
+            self.refresh_HDV()
+            
 
 
         if self.got_contraintes:  # SERA INITALISÉE À 'TRUE' LORSQUE L'ON AURA RÉCUPÉRÉ LE FICHIER DE CONTRAINTES
@@ -654,8 +662,10 @@ class DicomHDV(tk.Frame):
 
         """À APPELER LORSQUE L'ON DÉCOCHE UNE CHECKBOX. ON A SEULEMENT BESOIN DE DONNER LA ROI."""
 
-        var = tk.StringVar()  #  À VENIR... VARIABLE D'ÉTAT QUI INDIQUE SI ON EST EN MODE 'VOLUME RELATF' OU 'VOLUME ABSOLU'. CODÉ EN DUR POUR LE MOMENT
-        var.set('r')
+        # Aucune source
+        dose_matrix = self.dicom_navigation.slice.get_dose_matrix() 
+        if dose_matrix is None:
+            return
 
         if not ROI_id in self.dict_graph:  # En cas où une ROI a été cochée mais qu'elle ne se trouve pas dans la zone reduite, on ne trace pas de graph.
             return                         # Et donc, on essaie pas de retirer un HDV qui n'est pas en mémoire.
@@ -663,29 +673,34 @@ class DicomHDV(tk.Frame):
         del (self.dict_graph[ROI_id][type_hdv])
         self.dict_plot[ROI_id][type_hdv].remove()  # commande 'remove' nécessaire pour effacer le graph correspondant à la case décochée
         del (self.dict_plot[ROI_id][type_hdv])
-        del (self.dict_doses_max[ROI_id])
-
+        del (self.dict_doses_max[ROI_id][type_hdv]) 
 
         if self.dicom_navigation.var_etat_abs_rel.get() == 'a':
-            del (self.dict_volumes_max[str(ROI_id) + type_hdv])
-            if len(self.dict_volumes_max) != 0:  # il faut ajuster l'axe des y en fonction du plus grand volume présent
-                self.y_lim = self.dict_volumes_max[max(self.dict_volumes_max, key=self.dict_volumes_max.get)]
+            del (self.dict_volumes_max[ROI_id][type_hdv])  
+            volume_max = get_max_2D_dic(self.dict_volumes_max)  
+            if volume_max != 0:  # il faut ajuster l'axe des y en fonction du plus grand volume présent 'dict_volumes_max'.
+                self.y_lim = volume_max  # Et on redéfinit les limites conséquemment.
 
-        if len(self.dict_doses_max) != 0: # on ajuste aussi l'axe des x en fonction de la plus grande dose présente
-            self.x_lim = self.dict_doses_max[max(self.dict_doses_max, key=self.dict_doses_max.get)]
+        dose_max = get_max_2D_dic(self.dict_doses_max) 
+        if dose_max != 0:  # On ajuste aussi l'axe des x en fonction de la plus grande dose présente
+            self.x_lim = dose_max  
 
+        self.fig.set_xlim([0, 1.02 * self.x_lim])  # dimension de l'axe des x
+        self.fig.set_ylim([0, 1.02 * self.y_lim])  # dimension de l'axe des y
 
-        self.fig.set_xlim([0, 1.02*self.x_lim])  # dimension de l'axe des x
-        self.fig.set_ylim([0, 1.02*self.y_lim])  # dimension de l'axe des y
-        self.canvas.draw()
-        self.parent.top_info.canvas_HDV.draw()
-        self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+        self.refresh_HDV()
 
 
     def mode_volume_relatif(self):  # pour passer de relatif à absolu et vice_versa.  ON A PLUS 'update_abs_rel', maintenant on a une fonction différente pour chaque mode.
+
+        # Pas de source activee
+        dose_matrix = self.dicom_navigation.slice.get_dose_matrix() 
+        if dose_matrix is None: 
+            return  
+
         if self.dicom_navigation.slice.get_dose_mode() == 0:
             return
-        
+
         self.dict_volumes_max = {}
         for ROI_id in self.dict_graph:  # on retrace tous les graph présents dans 'dict_graph' (tous ceux affichés à l'écran).
             for type_hdv in self.dict_graph[ROI_id]:
@@ -697,31 +712,35 @@ class DicomHDV(tk.Frame):
         self.y_lim = 100
         self.fig.set_xlabel('Dose absorbee')
         self.fig.set_ylabel('Pourcentage du volume')
-        self.fig.set_ylim([0, 1.02*self.y_lim])
-
-        self.canvas.draw()
-        self.parent.top_info.canvas_HDV.draw()
-        self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
-
+        self.fig.set_ylim([0, 1.02 * self.y_lim])
+        self.refresh_HDV()
+        
 
     def mode_volume_absolu(self):  # MODE VOLUME ABSOLU.
+        # Pas de source activee
+        dose_matrix = self.dicom_navigation.slice.get_dose_matrix()
+        if dose_matrix is None: 
+            return 
+
         if self.dicom_navigation.slice.get_dose_mode() == 0:
             return
-        
+
         for ROI_id in self.dict_graph:  # on retrace tous les graph présents dans 'dict_graph' (tous ceux affichés à l'écran).
+            self.dict_volumes_max[ROI_id] = {}  # Quand on passe en mode volume absolu, on crée un dict contenant les volumes max pour ajuster les axes.
             for type_hdv in self.dict_graph[ROI_id]:
-                self.dict_volumes_max[str(ROI_id) + type_hdv] = self.dict_graph[ROI_id][type_hdv].v_voxel * self.dict_graph[ROI_id][type_hdv].nb_voxels
-                self.dict_plot[ROI_id][type_hdv].remove()  # on retire d'abord les anciens graph tracés dans dict_plot.
+                self.dict_volumes_max[ROI_id][type_hdv] = self.dict_graph[ROI_id][type_hdv].v_voxel * self.dict_graph[ROI_id][type_hdv].nb_voxels
+                self.dict_plot[ROI_id][type_hdv].remove()  # on retire d'abord les anciens graph tracés dans dict_plot
                 facteur = self.dict_graph[ROI_id][type_hdv].v_voxel
                 self.dict_plot[ROI_id][type_hdv], = self.fig.plot(self.dict_graph[ROI_id][type_hdv].axe_doses,
-                                                                  facteur * self.dict_graph[ROI_id][type_hdv].axe_volume)  # on multiplie 'axe volume' par le facteur approprié.
+                                                                  facteur * self.dict_graph[ROI_id][
+                                                                      type_hdv].axe_volume)  # on multiplie 'axe volume' par le facteur approprié.
         self.fig.set_xlabel('Dose absorbee')
         self.fig.set_ylabel('Volume absolu (cm^3)')
-        self.fig.set_ylim([0, 1.02 * self.dict_volumes_max[max(self.dict_volumes_max, key=self.dict_volumes_max.get)]])
+        volume_max = get_max_2D_dic(self.dict_volumes_max) 
+        if volume_max != 0:  
+            self.fig.set_ylim([0, 1.02 * volume_max])  
 
-        self.canvas.draw()
-        self.parent.top_info.canvas_HDV.draw()
-        self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+        self.refresh_HDV()
 
 
     def get_contraintes(self, fichier_contraintes):  # À ACTIVER LORSQUE LE FICHIER DE CONTRAINTES EST SAISI
@@ -772,7 +791,11 @@ class DicomHDV(tk.Frame):
                 self.dict_respect_contraintes[ROI_id][contrainte] = False
         # ajouter commande qui affiche un message et qui met le titre de la ROI en rouge
 
-                         
+
+    def refresh_HDV(self):
+        self.canvas.draw()
+        self.dicom_navigation.parent.dicom_right_window.top_info.canvas_HDV.draw()
+        
 
 class DicomContourage(tk.Frame):
     def __init__(self, parent, dicom_navigation):
@@ -794,13 +817,15 @@ class DicomContourage(tk.Frame):
         img = Image.open(filename)
         self.color_button = ImageTk.PhotoImage(img)
 
+        tk.Label(self, text="Disp").grid(row=0, column=2, sticky=tk.W)
         tk.Label(self, text="Cum").grid(row=0, column=2)
-        tk.Label(self, text="Diff").grid(row=0, column=3)
+        tk.Label(self, text="Diff").grid(row=0, column=2, sticky=tk.E)
 
         row_id = 1
         
         for (ROI_id, contourages) in self.set_ROI.iteritems():
-            self.dict_lines[ROI_id] = { 'cum': tk.IntVar(), 'diff': tk.IntVar(), 'color': "orange" }
+            self.dict_lines[ROI_id] = { 'color': "orange", 'disp': tk.IntVar(), \
+                                        'cum': tk.IntVar(), 'diff': tk.IntVar() }
 
             # Color
             self.dict_lines[ROI_id]['button'] = tk.Button(self, image=self.color_button, \
@@ -812,18 +837,23 @@ class DicomContourage(tk.Frame):
 
             # Text
             self.dict_lines[ROI_id]['name'] = contourages['name']
-            tk.Label(self, text=self.dict_lines[ROI_id]['name']).grid(row=row_id, column=1)
+            tk.Label(self, text=self.dict_lines[ROI_id]['name']).grid(row=row_id, column=1, padx=4)
 
             # Checkboxes
+            checkbox = tk.Checkbutton(self, variable=self.dict_lines[ROI_id]['disp'], \
+                                      command=partial(self.OnUpdateContourage, ROI_id))
+            checkbox.grid(row=row_id, column=2, sticky=tk.W)
+            
+            
             checkbox = tk.Checkbutton(self, variable=self.dict_lines[ROI_id]['cum'], \
-                                      command=partial(self.OnUpdateContourage, ROI_id, "cum"))
+                                      command=partial(self.OnUpdateHDV, ROI_id, "cum"))
                                                                                            
                                                                                         
             checkbox.grid(row=row_id, column=2)
             
             checkbox = tk.Checkbutton(self, variable=self.dict_lines[ROI_id]['diff'], \
-                                      command=partial(self.OnUpdateContourage, ROI_id, "diff"))
-            checkbox.grid(row=row_id, column=3)
+                                      command=partial(self.OnUpdateHDV, ROI_id, "diff"))
+            checkbox.grid(row=row_id, column=2,  sticky=tk.E)
             
 
             row_id += 1
@@ -832,12 +862,12 @@ class DicomContourage(tk.Frame):
         rad_button = tk.Radiobutton(self, variable = self.dicom_navigation.var_etat_abs_rel, \
                                     value = 'r', text='Volume relatif', \
                                     command=self.dicom_navigation.parent.dicom_right_window.dicom_hdv.mode_volume_relatif)
-        rad_button.grid(row=row_id, column=1)
+        rad_button.grid(row=row_id, column=1, pady=10)
         
         rad_button = tk.Radiobutton(self, variable = self.dicom_navigation.var_etat_abs_rel, \
                                     value = 'a', text='Volume absolu', \
                                     command=self.dicom_navigation.parent.dicom_right_window.dicom_hdv.mode_volume_absolu)
-        rad_button.grid(row=row_id, column=2)
+        rad_button.grid(row=row_id, column=2, pady=10)
             
         # Creation du menu deroulant dans l'onglet previsualisation
         self.dicom_navigation.parent.dicom_left_window.dicom_previsualisation.create_contourage_cible_menu()
@@ -853,48 +883,77 @@ class DicomContourage(tk.Frame):
         
         self.dict_lines[ROI_id]['color'] = color
         self.dict_lines[ROI_id]['button'].config(background=color)
-        self.modifier_contourage(ROI_id, color)
+        self.modifier_couleur_contourage(ROI_id, color)
         
         self.dicom_navigation.refresh()
 
 
-    def OnUpdateContourage(self, ROI_id, type_hdv):
-        if (self.dict_lines[ROI_id]['cum'].get() == 1 or self.dict_lines[ROI_id]['diff'].get() == 1):
-            # Une checkbox cochee
-            self.add_contourage(ROI_id, self.dict_lines[ROI_id]['name'], self.dict_lines[ROI_id]['color'])
-        elif (self.dict_lines[ROI_id]['cum'].get() == 0 and self.dict_lines[ROI_id]['diff'].get() == 0):
-            # Les deux checkbox decochees
+    def OnUpdateContourage(self, ROI_id):
+        if self.dict_lines[ROI_id]['disp'].get() == 1:
+            self.add_contourage(ROI_id, self.dict_lines[ROI_id]['name'], \
+                                self.dict_lines[ROI_id]['color'])
+        elif self.dict_lines[ROI_id]['disp'].get() == 0:
             self.remove_contourage(ROI_id)
 
-        # Dose mode, on met a jour l'HDV
+        self.dicom_navigation.refresh()
+
+
+    def OnUpdateHDV(self, ROI_id, type_hdv):
         dicom_hdv = self.dicom_navigation.parent.dicom_right_window.dicom_hdv
         
-        if self.dicom_navigation.slice.get_dose_mode() == 1:
-            self.refresh_contourage()
+        if self.dict_lines[ROI_id][type_hdv].get() == 1:
+            # On coche la case d'affichage si ça n'a pas deja été fait
+            if self.dict_lines[ROI_id]['disp'].get() == 0:
+                self.dicom_navigation.parent.dicom_left_window.dicom_contourage.dict_lines[ROI_id]['disp'].set(1)
+                self.dicom_navigation.parent.dicom_left_window.dicom_contourage.OnUpdateContourage(ROI_id)
             
-            if (self.dict_lines[ROI_id]['cum'].get() == 1 or self.dict_lines[ROI_id]['diff'].get() == 1):
-                dicom_hdv.add_hdv(ROI_id, type_hdv)
-            elif (self.dict_lines[ROI_id]['cum'].get() == 0 or self.dict_lines[ROI_id]['diff'].get() == 0):
-                dicom_hdv.remove_hdv(ROI_id, type_hdv)
-        
+            # On calcule l'appartenance contourage pour la ROI selectionnee
+            self.dicom_navigation.slice.compute_appartenance_contourage(ROI_id)
+            
+            # Puis on calcule l'HDV
+            dicom_hdv.add_hdv(ROI_id, type_hdv, checkbox_mode=True)
+        elif self.dict_lines[ROI_id][type_hdv].get() == 0:
+            dicom_hdv.remove_hdv(ROI_id, type_hdv)
+
         self.dicom_navigation.refresh()
         
-                
+    
     def add_contourage(self, ROI_id, name, color):
         if ROI_id in self.dicom_navigation.contourages:
             return
 
-        self.dicom_navigation.contourages[ROI_id] = { 'name': name, 'color': color }
+        dicom_parser = self.dicom_navigation.dicom_parser
 
+        # Recuperation des informations sur le contourage
+        self.dicom_navigation.contourages[ROI_id] = dicom_parser.get_DICOM_ROI(ROI_id)
+
+        # MAJ des slices concernees
+        for (UID, array) in self.dicom_navigation.contourages[ROI_id].iteritems():
+            slice_id = dicom_parser.UID_to_sliceid_LUT[UID]
+            dicom_parser.slices[slice_id].add_contourage(ROI_id, name, color, array)
+        
 
     def remove_contourage(self, ROI_id):
-        if ROI_id in self.dicom_navigation.contourages:
-            del self.dicom_navigation.contourages[ROI_id]
+        if not(ROI_id in self.dicom_navigation.contourages):
+            return
+
+        # MAJ des slices concernees
+        for (UID, array) in self.dicom_navigation.contourages[ROI_id].iteritems():
+            slice_id = self.dicom_navigation.dicom_parser.UID_to_sliceid_LUT[UID]
+            self.dicom_navigation.dicom_parser.slices[slice_id].remove_contourage(ROI_id)
+
+            
+        # MAJ de dicom_navigation
+        del self.dicom_navigation.contourages[ROI_id]
 
 
-    def modifier_contourage(self, ROI_id, color):
-        if ROI_id in self.dicom_navigation.contourages:
-            self.dicom_navigation.contourages[ROI_id]['color'] = color
+    def modifier_couleur_contourage(self, ROI_id, color):
+        if not (ROI_id in self.dicom_navigation.contourages):
+            return
+        
+        for (UID, array) in self.dicom_navigation.contourages[ROI_id].iteritems():
+            slice_id = self.dicom_navigation.dicom_parser.UID_to_sliceid_LUT[UID]
+            self.dicom_navigation.dicom_parser.slices[slice_id].modifier_couleur_contourage(ROI_id, color)
 
 
     def create_slider(self, current_row_id):
@@ -915,12 +974,6 @@ class DicomContourage(tk.Frame):
                                    orient=tk.HORIZONTAL,
                                    command=lambda x: self.dicom_navigation.refresh())
         self.slider_max.grid(row=row_id, column=2)
-
-        
-
-
-    def refresh_contourage(self):
-        self.dicom_navigation.slice.set_contourages(self.dicom_navigation.contourages)
 
 
 class DicomPrevisualisation(tk.Frame):
@@ -990,7 +1043,7 @@ class DicomPrevisualisation(tk.Frame):
         e = tk.Entry(self, justify=tk.RIGHT, textvariable=self.zone_influence, width=7)
         e.grid(row=7, column=1, sticky=tk.E)
 
-        # Contourage cible
+        # Contourage cible (le vrai est cree ailleurs avec une version dediee)
         tk.Label(self, text="Contourage cible").grid(row=8, column=0, sticky=tk.W)
         liste_options = [""]
 
@@ -1040,6 +1093,11 @@ class DicomPrevisualisation(tk.Frame):
         open_button.grid(row=13, padx=2, pady=2, sticky=tk.W)
 
 
+    def load_initial_values(self):
+        self.dicom_navigation.dicom_parser.set_granularite_source(self.granularite_source.get())
+        self.dicom_navigation.dicom_parser.set_zone_influence(self.zone_influence.get())
+
+
     def OnSelectWorkingDirectory(self):
         working_directory = tkFileDialog.askdirectory(initialdir="~/tmp/")
         
@@ -1055,15 +1113,19 @@ class DicomPrevisualisation(tk.Frame):
         else:
             self.checkbox_display_area.set(0)
             self.grey_checkbox.config(state=tk.DISABLED)
+            self.dicom_navigation.display_settings["domaine"] = 0
 
         self.dicom_navigation.dicom_parser.set_granularite_source(self.granularite_source.get())
         self.dicom_navigation.display_settings["sources"] = self.checkbox_display_sources.get()
+        self.dicom_navigation.slice.refresh_sources()
         self.dicom_navigation.refresh()
+        
 
 
     def OnUpdateAfficherZoneInfluence(self):
         self.dicom_navigation.dicom_parser.set_zone_influence(self.zone_influence.get())
         self.dicom_navigation.display_settings["domaine"] = self.checkbox_display_area.get()
+        self.dicom_navigation.slice.refresh_domaine()
         self.dicom_navigation.refresh()
 
 
@@ -1083,14 +1145,21 @@ class DicomPrevisualisation(tk.Frame):
 
 
     def OnUpdateContourageCible(self, ROIname):
-        # On enleve le precedant contourage cible s'il etait present
-        if self.contourage_cible_id != None:
-            self.dicom_navigation.parent.dicom_left_window.dicom_contourage.remove_contourage(self.contourage_cible_id)
+        ROI_id = self.ROIname_to_ROIid(ROIname)
+        self.contourage_cible_id = ROI_id
+
+        # Comme si on cochait la checkbox d'affichage
+        self.dicom_navigation.parent.dicom_left_window.dicom_contourage.dict_lines[ROI_id]['disp'].set(1)
+        self.dicom_navigation.parent.dicom_left_window.dicom_contourage.OnUpdateContourage(ROI_id)
         
-        # Puis on le met a jour
-        self.contourage_cible_id = self.ROIname_to_ROIid(ROIname)
         self.dicom_navigation.dicom_parser.set_contourage_cible_id(self.contourage_cible_id)
-        self.dicom_navigation.parent.dicom_left_window.dicom_contourage.add_contourage(self.contourage_cible_id, ROIname, "orange")
+        
+        if self.dicom_navigation.display_settings["sources"] == 1:
+            self.dicom_navigation.slice.refresh_sources()
+
+        if self.dicom_navigation.display_settings["domaine"] == 1:
+            self.dicom_navigation.slice.refresh_domaine()
+            
         self.dicom_navigation.refresh()
 
 

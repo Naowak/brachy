@@ -338,6 +338,21 @@ class Lecteur_fichier_contraintes:
         fichier_contraintes.close()
 
 
+def get_max_2D_dic(d):  # ***MODIF : ajouter cette fonction en entier.***
+    """ Trouve le max des valeurs d'un dictionnaire de dictionnaires. ex :
+    pour le dict {1:{'cum':3, 'diff':2}, 2:{'cum':4, 'diff':1}}, la fonction retournera 4."""
+
+    m_value = 0  # ***MODIF
+
+    for subdic in d.values():  # ***MODIF
+        if subdic != {}:  # ***MODIF
+            current_max = max(subdic.values())  # ***MODIF
+            if current_max > m_value:  # ***MODIF
+                m_value = current_max  # ***MODIF
+
+    return m_value  # ***MODIF
+
+
 if __name__ == '__main__':
 
     # TESTS
