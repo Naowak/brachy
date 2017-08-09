@@ -218,9 +218,9 @@ def ajouter_source(f, groupe, type_particule, direction_M1, volume_sphere, spect
     res += "-frontiere spectre_mono " + str(spectre_mono[0]) + " " + str(spectre_mono[1]) + "\n"
 
     if calculs_finaux:
-        res += "-densite spheroid 4.507 " + str(volume_sphere[0]) + " " + str(volume_sphere[1]) + \
+        res += "-densite spheroid 3.5832 " + str(volume_sphere[0]) + " " + str(volume_sphere[1]) + \
                " " + str(volume_sphere[2]) + " " + str(volume_sphere[3]) + " " + \
-               str(volume_sphere[4]) + " " + str(volume_sphere[5]) + "2\n"
+               str(volume_sphere[4]) + " " + str(volume_sphere[5]) + "5\n"
 
     f.write(res)
     

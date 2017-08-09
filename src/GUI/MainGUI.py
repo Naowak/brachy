@@ -66,6 +66,7 @@ class DicomNavigation:
         self.PATH_initial = current_directory
         self.PATH_lance_KIDS = current_directory + "/lance_KIDS"
         self.PATH_ressources = current_directory + "/ressources/"
+        self.working_directory = None
 
         # Current_slice
         self.slice_id = None
@@ -144,6 +145,10 @@ class DicomNavigation:
     def get_dicom_hdv(self):
         return self.parent.dicom_right_window.dicom_hdv
 
+
+    def get_working_directory(self):
+        return self.working_directory
+    
 
     def set_working_directory(self, working_directory):
         self.working_directory = working_directory

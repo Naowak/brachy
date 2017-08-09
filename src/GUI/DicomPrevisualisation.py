@@ -165,6 +165,11 @@ class DicomPrevisualisation(tk.Frame):
 
     def OnUpdateAfficherSources(self):
         """ Affiche/cache les sources prises en compte pour la prévisualisation """
+        # WARNING : Choisir contourage cible
+        if (self.dicom_navigation.dicom_parser.get_contourage_cible_id() is None) or (self.dicom_navigation.get_working_directory() is None):
+            showwarning("Attention", "Veuillez d'abord choisir un répertoire de travail et un contourage cible.")
+            return
+        
         if self.checkbox_display_sources.get() == 1:
             self.grey_checkbox.config(state=tk.NORMAL)
         else:
@@ -196,6 +201,14 @@ class DicomPrevisualisation(tk.Frame):
         slice = self.dicom_navigation.slice
         dicom_hdv = self.dicom_navigation.parent.dicom_right_window.dicom_hdv
 
+        # WARNING : Choisir contourage cible
+        if (self.dicom_navigation.dicom_parser.get_contourage_cible_id() is None) or (self.dicom_navigation.get_working_directory() is None):
+            showwarning("Attention", "Veuillez d'abord choisir un répertoire de travail et un contourage cible.")
+            return
+            
+        self.dicom_navigation.slice.refresh_sources()
+        self.dicom_navigation.slice.refresh_domaine()
+
         self.dicom_navigation.dicom_parser.set_granularite_source(self.granularite_source.get())
         self.dicom_navigation.dicom_parser.set_zone_influence(self.zone_influence.get())
         slice.preparatifs_precalculs()
@@ -217,6 +230,14 @@ class DicomPrevisualisation(tk.Frame):
         On prend en compte la position exacte des points placés
         La composition chimique et densité des grainds d'iode est également rajoutée
         """
+        # WARNING : Choisir contourage cible
+        if (self.dicom_navigation.dicom_parser.get_contourage_cible_id() is None) or (self.dicom_navigation.get_working_directory() is None):
+            showwarning("Attention", "Veuillez d'abord choisir un répertoire de travail et un contourage cible.")
+            return
+        
+        self.dicom_navigation.slice.refresh_sources()
+        self.dicom_navigation.slice.refresh_domaine()
+
         self.dicom_navigation.dicom_parser.set_granularite_source(self.granularite_source.get())
         self.dicom_navigation.dicom_parser.set_zone_influence(self.zone_influence.get())
         self.lancer_calculs_finaux()
@@ -247,6 +268,15 @@ class DicomPrevisualisation(tk.Frame):
 
 
     def OnAddAllSources(self):
+        # WARNING : Choisir contourage cible
+        if (self.dicom_navigation.dicom_parser.get_contourage_cible_id() is None) or (self.dicom_navigation.get_working_directory() is None):
+            showwarning("Attention", "Veuillez d'abord choisir un répertoire de travail et un contourage cible.")
+            return
+
+        if self.dicom_navigation.slice.get_dose_mode() == 0:
+            showwarning("Attention", "Veuillez d'abord lancer les calculs de prévisualisation.")
+            return
+
         self.dicom_navigation.slice.add_all_sources()
         
         # Refresh

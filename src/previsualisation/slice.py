@@ -275,11 +275,10 @@ class Slice:
 
 
     def add_all_sources(self):
-        self.refresh_sources()
+        (lf, mf, nf) = self.dicomparser.n_points
 
         # Cas de la premiere source ajoutee (matrice nulle)
         if self.dose_matrix is None:
-            (lf, mf, nf) = self.dicomparser.n_points
             self.dose_matrix = np.zeros([lf, mf])
 
         # Conversion aux bonnes dimensions (retrecissement)
