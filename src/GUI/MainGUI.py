@@ -141,6 +141,10 @@ class DicomNavigation:
         return self.parent.dicom_right_window.dicom_view
 
 
+    def get_dicom_hdv(self):
+        return self.parent.dicom_right_window.dicom_hdv
+
+
     def set_working_directory(self, working_directory):
         self.working_directory = working_directory
 

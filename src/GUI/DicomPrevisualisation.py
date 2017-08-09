@@ -115,21 +115,36 @@ class DicomPrevisualisation(tk.Frame):
                                   command=None)
         checkbox.grid(row=11, column=1, sticky=tk.E)
 
+        # Bouton pour activer toutes les sources
+        button = tk.Button(self, text="Activer toutes les sources", \
+                           relief=tk.RAISED, command=self.OnAddAllSources)
+        button.grid(row=12, padx=2, pady=2, sticky=tk.W)
+
+        # Bouton pour retirer toutes les sources
+        button = tk.Button(self, text="Retirer toutes les sources", \
+                           relief=tk.RAISED, command=self.OnRemoveAllSources)
+        button.grid(row=13, padx=2, pady=2, sticky=tk.W)
+
+        # Bouton pour optimiser le dépot de source
+        button = tk.Button(self, text="Optimiser le dépot de dose", \
+                           relief=tk.RAISED, command=None)
+        button.grid(row=14, padx=2, pady=2, sticky=tk.W)
+
         # Bouton pour lancer la previsualisation
         filename = self.dicom_navigation.PATH_ressources + "cog.gif"
         img = Image.open(filename)
         self.button_previsualisation = ImageTk.PhotoImage(img)
-        open_button = tk.Button(self, text="Lancer la previsualisation", image=self.button_previsualisation, \
+        button = tk.Button(self, text="Lancer la previsualisation", image=self.button_previsualisation, \
                                 relief=tk.RAISED, compound="right", command=self.OnLancerPrevisualisation)
-        open_button.grid(row=12, padx=2, pady=2, sticky=tk.W)
+        button.grid(row=15, padx=2, pady=2, sticky=tk.W)
 
         # Bouton pour lancer les calculs finaux
         filename = self.dicom_navigation.PATH_ressources + "cog.gif"
         img = Image.open(filename)
         self.button_calculs = ImageTk.PhotoImage(img)
-        open_button = tk.Button(self, text="Lancer calculs finaux", image=self.button_calculs, \
+        button = tk.Button(self, text="Lancer calculs finaux", image=self.button_calculs, \
                                 relief=tk.RAISED, compound="right", command=self.OnLancerCalculsFinaux)
-        open_button.grid(row=13, padx=2, pady=2, sticky=tk.W)
+        button.grid(row=16, padx=2, pady=2, sticky=tk.W)
 
 
     def load_initial_values(self):
@@ -229,6 +244,23 @@ class DicomPrevisualisation(tk.Frame):
             self.dicom_navigation.slice.refresh_domaine()
             
         self.dicom_navigation.refresh()
+
+
+    def OnAddAllSources(self):
+        self.dicom_navigation.slice.add_all_sources()
+        
+        # Refresh
+        self.dicom_navigation.get_dicom_hdv().update_hdv()
+        self.dicom_navigation.get_dicom_view().refresh_window()
+
+
+    def OnRemoveAllSources(self):
+        self.dicom_navigation.slice.remove_all_sources()
+        self.dicom_navigation.refresh()
+
+        # Refresh
+        self.dicom_navigation.get_dicom_hdv().update_hdv()
+        self.dicom_navigation.get_dicom_view().refresh_window()
 
 
     def create_contourage_cible_menu(self):

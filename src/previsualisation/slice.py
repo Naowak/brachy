@@ -150,12 +150,12 @@ class Slice:
         self.densite = self.dicomparser.get_DICOM_densite(self.slice_id)
         self.HU_array = self.dicomparser.get_DICOM_hounsfield(self.slice_id)
 
-        self.appartenance_contourage = get_appartenance_contourage(self.dicomparser.n_points, \
+        self.appartenance_contourage_cible = get_appartenance_contourage(self.dicomparser.n_points, \
                                                                    self.dicomparser.maillage, \
                                                                    self.contourages[self.dicomparser.contourage_cible_id]['array'])
         
         self.sources = get_sources(self.dicomparser.granularite_source, self.dicomparser.n_points,
-                                   self.appartenance_contourage, self.densite)
+                                   self.appartenance_contourage_cible, self.densite)
         self.domaine = get_domaine_minimal(self.sources, self.dicomparser.n_points,
                                            self.dicomparser.dimensions, self.dicomparser.maillage,
                                            self.dicomparser.zone_influence)
@@ -169,10 +169,10 @@ class Slice:
             self.densite = self.dicomparser.get_DICOM_densite(self.slice_id)
             self.HU_array = self.dicomparser.get_DICOM_hounsfield(self.slice_id)
 
-            self.appartenance_contourage_cible = get_appartenance_contourage(
-                self.dicomparser.n_points, \
-                self.dicomparser.maillage, \
-                self.contourages[self.dicomparser.get_contourage_cible_id()]['array'])
+        self.appartenance_contourage_cible = get_appartenance_contourage(
+            self.dicomparser.n_points, \
+            self.dicomparser.maillage, \
+            self.contourages[self.dicomparser.get_contourage_cible_id()]['array'])
 
         self.sources = get_sources(self.dicomparser.granularite_source, self.dicomparser.n_points,
                                    self.appartenance_contourage_cible, self.densite)
@@ -272,6 +272,34 @@ class Slice:
         # On met la matrice de doses aux bonnes dimensions
         self.dose_matrix = np.zeros([lf, mf])
         self.dose_matrix = domaine_to_matrix(self.dose_matrix, domaine_merged_dose_matrix, self.domaine)
+
+
+    def add_all_sources(self):
+        self.refresh_sources()
+
+        # Cas de la premiere source ajoutee (matrice nulle)
+        if self.dose_matrix is None:
+            (lf, mf, nf) = self.dicomparser.n_points
+            self.dose_matrix = np.zeros([lf, mf])
+
+        # Conversion aux bonnes dimensions (retrecissement)
+        domaine_dose_matrix = matrix_to_domaine(self.dose_matrix, self.domaine)
+
+        # Ajout de toutes les sources
+        for (id, source) in enumerate(self.sources, start=1):
+            self.dic_sources_displayed[id] = source
+            domaine_dose_matrix = dose_matrix_add_source(self.slice_directory,
+                                                         domaine_dose_matrix,
+                                                         id)
+        
+        # On met la matrice de doses aux bonnes dimensions (agrandissement)
+        self.dose_matrix = np.zeros([lf, mf])
+        self.dose_matrix = domaine_to_matrix(self.dose_matrix, domaine_dose_matrix, self.domaine)
+            
+        
+    def remove_all_sources(self):
+        self.dic_sources_displayed = {}
+        self.dose_matrix = None
 
             
     def update_dose_matrix(self):
