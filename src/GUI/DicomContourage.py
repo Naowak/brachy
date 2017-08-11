@@ -135,6 +135,17 @@ class DicomContourage(tk.Frame):
             dicom_hdv.remove_hdv(ROI_id, type_hdv)
 
         self.dicom_navigation.refresh()
+
+
+    def compute_appartenances_contourage_slice(self):
+        """
+        Utilisé lorsqu'on change de slice pour calculer toutes les
+        appartenances contourage de la slice courante (si ça n'a pas déjà été fait)
+        """
+        for (ROI_id, line) in self.dict_lines.iteritems():
+            if line['cum'].get() == 1 or line['diff'].get() == 1:
+                self.dicom_navigation.slice.compute_appartenance_contourage(ROI_id)            
+            
         
     
     def add_contourage(self, ROI_id, name, color):

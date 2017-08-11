@@ -42,6 +42,7 @@ class DicomParser:
         # Lecture des metadatas
         self.slices_info = self.get_slices_info()
         self.n_points = self.get_DICOM_npoints()
+        self.n_points_raffines = None
         self.dimensions = self.get_DICOM_dimensions()
         self.maillage = self.get_DICOM_maillage()
         self.is_prone = 'p' in self.slices_info.PatientPosition.lower()
@@ -88,6 +89,12 @@ class DicomParser:
 
     def get_contourage_cible_id(self):
         return self.contourage_cible_id
+
+
+    def set_raffinement(self, raffinement):
+        """ Utilisé lorsqu'on change le raffinement """
+        (lf, mf, nf) = self.n_points
+        self.n_points_raffines = (raffinement * lf, raffinement * mf, nf)
     
 
     def get_DICOM_files(self, DICOM_path):
@@ -561,7 +568,7 @@ class DicomParser:
         domaine = slice.get_domaine()
             
         # Reduction des calculs sur le domaine        
-        domaine_n_points = get_domaine_n_points(domaine, self.n_points)
+        domaine_n_points = get_domaine_n_points(domaine, self.n_points_raffines)
         domaine_dimensions = get_domaine_dimensions(domaine, self.dimensions, self.maillage)
         domaine_sources = get_domaine_sources(domaine, sources)
         domaine_HU_array = get_domaine_HU_array(domaine, HU_array)
@@ -591,7 +598,7 @@ class DicomParser:
         domaine = slice.get_domaine()
             
         # Reduction des calculs sur le domaine        
-        domaine_n_points = get_domaine_n_points(domaine, self.n_points)
+        domaine_n_points = get_domaine_n_points(domaine, self.n_points_raffines)
         domaine_dimensions = get_domaine_dimensions(domaine, self.dimensions, self.maillage)
         domaine_sources = get_domaine_sources(domaine, sources)
         domaine_HU_array = get_domaine_HU_array(domaine, HU_array)

@@ -216,12 +216,16 @@ class DicomPrevisualisation(tk.Frame):
         # Verification si des calculs sont en memoire
         if slice.dose_already_calculated():
             answer = askyesno("Lancer prévisualisation", "Des calculs de prévisualisation sont en mémoire, voulez-vous les utiliser ? Si vous répondez NON, ceux-ci seront relancés.")
-            if answer:
-                slice.set_dose_mode_ON()
-                return
+            if not answer:
+                self.lancer_calculs_previsualisation()
+        else:
+            self.lancer_calculs_previsualisation()
 
-        self.lancer_calculs_previsualisation()
         slice.set_dose_mode_ON()
+        self.dicom_navigation.get_dicom_contourage().compute_appartenances_contourage_slice()
+        self.dicom_navigation.get_dicom_hdv().update_hdv()
+        self.dicom_navigation.refresh()
+        
 
 
     def OnLancerCalculsFinaux(self):
@@ -240,8 +244,13 @@ class DicomPrevisualisation(tk.Frame):
 
         self.dicom_navigation.dicom_parser.set_granularite_source(self.granularite_source.get())
         self.dicom_navigation.dicom_parser.set_zone_influence(self.zone_influence.get())
+        
         self.lancer_calculs_finaux()
+        
         self.dicom_navigation.slice.set_dose_mode_ON()
+        self.dicom_navigation.get_dicom_contourage().compute_appartenances_contourage_slice()
+        self.dicom_navigation.get_dicom_hdv().update_hdv()
+        self.dicom_navigation.refresh()
 
 
     def OnUpdateContourageCible(self, ROIname):
@@ -317,19 +326,20 @@ class DicomPrevisualisation(tk.Frame):
         slice = self.dicom_navigation.slice
         
         # Generation des fichiers de configuration .don
+        self.dicom_navigation.dicom_parser.set_raffinement(self.raffinement.get())
+        
         options = { 'algorithme': self.algorithme.get(),
                     'rayon': (self.rayon_x.get(), self.rayon_y.get(), 1),
                     'direction_M1': (0., 0., 0.), # Curietherapie
-                    'spectre_mono': (self.intensite, self.energie) }
+                    'spectre_mono': (self.intensite.get(), self.energie.get()) }
         
         self.dicom_navigation.dicom_parser.generate_DICOM_previsualisation(slice.get_slice_id(),
                                                                            self.dicom_navigation.working_directory,
                                                                            options)
 
         # Lancement du calcul M1
-        #os.chdir(self.dicom_navigation.slice.get_slice_directory())
-        #call([self.dicom_navigation.PATH_lance_KIDS, "config_KIDS.don"])
-        #os.chdir(self.dicom_navigation.PATH_initial)
+        command = self.dicom_navigation.PATH_start_previsualisation + " " + self.dicom_navigation.slice.get_slice_directory()
+        os.system(command)
 
 
     def lancer_calculs_finaux(self):
@@ -337,6 +347,8 @@ class DicomPrevisualisation(tk.Frame):
         slice = self.dicom_navigation.slice
         
         # Generation des fichiers de configuration .don
+        self.dicom_navigation.dicom_parser.set_raffinement(self.raffinement.get())
+        
         options = { 'algorithme': self.algorithme.get(),
                     'rayon': (self.rayon_x.get(), self.rayon_y.get(), 1),
                     'direction_M1': (0., 0., 0.), # Curietherapie
@@ -347,6 +359,5 @@ class DicomPrevisualisation(tk.Frame):
                                                                          options)
 
         # Lancement du calcul M1
-        #os.chdir(self.dicom_navigation.slice.get_slice_directory())
-        #call([self.dicom_navigation.PATH_lance_KIDS, "config_KIDS.don"])
-        #os.chdir(self.dicom_navigation.PATH_initial)
+        command = self.dicom_navigation.PATH_start_previsualisation + " " + self.dicom_navigation.slice.get_slice_directory()
+        os.system(command)

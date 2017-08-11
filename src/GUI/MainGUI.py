@@ -64,7 +64,7 @@ class DicomNavigation:
         # Usefull path
         current_directory = os.getcwd()
         self.PATH_initial = current_directory
-        self.PATH_lance_KIDS = current_directory + "/lance_KIDS"
+        self.PATH_start_previsualisation = current_directory + "/src/GUI/start_previsualisation.sh"
         self.PATH_ressources = current_directory + "/ressources/"
         self.working_directory = None
 
@@ -123,7 +123,11 @@ class DicomNavigation:
             self.slice.refresh_domaine()
 
         if self.slice.get_dose_mode() == 1:
-            self.parent.dicom_right_window.dicom_hdv.update_hdv()
+            # Calcul des appartenances contourage pour avoir l'HDV de la slice
+            self.get_dicom_contourage().compute_appartenances_contourage_slice()
+
+        # MAJ de l'HDV
+        self.get_dicom_hdv().update_hdv()
 
 
     def get_dicom_contourage(self):

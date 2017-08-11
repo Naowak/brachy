@@ -137,6 +137,11 @@ class Slice:
 
     def compute_appartenance_contourage(self, ROI_id):
         """ Calcule la matrice booléenne qui dit si un point appartient au contourage ou non """
+        # Si la matrice a déjà été calculée (cas ou on scroll puis on revient sur une slice)
+        if self.contourages[ROI_id]['appartenance_contourage'] is not None:
+            return
+        
+        # Calcul de la matrice booléenne
         appartenance_contourage = get_appartenance_contourage(
             self.dicomparser.n_points,
             self.dicomparser.maillage,
