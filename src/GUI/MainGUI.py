@@ -24,6 +24,7 @@ from DicomView import *
 from DicomHDV import *
 from DicomContourage import *
 from DicomPrevisualisation import *
+from DicomContraintes import *
 
 
 class MainApplication(tk.Tk):
@@ -136,6 +137,10 @@ class DicomNavigation:
 
     def get_dicom_previsualisation(self):
         return self.parent.dicom_left_window.dicom_previsualisation
+
+
+    def get_dicom_contraintes(self):
+        return self.parent.dicom_left_window.dicom_contraintes
     
 
     def get_dicom_info(self):
@@ -252,8 +257,10 @@ class DicomLeftWindow(ttk.Notebook):
     def initialize(self):
         self.dicom_contourage = DicomContourage(self, self.dicom_navigation)
         self.dicom_previsualisation = DicomPrevisualisation(self, self.dicom_navigation)
+        self.dicom_contraintes = DicomContraintes(self, self.dicom_navigation)
         self.add(self.dicom_contourage, text="Contourage")
         self.add(self.dicom_previsualisation, text="Prévisualisation")
+        self.add(self.dicom_contraintes, text="Contraintes")
     
 
 class DicomRightWindow(tk.Frame):

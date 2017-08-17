@@ -1,6 +1,8 @@
 Modifier le fichier ./src/GUI/start_previsualisation.sh
 En mettant le chemin absolu vers l'endroit où se trouve le code KIDS
 
+Modifier le fichier ./src/previsualisation/generate_multisource.py
+Pour changer la configuration de base du fichier .don
 
 Modifications code KIDS :
 

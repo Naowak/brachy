@@ -56,7 +56,8 @@ class DicomContourage(tk.Frame):
 
             # Text
             self.dict_lines[ROI_id]['name'] = contourages['name']
-            tk.Label(self, text=self.dict_lines[ROI_id]['name']).grid(row=row_id, column=1, padx=4)
+            self.dict_lines[ROI_id]['label'] = tk.Label(self, text=self.dict_lines[ROI_id]['name'])
+            self.dict_lines[ROI_id]['label'].grid(row=row_id, column=1, padx=4)
 
             # Checkboxes
             checkbox = tk.Checkbutton(self, variable=self.dict_lines[ROI_id]['disp'], \
@@ -89,9 +90,12 @@ class DicomContourage(tk.Frame):
         rad_button.grid(row=row_id, column=2, pady=10)
             
         # Creation du menu deroulant dans l'onglet previsualisation
-        self.dicom_navigation.parent.dicom_left_window.dicom_previsualisation.create_contourage_cible_menu()
+        self.dicom_navigation.get_dicom_previsualisation().create_contourage_cible_menu()
 
         self.create_slider(row_id)
+
+        # Contraintes
+        self.dicom_navigation.get_dicom_contraintes().get_dict_nom_to_id()
 
 
     def OnSelectColor(self, ROI_id):
@@ -131,8 +135,17 @@ class DicomContourage(tk.Frame):
             
             # Puis on calcule l'HDV
             dicom_hdv.add_hdv(ROI_id, type_hdv, checkbox_mode=True)
+            
+            # Puis on 'enable' les checkbuttons des contraintes pour lesquelles un contourage est affiché
+            if type_hdv == 'cum' and self.dicom_navigation.get_dicom_contraintes().got_contraintes:
+                nom_ROI = self.dicom_navigation.get_dicom_contraintes().dict_id_to_nom[ROI_id]
+                self.dicom_navigation.get_dicom_contraintes().enable_checkbuttons_pour_une_ROI(nom_ROI)
         elif self.dict_lines[ROI_id][type_hdv].get() == 0:
             dicom_hdv.remove_hdv(ROI_id, type_hdv)
+            # On 'disable' les checkbuttons si on décoche le contourage correspondant
+            if type_hdv == 'cum' and self.dicom_navigation.get_dicom_contraintes().got_contraintes:
+                nom_ROI = self.dicom_navigation.get_dicom_contraintes().dict_id_to_nom[ROI_id]
+                self.dicom_navigation.get_dicom_contraintes().disable_checkbuttons_pour_une_ROI(nom_ROI)
 
         self.dicom_navigation.refresh()
 
@@ -175,6 +188,16 @@ class DicomContourage(tk.Frame):
             
         # MAJ de dicom_navigation
         del self.dicom_navigation.contourages[ROI_id]
+
+
+    def change_label_to_red(self, ROI_id):
+        """ Utilisé avec les contraintes """
+        self.dict_lines[ROI_id]['label'].config(fg='red')
+
+
+    def change_label_to_black(self, ROI_id):
+        """ Utilisé avec les contraintes """
+        self.dict_lines[ROI_id]['label'].config(fg='black')
 
 
     def modifier_couleur_contourage(self, ROI_id, color):

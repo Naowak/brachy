@@ -76,6 +76,9 @@ class DicomHDV(tk.Frame):
             self.dicom_navigation.parent.dicom_right_window.dicom_hdv.canvas.get_tk_widget().update_idletasks()
             self.dicom_navigation.parent.dicom_right_window.dicom_view.canvas.get_tk_widget().update_idletasks()
 
+
+    def got_contraintes_true(self):
+        self.got_contraintes = True
         
 
     def update_hdv(self):
@@ -115,6 +118,10 @@ class DicomHDV(tk.Frame):
                 self.add_hdv(ROI_id)
             if dict_var_checkboxes[ROI_id]['diff'].get() == 1:
                 self.add_hdv(ROI_id, type_hdv='diff')
+
+        # Contraintes
+        if self.got_contraintes:
+            self.dicom_navigation.get_dicom_contraintes().verifier_les_contraintes_des_hdv_choisis()
 
         # Affichage de la version mise a jour
         self.refresh_HDV()
@@ -187,14 +194,13 @@ class DicomHDV(tk.Frame):
         self.fig.set_xlim([0, 1.02*self.x_lim])  # dimension de l'axe des x
         self.fig.set_ylim([0, 1.02*self.y_lim])  # dimension de l'axe des y
 
+        # Contraintes
+        if self.got_contraintes and type_hdv == 'cum':  # 'got_contraintes' SERA INITALISÉE À 'TRUE' LORSQUE L'ON AURA RÉCUPÉRÉ LE FICHIER DE CONTRAINTES
+            self.dicom_navigation.get_dicom_contraintes().verifier_contraintes_sur_une_ROI(ROI_id)
+
         # Modifier
         if checkbox_mode:
             self.refresh_HDV()
-            
-
-
-        if self.got_contraintes:  # SERA INITALISÉE À 'TRUE' LORSQUE L'ON AURA RÉCUPÉRÉ LE FICHIER DE CONTRAINTES
-            self.verifier_contraintes(ROI_id)
 
 
     def remove_hdv(self, ROI_id, type_hdv='cum'):
@@ -226,7 +232,15 @@ class DicomHDV(tk.Frame):
         self.fig.set_xlim([0, 1.02 * self.x_lim])  # dimension de l'axe des x
         self.fig.set_ylim([0, 1.02 * self.y_lim])  # dimension de l'axe des y
 
+        # Contraintes
+        if self.got_contraintes and type_hdv == 'cum':
+            nom_ROI = self.dicom_navigation.get_dicom_contraintes().dict_id_to_nom[ROI_id]
+            self.dicom_navigation.get_dicom_contraintes().reset_contraintes_du_dict_pour_une_ROI(nom_ROI)
+            self.dicom_navigation.get_dicom_contourage().change_label_to_black(ROI_id)
+
         self.refresh_HDV()
+
+
 
 
     def mode_volume_relatif(self):

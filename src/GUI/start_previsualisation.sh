@@ -7,8 +7,8 @@
 #!/bin/bash
 
 # Entrer manuellement le chemin absolu vers l'executable ./lance_KIDS pour lancer M1
-# Exemple : /home/thibault/KIDS_4/lance_KIDS
-EXEC_PATH="/home/thibault/KIDS_4/lance_KIDS"
+# Exemple : /home/thibault/KIDS_cythi/lance_KIDS
+EXEC_PATH="/home/thibault/KIDS_cythi/lance_KIDS"
 
 usage()
 {
