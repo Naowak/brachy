@@ -111,7 +111,7 @@ class DicomNavigation:
         self.refresh_new_slice()
         
 
-    def refresh(self):                    
+    def refresh(self):        
         self.get_dicom_view().refresh_window()
         self.get_dicom_info().refresh_info()
 
@@ -127,8 +127,8 @@ class DicomNavigation:
             # Calcul des appartenances contourage pour avoir l'HDV de la slice
             self.get_dicom_contourage().compute_appartenances_contourage_slice()
 
-        # MAJ de l'HDV
-        self.get_dicom_hdv().update_hdv()
+            # MAJ de l'HDV
+            self.get_dicom_hdv().update_hdv()
 
 
     def get_dicom_contourage(self):
@@ -178,10 +178,18 @@ class Menu(tk.Menu):
     def initialize(self):
         # Create a file menu and add it to the menubar
         file_menu = tk.Menu(self, tearoff=False)
-        self.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Choisir repertoire DICOM", command=self.OnSelectDirectory)
-        file_menu.add_command(label="Quit")
+        self.add_cascade(label="Fichier", menu=file_menu)
+        file_menu.add_command(label="Choisir un repertoire DICOM", command=self.OnSelectDirectory)
+        file_menu.add_command(label="Quitter", command=self.OnQuit)
+
+        help_menu = tk.Menu(self, tearoff=False)
+        self.add_cascade(label="Aide", menu=help_menu)
+        help_menu.add_command(label="Afficher l'aide", command=self.OnShowHelp)
         
+
+    def OnQuit(self):
+        self.parent.destroy()
+
         
     def OnSelectDirectory(self):
         str = tkFileDialog.askdirectory()
@@ -197,6 +205,24 @@ class Menu(tk.Menu):
 
     def OnSelectSlice(self):
         return 1
+
+
+    def OnShowHelp(self):
+        message = "Ce logiciel permet de visualiser les résultats obtenus à partir de l'algorithme M1. \n\
+        Il est possible de lancer des calculs de prévisualisation, puis de simuler un dépot de dose en direct avec l'histogramme dose volume (HDV) en support.\n\
+        Marche à suivre :\n\
+        1) Ouvrir patient -> Choisir un répertoire contenant des fichiers DICOM (.dsm)\n\
+        2) Prévisualisation -> Choisir le répertoire de travail (où seront enregistrés les calculs)\n\
+        3) Choisir le contourage cible dans le menu déroulant (ROI par défaut)\n\
+        4) Lancer la prévisualisation\n\
+        - Il y la possibilité de récupérer des calculs déjà effectués\n\
+        - Une information -- Calculs en cours -- s'affiche pour indiquer que M1 est en train de tourner pour une slice donnée\n\
+        - Une fois les calculs terminés, -- Dose mode -- est activé (une icone l'indique en haut à droite de l'écran)\n\
+        5) Contourage -> Cocher les contourages à visualiser sur le HDV\n\
+        6) Afficher-Retirer miniature pour voir l'HDV en miniature\n\
+        7) Possibilité de switch entre mode absolu et relatif\n\
+        BUG : si un bug d'affichage apparait, veuillez actualiser la fenetre en appuyant plusieurs fois sur -- Afficher-Retirer miniature"
+        showinfo("Aide basique", message)
 
 
 class Toolbar(tk.Frame):
@@ -303,7 +329,7 @@ class DicomInfo(tk.Frame):
         figure_hdv = self.dicom_navigation.figure_hdv
         self.top_canvas = tk.Canvas(self, width=600, height=50, borderwidth=1, relief=tk.RAISED)
         self.top_canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=False)
-        
+
         # Figure DVH
         self.canvas_HDV = FigureCanvasTkAgg(figure_hdv, self.top_canvas)
         self.canvas_HDV.show()

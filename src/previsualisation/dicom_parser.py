@@ -588,13 +588,13 @@ class DicomParser:
         # Densite
         HU_array = slice.get_HU_array()
 
-        # Sources reelles activees
+        # Sources reelles activees (arrondies a la maillage la plus proche)
         sources = slice.get_dic_sources_displayed().values()
         for source in sources:
             source[0] = int(np.round(source[0]))
             source[1] = int(np.round(source[1]))
 
-        # Domaine minimal (TODO : a optimiser)
+        # Domaine minimal (TODO : a optimiser avec les nouvelles sources)
         domaine = slice.get_domaine()
             
         # Reduction des calculs sur le domaine        

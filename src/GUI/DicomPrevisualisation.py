@@ -7,7 +7,7 @@
 # This file is part of cythi, released under a BSD license.
 
 from MainGUI import *
-
+from threading import Thread
 
 class DicomPrevisualisation(tk.Frame):
     """
@@ -115,36 +115,42 @@ class DicomPrevisualisation(tk.Frame):
                                   command=None)
         checkbox.grid(row=11, column=1, sticky=tk.E)
 
-        # Bouton pour activer toutes les sources
-        button = tk.Button(self, text="Activer toutes les sources", \
-                           relief=tk.RAISED, command=self.OnAddAllSources)
-        button.grid(row=12, padx=2, pady=2, sticky=tk.W)
-
-        # Bouton pour retirer toutes les sources
-        button = tk.Button(self, text="Retirer toutes les sources", \
-                           relief=tk.RAISED, command=self.OnRemoveAllSources)
-        button.grid(row=13, padx=2, pady=2, sticky=tk.W)
-
-        # Bouton pour optimiser le dépot de source
-        button = tk.Button(self, text="Optimiser le dépot de dose", \
-                           relief=tk.RAISED, command=None)
-        button.grid(row=14, padx=2, pady=2, sticky=tk.W)
+        # Separateur
+        ttk.Separator(self, orient=tk.HORIZONTAL).grid(row=12, padx=10, pady=10, columnspan=2)
 
         # Bouton pour lancer la previsualisation
         filename = self.dicom_navigation.PATH_ressources + "cog.gif"
         img = Image.open(filename)
         self.button_previsualisation = ImageTk.PhotoImage(img)
         button = tk.Button(self, text="Lancer la previsualisation", image=self.button_previsualisation, \
-                                relief=tk.RAISED, compound="right", command=self.OnLancerPrevisualisation)
-        button.grid(row=15, padx=2, pady=2, sticky=tk.W)
+                           relief=tk.RAISED, compound="right", command=partial(self.OnLancerCalculs, calculs_finaux=False))
+        button.grid(row=13, padx=2, pady=2, sticky=tk.W)
 
         # Bouton pour lancer les calculs finaux
         filename = self.dicom_navigation.PATH_ressources + "cog.gif"
         img = Image.open(filename)
         self.button_calculs = ImageTk.PhotoImage(img)
         button = tk.Button(self, text="Lancer calculs finaux", image=self.button_calculs, \
-                                relief=tk.RAISED, compound="right", command=self.OnLancerCalculsFinaux)
+                                relief=tk.RAISED, compound="right",  command=partial(self.OnLancerCalculs, calculs_finaux=True))
+        button.grid(row=14, padx=2, pady=2, sticky=tk.W)
+
+        # Separateur
+        ttk.Separator(self, orient=tk.HORIZONTAL).grid(row=15, padx=10, pady=10, columnspan=2)
+
+        # Bouton pour activer toutes les sources
+        button = tk.Button(self, text="Activer toutes les sources", \
+                           relief=tk.RAISED, command=self.OnAddAllSources)
         button.grid(row=16, padx=2, pady=2, sticky=tk.W)
+
+        # Bouton pour retirer toutes les sources
+        button = tk.Button(self, text="Retirer toutes les sources", \
+                           relief=tk.RAISED, command=self.OnRemoveAllSources)
+        button.grid(row=17, padx=2, pady=2, sticky=tk.W)
+
+        # Bouton pour optimiser le dépot de dose
+        button = tk.Button(self, text="Optimiser le dépot de dose", \
+                           relief=tk.RAISED, command=None)
+        button.grid(row=18, padx=2, pady=2, sticky=tk.W)
 
 
     def load_initial_values(self):
@@ -192,65 +198,42 @@ class DicomPrevisualisation(tk.Frame):
         self.dicom_navigation.refresh()
 
 
-    def OnLancerPrevisualisation(self):
-        """
-        Lance la prévisualition, deux cas :
-        - Si des calculs sont déjà en mémoire, alors possibilité de les récupérer
-        - Sinon lancer les calculs à l'aide de KIDS (~400 secondes pour 80 sources)
-        """
+    def OnLancerCalculs(self, calculs_finaux=False):
         slice = self.dicom_navigation.slice
-        dicom_hdv = self.dicom_navigation.parent.dicom_right_window.dicom_hdv
+        dicom_hdv = self.dicom_navigation.get_dicom_hdv()
 
         # WARNING : Choisir contourage cible
         if (self.dicom_navigation.dicom_parser.get_contourage_cible_id() is None) or (self.dicom_navigation.get_working_directory() is None):
             showwarning("Attention", "Veuillez d'abord choisir un répertoire de travail et un contourage cible.")
             return
-            
+        
+        # Update sources
         self.dicom_navigation.slice.refresh_sources()
         self.dicom_navigation.slice.refresh_domaine()
 
-        self.dicom_navigation.dicom_parser.set_granularite_source(self.granularite_source.get())
-        self.dicom_navigation.dicom_parser.set_zone_influence(self.zone_influence.get())
-        slice.preparatifs_precalculs()
+        if calculs_finaux:
+            # Creation et lancement du thread
+            thread_calculs = LancerCalculs(self.dicom_navigation, self, True)
+            thread_calculs.start()
+        else: # Calculs previsualisation
+            # Creation du thread
+            thread_calculs = LancerCalculs(self.dicom_navigation, self, False)
 
-        # Verification si des calculs sont en memoire
-        if slice.dose_already_calculated():
-            answer = askyesno("Lancer prévisualisation", "Des calculs de prévisualisation sont en mémoire, voulez-vous les utiliser ? Si vous répondez NON, ceux-ci seront relancés.")
-            if not answer:
-                self.lancer_calculs_previsualisation()
-        else:
-            self.lancer_calculs_previsualisation()
-
-        slice.set_dose_mode_ON()
-        self.dicom_navigation.get_dicom_contourage().compute_appartenances_contourage_slice()
-        self.dicom_navigation.get_dicom_hdv().update_hdv()
-        self.dicom_navigation.refresh()
-        
-
-
-    def OnLancerCalculsFinaux(self):
-        """
-        Lance les calculs finaux
-        On prend en compte la position exacte des points placés
-        La composition chimique et densité des grainds d'iode est également rajoutée
-        """
-        # WARNING : Choisir contourage cible
-        if (self.dicom_navigation.dicom_parser.get_contourage_cible_id() is None) or (self.dicom_navigation.get_working_directory() is None):
-            showwarning("Attention", "Veuillez d'abord choisir un répertoire de travail et un contourage cible.")
-            return
-        
-        self.dicom_navigation.slice.refresh_sources()
-        self.dicom_navigation.slice.refresh_domaine()
-
-        self.dicom_navigation.dicom_parser.set_granularite_source(self.granularite_source.get())
-        self.dicom_navigation.dicom_parser.set_zone_influence(self.zone_influence.get())
-        
-        self.lancer_calculs_finaux()
-        
-        self.dicom_navigation.slice.set_dose_mode_ON()
-        self.dicom_navigation.get_dicom_contourage().compute_appartenances_contourage_slice()
-        self.dicom_navigation.get_dicom_hdv().update_hdv()
-        self.dicom_navigation.refresh()
+            # Verification si des calculs sont en memoire
+            if slice.dose_already_calculated():
+                answer = askyesno("Lancer prévisualisation", "Des calculs de prévisualisation sont en mémoire, voulez-vous les utiliser ? Si vous répondez NON, ceux-ci seront relancés.")
+                if answer:
+                    # On recupere les calculs deja effectués, update du dose mode et HDV
+                    slice.set_dose_mode_ON()
+                    self.dicom_navigation.get_dicom_contourage().compute_appartenances_contourage_slice()
+                    self.dicom_navigation.get_dicom_hdv().update_hdv()
+                    self.dicom_navigation.refresh()
+                else:
+                    # Sinon on RElance les calcul (meme s'il y en a en memoire)
+                    thread_calculs.start()   
+            else:
+                # Si aucun calcul en memoire on lance les calculs
+                thread_calculs.start()
 
 
     def OnUpdateContourageCible(self, ROIname):
@@ -321,43 +304,57 @@ class DicomPrevisualisation(tk.Frame):
         return self.ROI_name_LUT[ROIname]
 
 
-    def lancer_calculs_previsualisation(self):
-        """ Genère les fichiers .don nécessaires et lance les calculs """
+class LancerCalculs(Thread):
+    """
+    Thread chargé de lancer les calculs de previsualisation (ou calculs finaux) en parallèle du programme principal
+    Le principe de la délégation est utilisé pour utiliser les informations relatives à dicom_previsualisation
+    """
+
+    def __init__(self, dicom_navigation, dicom_previsualisation, calculs_finaux=False):
+        Thread.__init__(self)
+        self.dicom_navigation = dicom_navigation
+        self.dicom_previsualisation = dicom_previsualisation
+        self.calculs_finaux = calculs_finaux
+
+    def run(self):
+        """ Code à exécuter pendant l'exécution du thread """
         slice = self.dicom_navigation.slice
+
+        # Affichage de "Calculs en cours..."
+        slice.set_calculs_en_cours(1)
+        self.dicom_navigation.refresh()
+
+        # On met a jour les parametres
+        self.dicom_navigation.dicom_parser.set_granularite_source(self.dicom_previsualisation.granularite_source.get())
+        self.dicom_navigation.dicom_parser.set_zone_influence(self.dicom_previsualisation.zone_influence.get())
+        self.dicom_navigation.dicom_parser.set_raffinement(self.dicom_previsualisation.raffinement.get())
         
-        # Generation des fichiers de configuration .don
-        self.dicom_navigation.dicom_parser.set_raffinement(self.raffinement.get())
+        # Generation des fichiers de configuration .don en fonction de calculs previsualisation ou calculs finaux
+        self.dicom_navigation.dicom_parser.set_raffinement(self.dicom_previsualisation.raffinement.get())
         
-        options = { 'algorithme': self.algorithme.get(),
-                    'rayon': (self.rayon_x.get(), self.rayon_y.get(), 1),
+        options = { 'algorithme': self.dicom_previsualisation.algorithme.get(),
+                    'rayon': (self.dicom_previsualisation.rayon_x.get(),
+                              self.dicom_previsualisation.rayon_y.get(), 1),
                     'direction_M1': (0., 0., 0.), # Curietherapie
-                    'spectre_mono': (self.intensite.get(), self.energie.get()) }
-        
-        self.dicom_navigation.dicom_parser.generate_DICOM_previsualisation(slice.get_slice_id(),
-                                                                           self.dicom_navigation.working_directory,
-                                                                           options)
+                    'spectre_mono': (self.dicom_previsualisation.intensite.get(), self.dicom_previsualisation.energie.get()) }
+
+        if self.calculs_finaux:
+            slice.preparatifs_precalculs() # Calcul de la densite, HU_array, etc.
+            self.dicom_navigation.dicom_parser.generate_DICOM_calculs_finaux(slice.get_slice_id(),
+                                                                             self.dicom_navigation.working_directory,
+                                                                             options)
+        else:
+            self.dicom_navigation.dicom_parser.generate_DICOM_previsualisation(slice.get_slice_id(),
+                                                                               self.dicom_navigation.working_directory,
+                                                                               options)
 
         # Lancement du calcul M1
         command = self.dicom_navigation.PATH_start_previsualisation + " " + self.dicom_navigation.slice.get_slice_directory()
         os.system(command)
 
-
-    def lancer_calculs_finaux(self):
-        """ Genère les fichiers .don nécessaires et lance les calculs """
-        slice = self.dicom_navigation.slice
-        
-        # Generation des fichiers de configuration .don
-        self.dicom_navigation.dicom_parser.set_raffinement(self.raffinement.get())
-        
-        options = { 'algorithme': self.algorithme.get(),
-                    'rayon': (self.rayon_x.get(), self.rayon_y.get(), 1),
-                    'direction_M1': (0., 0., 0.), # Curietherapie
-                    'spectre_mono': (self.intensite, self.energie) }
-        
-        self.dicom_navigation.dicom_parser.generate_DICOM_calculs_finaux(slice.get_slice_id(),
-                                                                         self.dicom_navigation.working_directory,
-                                                                         options)
-
-        # Lancement du calcul M1
-        command = self.dicom_navigation.PATH_start_previsualisation + " " + self.dicom_navigation.slice.get_slice_directory()
-        os.system(command)
+        # Update du dose mode et HDV
+        slice.set_dose_mode_ON()
+        self.dicom_navigation.get_dicom_contourage().compute_appartenances_contourage_slice()
+        self.dicom_navigation.get_dicom_hdv().update_hdv()
+        slice.set_calculs_en_cours(0)
+        self.dicom_navigation.refresh()

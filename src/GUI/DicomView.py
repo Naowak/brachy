@@ -42,18 +42,28 @@ class DicomView(tk.Frame):
 
         # Affichage des informations
         widget = self.canvas.get_tk_widget()
-        
-        message = "Slice :\n" + \
+
+        # NW
+        message = "Patient position :\n" + \
+                  "Slice :\n" + \
                   "Position :"
         self.label_NW = tk.Label(widget, text=message, bg="black", fg="white", justify=tk.LEFT)
-        self.label_NW.pack(side=tk.TOP, anchor=tk.NW)
+        self.label_NW.pack(side=tk.LEFT, fill=tk.X, anchor=tk.NW)
 
-        message = "Patient position :"
-        self.label_SW = tk.Label(widget, text=message, bg="black", fg="white", justify=tk.LEFT)
-        self.label_SW.pack(side=tk.BOTTOM, anchor=tk.SW)
-    
+        # NE
+        filename = self.dicom_navigation.PATH_ressources + "refuse.gif"
+        img = Image.open(filename)
+        self.img_dose_mode_OFF = ImageTk.PhotoImage(img)
+        
+        filename = self.dicom_navigation.PATH_ressources + "accept.gif"
+        img = Image.open(filename)
+        self.img_dose_mode_ON = ImageTk.PhotoImage(img)
+            
+        self.label_NE = tk.Label(widget, text="Dose mode ", image=self.img_dose_mode_OFF,
+                                     bg="black", fg="white", compound=tk.RIGHT)
+        self.label_NE.pack(anchor=tk.NE)
 
-
+        
     def OnSwitchTab(self, event):
         """ Permet d'actualiser les miniatures """
         if self.dicom_navigation.display_settings['miniature'] == 1:
@@ -151,36 +161,59 @@ class DicomView(tk.Frame):
             self.canvas.mpl_connect('button_press_event', self.OnClick)
             self.canvas.mpl_connect('scroll_event', self.OnMouseScroll)
             self.canvas.show()
-            self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+            self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
             self.canvas.get_tk_widget().configure(background='black',  highlightcolor='black',\
                                                   highlightbackground='black')
             self.canvas.get_tk_widget().pack_propagate(False) 
             self.toolbar = NavigationToolbar2TkAgg(self.canvas, self)
             self.toolbar.update()
-            self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+            self.canvas._tkcanvas.pack(fill=tk.BOTH, expand=True)
 
             # Affichage des informations
             widget = self.canvas.get_tk_widget()
-        
-            message = "Slice : " + str(self.dicom_navigation.slice_id + 1) + "/" + \
+
+            # NW (Slice number)
+            message = "Patient position : " + str(self.dicom_navigation.slice.dicom_slice.PatientPosition) + "\n" + \
+                      "Slice : " + str(self.dicom_navigation.slice_id + 1) + "/" + \
                       str(self.dicom_navigation.dicom_parser.n_slices) + "\n" + \
                       "Position : " + str(self.dicom_navigation.slice.position) + " mm"
             self.label_NW = tk.Label(widget, text=message, bg="black", fg="white", justify=tk.LEFT)
-            self.label_NW.pack(side=tk.TOP, anchor=tk.NW)
+            self.label_NW.pack(side=tk.LEFT, fill=tk.X, anchor=tk.NW)
 
-            message = "Patient position : " + str(self.dicom_navigation.slice.dicom_slice.PatientPosition)
-            self.label_SW = tk.Label(widget, text=message, bg="black", fg="white", justify=tk.LEFT)
-            self.label_SW.pack(side=tk.BOTTOM, anchor=tk.SW)
+            # NE (Dose mode)
+            self.label_NE = tk.Label(widget, text="Dose mode ", image=self.img_dose_mode_OFF,
+                                     bg="black", fg="white", compound=tk.RIGHT)
+            self.label_NE.pack(anchor=tk.NE)
+
+            # SE (Calculs en cours...)
+            message=""
+            self.label_SE = tk.Label(widget, text=message, bg="black", fg="white", justify=tk.LEFT)
+            self.label_SE.pack(anchor=tk.SE)
+
+
             
 
         # On affiche la figure
         self.canvas.draw()  
 
         # Update des informations
-        message = "Slice : " + str(self.dicom_navigation.slice_id + 1) + "/" + \
+        message = "Patient position : " + str(self.dicom_navigation.slice.dicom_slice.PatientPosition) + "\n" + \
+                  "Slice : " + str(self.dicom_navigation.slice_id + 1) + "/" + \
                   str(self.dicom_navigation.dicom_parser.n_slices) + "\n" + \
                   "Position : " + str(self.dicom_navigation.slice.position) + " mm"
         self.label_NW.config(text=message)
-        
-        message = "Patient position : " + str(self.dicom_navigation.slice.dicom_slice.PatientPosition)
-        self.label_SW.config(text=message)
+
+        # Calculs en cours
+        if self.dicom_navigation.slice.get_calculs_en_cours():
+            message = "Calculs en cours..."
+        else:
+            message = ""
+        self.label_SE.config(text=message)
+
+        # Dose mode
+        if self.dicom_navigation.slice.get_dose_mode():
+            self.label_NE.config(image=self.img_dose_mode_ON)
+        else:
+            self.label_NE.config(image=self.img_dose_mode_OFF)
+            
+            

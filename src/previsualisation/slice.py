@@ -44,8 +44,9 @@ class Slice:
         self.contourages = None
         self.appartenance_contourage_cible = None
 
-        # Affichage ou non
+        # Informations sur l'etat courant
         self.dose_mode = 0
+        self.calculs_en_cours = 0
 
         # Sources, domaine, matrice dose
         self.sources = None
@@ -101,6 +102,14 @@ class Slice:
 
     def get_slice_directory(self):
         return self.slice_directory
+
+
+    def get_calculs_en_cours(self):
+        return self.calculs_en_cours
+
+
+    def set_calculs_en_cours(self, value):
+        self.calculs_en_cours = value
     
 
     def set_working_directory(self, working_directory):

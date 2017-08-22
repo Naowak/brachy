@@ -216,7 +216,7 @@ class DicomContourage(tk.Frame):
         self.slider_min = tk.Scale(self, from_=0, to=3000, \
                                    variable=self.dicom_navigation.vmin, \
                                    orient=tk.HORIZONTAL, \
-                                   command=lambda x: self.dicom_navigation.refresh())
+                                   command=self.OnChangeLuminosity)
         self.slider_min.grid(row=row_id, column=2)
 
         row_id += 1
@@ -224,6 +224,13 @@ class DicomContourage(tk.Frame):
         tk.Label(self, text="Luminosité max").grid(row=row_id, column=1)
         self.slider_max = tk.Scale(self, from_=0, to=3000, \
                                    variable=self.dicom_navigation.vmax, \
-                                   orient=tk.HORIZONTAL,
-                                   command=lambda x: self.dicom_navigation.refresh())
+                                   orient=tk.HORIZONTAL, \
+                                   command=self.OnChangeLuminosity)
         self.slider_max.grid(row=row_id, column=2)
+
+
+    def OnChangeLuminosity(self, event):
+        if self.dicom_navigation.vmin.get() > self.dicom_navigation.vmax.get():
+            self.dicom_navigation.vmin.set(self.dicom_navigation.vmax.get())
+
+        self.dicom_navigation.refresh()
