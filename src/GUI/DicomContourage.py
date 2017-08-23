@@ -166,10 +166,10 @@ class DicomContourage(tk.Frame):
 
         dicom_parser = self.dicom_navigation.dicom_parser
 
-        # Recuperation des informations sur le contourage
+        # Recuperation des informations sur le contourage du ROI souhaité
         self.dicom_navigation.contourages[ROI_id] = dicom_parser.get_DICOM_ROI(ROI_id)
 
-        # MAJ des slices concernees
+        # MAJ de toutes les slices concernees
         for (UID, array) in self.dicom_navigation.contourages[ROI_id].iteritems():
             slice_id = dicom_parser.UID_to_sliceid_LUT[UID]
             dicom_parser.slices[slice_id].add_contourage(ROI_id, name, color, array)

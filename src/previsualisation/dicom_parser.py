@@ -374,6 +374,7 @@ class DicomParser:
 
 
     def get_UID_to_sliceid_LUT(self):
+        """ Dictionnaire permettant d'associer à un UID un ID de slice """
         UID_to_sliceid_LUT = {}
 
         for slice in self.slices:

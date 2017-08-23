@@ -206,10 +206,6 @@ class DicomPrevisualisation(tk.Frame):
         if (self.dicom_navigation.dicom_parser.get_contourage_cible_id() is None) or (self.dicom_navigation.get_working_directory() is None):
             showwarning("Attention", "Veuillez d'abord choisir un répertoire de travail et un contourage cible.")
             return
-        
-        # Update sources
-        self.dicom_navigation.slice.refresh_sources()
-        self.dicom_navigation.slice.refresh_domaine()
 
         # Recuperation des parametres
         self.dicom_navigation.dicom_parser.set_granularite_source(self.granularite_source.get())
@@ -222,17 +218,13 @@ class DicomPrevisualisation(tk.Frame):
                     'direction_M1': (0., 0., 0.), # Curietherapie
                     'spectre_mono': (self.intensite.get(), self.energie.get()) }
 
-        # Lancement du ou des threads (generation + calculs M1)
-
-        if calculs_finaux:
-            # Lancement des calculs finaux avec la slice courante
-            thread_calculs = LancerCalculs(self.dicom_navigation, self.dicom_navigation.slice, options, True)
+        if self.checkbox_all_slices.get() == 0:
+            # Lancement du thread pour la slice courante
+            thread_calculs = LancerCalculs(self.dicom_navigation, self.dicom_navigation.slice, options, calculs_finaux)
             thread_calculs.start()
         else:
-            # Lancement des calculs de prévisualisation avec la slice courante
-            thread_calculs = LancerCalculs(self.dicom_navigation, self.dicom_navigation.slice, options, False)
-            thread_calculs.start()   
-        
+            # Lancement des threads pour toutes les slices contourées
+            self.lancer_calculs_all_slices(options, calculs_finaux)        
 
 
     def OnUpdateContourageCible(self, ROIname):
@@ -248,7 +240,8 @@ class DicomPrevisualisation(tk.Frame):
         self.dicom_navigation.parent.dicom_left_window.dicom_contourage.OnUpdateContourage(ROI_id)
         
         self.dicom_navigation.dicom_parser.set_contourage_cible_id(self.contourage_cible_id)
-        
+
+        # Actualisation de l'affichage
         if self.dicom_navigation.display_settings["sources"] == 1:
             self.dicom_navigation.slice.refresh_sources()
 
@@ -302,9 +295,17 @@ class DicomPrevisualisation(tk.Frame):
     def ROIname_to_ROIid(self, ROIname):
         return self.ROI_name_LUT[ROIname]
 
-    #def lancer_calculs_all_slices(self):
+    
+    def lancer_calculs_all_slices(self, options, calculs_finaux):
+        dicom_parser = self.dicom_navigation.dicom_parser
+        ROI_id = dicom_parser.get_contourage_cible_id()
 
-        
+        # On lance un thread pour chaque slice contourée pour le ROI correspondant au contourage cible
+        for (UID, array) in self.dicom_navigation.contourages[ROI_id].iteritems():
+            slice_id = dicom_parser.UID_to_sliceid_LUT[UID]
+            thread_calculs = LancerCalculs(self.dicom_navigation, dicom_parser.get_slice(slice_id), options, calculs_finaux)
+            thread_calculs.start()
+            
         
 class LancerCalculs(Thread):
     """
@@ -321,9 +322,13 @@ class LancerCalculs(Thread):
 
     def run(self):
         """ Code à exécuter pendant l'exécution du thread """
+        # Calcul des sources à placer pour la prévisualisation (réparties en fonction du ROI cible)
+        self.slice.refresh_sources()
+        self.slice.refresh_domaine()
+        
         # Verification si des calculs sont en memoire
         answer = False
-        if self.slice.dose_already_calculated():
+        if self.slice.dose_already_calculated() and (not self.calculs_finaux):
             message = "Des calculs de prévisualisation sont en mémoire pour la slice " + str(self.dicom_navigation.slice_id + 1) + ", voulez-vous les utiliser ? Si vous répondez NON, ceux-ci seront relancés."
             answer = askyesno("Lancer prévisualisation", message)
             
