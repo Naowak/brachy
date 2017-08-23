@@ -211,29 +211,28 @@ class DicomPrevisualisation(tk.Frame):
         self.dicom_navigation.slice.refresh_sources()
         self.dicom_navigation.slice.refresh_domaine()
 
-        if calculs_finaux:
-            # Creation et lancement du thread
-            thread_calculs = LancerCalculs(self.dicom_navigation, self, True)
-            thread_calculs.start()
-        else: # Calculs previsualisation
-            # Creation du thread
-            thread_calculs = LancerCalculs(self.dicom_navigation, self, False)
+        # Recuperation des parametres
+        self.dicom_navigation.dicom_parser.set_granularite_source(self.granularite_source.get())
+        self.dicom_navigation.dicom_parser.set_zone_influence(self.zone_influence.get())
+        self.dicom_navigation.dicom_parser.set_raffinement(self.raffinement.get())
 
-            # Verification si des calculs sont en memoire
-            if slice.dose_already_calculated():
-                answer = askyesno("Lancer prévisualisation", "Des calculs de prévisualisation sont en mémoire, voulez-vous les utiliser ? Si vous répondez NON, ceux-ci seront relancés.")
-                if answer:
-                    # On recupere les calculs deja effectués, update du dose mode et HDV
-                    slice.set_dose_mode_ON()
-                    self.dicom_navigation.get_dicom_contourage().compute_appartenances_contourage_slice()
-                    self.dicom_navigation.get_dicom_hdv().update_hdv()
-                    self.dicom_navigation.refresh()
-                else:
-                    # Sinon on RElance les calcul (meme s'il y en a en memoire)
-                    thread_calculs.start()   
-            else:
-                # Si aucun calcul en memoire on lance les calculs
-                thread_calculs.start()
+        options = { 'algorithme': self.algorithme.get(),
+                    'rayon': (self.rayon_x.get(),
+                              self.rayon_y.get(), 1),
+                    'direction_M1': (0., 0., 0.), # Curietherapie
+                    'spectre_mono': (self.intensite.get(), self.energie.get()) }
+
+        # Lancement du ou des threads (generation + calculs M1)
+
+        if calculs_finaux:
+            # Lancement des calculs finaux avec la slice courante
+            thread_calculs = LancerCalculs(self.dicom_navigation, self.dicom_navigation.slice, options, True)
+            thread_calculs.start()
+        else:
+            # Lancement des calculs de prévisualisation avec la slice courante
+            thread_calculs = LancerCalculs(self.dicom_navigation, self.dicom_navigation.slice, options, False)
+            thread_calculs.start()   
+        
 
 
     def OnUpdateContourageCible(self, ROIname):
@@ -303,58 +302,59 @@ class DicomPrevisualisation(tk.Frame):
     def ROIname_to_ROIid(self, ROIname):
         return self.ROI_name_LUT[ROIname]
 
+    #def lancer_calculs_all_slices(self):
 
+        
+        
 class LancerCalculs(Thread):
     """
     Thread chargé de lancer les calculs de previsualisation (ou calculs finaux) en parallèle du programme principal
     Le principe de la délégation est utilisé pour utiliser les informations relatives à dicom_previsualisation
     """
 
-    def __init__(self, dicom_navigation, dicom_previsualisation, calculs_finaux=False):
+    def __init__(self, dicom_navigation, slice, options, calculs_finaux=False):
         Thread.__init__(self)
         self.dicom_navigation = dicom_navigation
-        self.dicom_previsualisation = dicom_previsualisation
+        self.slice = slice
+        self.options = options
         self.calculs_finaux = calculs_finaux
 
     def run(self):
         """ Code à exécuter pendant l'exécution du thread """
-        slice = self.dicom_navigation.slice
+        # Verification si des calculs sont en memoire
+        answer = False
+        if self.slice.dose_already_calculated():
+            message = "Des calculs de prévisualisation sont en mémoire pour la slice " + str(self.dicom_navigation.slice_id + 1) + ", voulez-vous les utiliser ? Si vous répondez NON, ceux-ci seront relancés."
+            answer = askyesno("Lancer prévisualisation", message)
+            
+        if not answer:
+            # Affichage de "Calculs en cours..."
+            self.slice.set_calculs_en_cours(1)
+            self.slice.set_dose_mode_OFF() # Au cas où on soit déjà en dose_mode
+            self.dicom_navigation.refresh()
+            
+            # Generation des fichiers .don
+            if self.calculs_finaux:
+                self.dicom_navigation.dicom_parser.generate_DICOM_calculs_finaux(self.slice.get_slice_id(),
+                                                                                 self.dicom_navigation.working_directory,
+                                                                                 self.options)
+            else:
+                self.slice.preparatifs_precalculs() # Calcul de la densite, HU_array, etc.
+                self.dicom_navigation.dicom_parser.generate_DICOM_previsualisation(self.slice.get_slice_id(),
+                                                                                   self.dicom_navigation.working_directory,
+                                                                                   self.options)
 
-        # Affichage de "Calculs en cours..."
-        slice.set_calculs_en_cours(1)
-        self.dicom_navigation.refresh()
+            # Puis Lancement du calcul M1
+            command = self.dicom_navigation.PATH_start_previsualisation + " " + self.slice.get_slice_directory() 
+            os.system(command)
 
-        # On met a jour les parametres
-        self.dicom_navigation.dicom_parser.set_granularite_source(self.dicom_previsualisation.granularite_source.get())
-        self.dicom_navigation.dicom_parser.set_zone_influence(self.dicom_previsualisation.zone_influence.get())
-        self.dicom_navigation.dicom_parser.set_raffinement(self.dicom_previsualisation.raffinement.get())
-        
-        # Generation des fichiers de configuration .don en fonction de calculs previsualisation ou calculs finaux
-        self.dicom_navigation.dicom_parser.set_raffinement(self.dicom_previsualisation.raffinement.get())
-        
-        options = { 'algorithme': self.dicom_previsualisation.algorithme.get(),
-                    'rayon': (self.dicom_previsualisation.rayon_x.get(),
-                              self.dicom_previsualisation.rayon_y.get(), 1),
-                    'direction_M1': (0., 0., 0.), # Curietherapie
-                    'spectre_mono': (self.dicom_previsualisation.intensite.get(), self.dicom_previsualisation.energie.get()) }
-
-        if self.calculs_finaux:
-            slice.preparatifs_precalculs() # Calcul de la densite, HU_array, etc.
-            self.dicom_navigation.dicom_parser.generate_DICOM_calculs_finaux(slice.get_slice_id(),
-                                                                             self.dicom_navigation.working_directory,
-                                                                             options)
-        else:
-            self.dicom_navigation.dicom_parser.generate_DICOM_previsualisation(slice.get_slice_id(),
-                                                                               self.dicom_navigation.working_directory,
-                                                                               options)
-
-        # Lancement du calcul M1
-        command = self.dicom_navigation.PATH_start_previsualisation + " " + self.dicom_navigation.slice.get_slice_directory()
-        os.system(command)
+            # On retire l'affichage de "Calculs en cours..."
+            self.slice.set_calculs_en_cours(0)
+                
+        # Implicite : Si answer == True, alors on recupere les calculs deja effectués
 
         # Update du dose mode et HDV
-        slice.set_dose_mode_ON()
-        self.dicom_navigation.get_dicom_contourage().compute_appartenances_contourage_slice()
+        self.slice.set_dose_mode_ON()
+        self.dicom_navigation.get_dicom_contourage().compute_appartenances_contourage_slice(self.slice)
         self.dicom_navigation.get_dicom_hdv().update_hdv()
-        slice.set_calculs_en_cours(0)
         self.dicom_navigation.refresh()

@@ -28,9 +28,10 @@ else
 
     # Nettoyage du repertoire
     rm -rf *.dat 2> /dev/null
+    rm -rf logbook.txt 2> /dev/null
 
     # Lancement de M1
-    $EXEC_PATH $SLICE_DIRECTORY/config_KIDS.don
+    $EXEC_PATH $SLICE_DIRECTORY/config_KIDS.don > logbook.txt
 
     # Nettoyage des fichiers parasites
     rm *.mtv *.mgr

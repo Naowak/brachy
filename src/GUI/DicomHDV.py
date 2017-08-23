@@ -104,9 +104,9 @@ class DicomHDV(tk.Frame):
         self.fig.set_ylabel('Pourcentage du volume')
         self.fig.grid(True)
 
-        # Cas ou aucune source n'est placee
         dose_matrix = self.dicom_navigation.slice.get_dose_matrix()
-        
+
+        # Cas ou aucune source n'est placee
         if dose_matrix is None:
             self.canvas.draw()
             self.parent.top_info.canvas_HDV.draw()

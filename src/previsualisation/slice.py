@@ -202,6 +202,11 @@ class Slice:
     def set_dose_mode_ON(self):
         """ Active le dose mode """
         self.dose_mode = 1
+
+
+    def set_dose_mode_OFF(self):
+        """ Désactive le dose mode """
+        self.dose_mode = 0
     
 
     def dose_already_calculated(self):

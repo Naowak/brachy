@@ -123,12 +123,8 @@ class DicomNavigation:
         if self.display_settings["domaine"] == 1:
             self.slice.refresh_domaine()
 
-        if self.slice.get_dose_mode() == 1:
-            # Calcul des appartenances contourage pour avoir l'HDV de la slice
-            self.get_dicom_contourage().compute_appartenances_contourage_slice()
-
-            # MAJ de l'HDV
-            self.get_dicom_hdv().update_hdv()
+        # MAJ de l'HDV (si dose_matrix est None alors HDV vierge)
+        self.get_dicom_hdv().update_hdv()
 
 
     def get_dicom_contourage(self):
