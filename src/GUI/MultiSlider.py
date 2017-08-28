@@ -187,7 +187,7 @@ class Cursor:
 
 
         self.label_var.set(str(self.cursor_value.get()))
-        self.label.place(x=self.padx + self.position, y=self.pady - 20, anchor=tk.N)
+        self.label.place(x=self.padx + self.position, y=self.pady - 30, anchor=tk.N)
 
 
     def onLeftClick(self, event):

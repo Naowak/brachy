@@ -11,6 +11,7 @@ import Tkinter as tk
 import tkFileDialog
 import ttk
 import tkColorChooser as tkc
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from subprocess import call
@@ -298,7 +299,6 @@ class DicomRightWindow(tk.Frame):
     def initialize(self):        
         # Notebook (dicom window + hdv)
         self.notebook = ttk.Notebook(self, style='TNotebook')
-        self.notebook.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
         self.dicom_view = DicomView(self, self.dicom_navigation)
         self.dicom_hdv = DicomHDV(self, self.dicom_navigation)
         self.notebook.add(self.dicom_view, text="Dicom View")
@@ -306,7 +306,10 @@ class DicomRightWindow(tk.Frame):
 
         # Top frame info
         self.top_info = DicomInfo(self, self.dicom_navigation)
+
+        # Pack
         self.top_info.pack(side=tk.TOP, fill=tk.BOTH, expand=False)
+        self.notebook.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
 
     def get_current_tab(self):
@@ -339,7 +342,13 @@ class DicomInfo(tk.Frame):
         # Figure Dicom
         self.blank_canvas = True
         (fig, axes) = plt.subplots(facecolor="black")
-        axes.set_axis_bgcolor("black")
+
+        # Error depending version
+        if (mpl.__version__ =='2.0.0'):
+            axes.set_facecolor("black")
+        else:
+            axes.set_axis_bgcolor("black")
+            
         axes.set_axis_off()
         self.canvas_dicom = FigureCanvasTkAgg(fig, self.top_canvas)
         self.canvas_dicom.get_tk_widget().pack_propagate(True) 
@@ -356,6 +365,7 @@ class DicomInfo(tk.Frame):
             self.blank_canvas = False
             self.canvas_dicom.get_tk_widget().destroy()
             self.canvas_dicom = FigureCanvasTkAgg(figure_dicom, self.top_canvas)
+            self.canvas_dicom.get_tk_widget().pack_propagate(True)
             self.canvas_dicom.show()
             self.canvas_dicom.get_tk_widget().configure(background='black',  highlightcolor='black',\
                                                         highlightbackground='black')

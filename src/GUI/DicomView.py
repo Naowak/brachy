@@ -33,7 +33,13 @@ class DicomView(tk.Frame):
         # Drawing initial empty canvas
         self.blank_canvas = True
         (fig, axes) = plt.subplots(facecolor="black")
-        axes.set_axis_bgcolor("black")
+
+        # Error depending version
+        if (mpl.__version__ =='2.0.0'):
+            axes.set_facecolor("black")
+        else:
+            axes.set_axis_bgcolor("black")
+
         axes.set_axis_off()
         self.canvas = FigureCanvasTkAgg(fig, self)
         self.canvas.get_tk_widget().config(width=500, height=270)

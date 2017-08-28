@@ -765,8 +765,8 @@ def plot_DICOM_dose(ax, dose_matrix, n_points, isodose_values):
     dose_matrix = dose_matrix.T
     maxhom = np.amax(dose_matrix)
     
-    CS = ax.contour(dose_matrix/maxhom, isodose_values, origin='upper', extent=[0, lf, mf, 0], linewidths=2, zorder=3)
-    #CS = ax.contourf(dose_matrix/maxhom, isodose_values, origin='upper', extent=[0, lf, mf, 0], linewidths=2, zorder=3, alpha=0.2)
+    #CS = ax.contour(dose_matrix/maxhom, isodose_values, origin='upper', extent=[0, lf, mf, 0], linewidths=2, zorder=3)
+    CS = ax.contourf(dose_matrix/maxhom, isodose_values, origin='upper', extent=[0, lf, mf, 0], linewidths=2, zorder=3, alpha=0.2)
 
     
 def plot_DICOM_contourage(ax, contourage, color):

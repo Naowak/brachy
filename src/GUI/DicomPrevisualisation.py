@@ -48,7 +48,7 @@ class DicomPrevisualisation(tk.Frame):
         self.rayon_x = tk.DoubleVar(value=0.6)
         tk.Label(self, text="Rayon (x, y)").grid(row=2, column=0, stick=tk.W)
         e = tk.Entry(self, justify=tk.RIGHT, textvariable=self.rayon_x, width=3)
-        e.grid(row=2, column=1)
+        e.grid(row=2, column=1, sticky=tk.W)
 
         self.rayon_y = tk.DoubleVar(value=0.6)
         e = tk.Entry(self, justify=tk.RIGHT, textvariable=self.rayon_y, width=3)
