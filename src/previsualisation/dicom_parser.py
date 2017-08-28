@@ -764,22 +764,11 @@ def plot_DICOM_dose(ax, dose_matrix, n_points, isodose_values):
     (lf, mf, nf) = n_points
     dose_matrix = dose_matrix.T
     maxhom = np.amax(dose_matrix)
-
-    # Calcul des limites d'isodoses
-    # levelsXZ = (0.05, 0.25, 0.5, 0.85, 0.95)
-    #min = options_isodoses['isodose_min']
-    #max = options_isodoses['isodose_max']
-    #step = (max - min) / 4
-    #levelsXZ = (min, min + step, min + (2 * step), min + (3 * step), max)
-
-    #isodose = dose_matrix/maxhom
-    #print isodose[179+51, 194+61]
-    #ax.imshow(dose_matrix, origin='upper', zorder=2, cmap='hot')
     
     CS = ax.contour(dose_matrix/maxhom, isodose_values, origin='upper', extent=[0, lf, mf, 0], linewidths=2, zorder=3)
-    #ax.clabel(CS, inline=1, fontsize=15, inline_spacing=0, linestyles='dashed', zorder=3)
+    #CS = ax.contourf(dose_matrix/maxhom, isodose_values, origin='upper', extent=[0, lf, mf, 0], linewidths=2, zorder=3, alpha=0.2)
 
-
+    
 def plot_DICOM_contourage(ax, contourage, color):
     """ Ajoute la visualisation du contourage sur la figure
     [Params]
