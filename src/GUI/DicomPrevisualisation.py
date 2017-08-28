@@ -8,6 +8,7 @@
 
 from MainGUI import *
 from threading import Thread
+from MultiSlider import *
 
 class DicomPrevisualisation(tk.Frame):
     """
@@ -20,6 +21,7 @@ class DicomPrevisualisation(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.parent = parent
         self.dicom_navigation = dicom_navigation
+        
         self.initialize()
 
     def initialize(self):
@@ -152,11 +154,59 @@ class DicomPrevisualisation(tk.Frame):
                            relief=tk.RAISED, command=None)
         button.grid(row=18, padx=2, pady=2, sticky=tk.W)
 
+        # Separateur
+        ttk.Separator(self, orient=tk.HORIZONTAL).grid(row=19, padx=10, pady=10, columnspan=2)
+
+        # Sliders permettant de gérer les options d'isodoses (min et max)
+        self.isodose_values = [0] * 5
+        self.isodose_values[0] = tk.DoubleVar()
+        self.isodose_values[1] = tk.DoubleVar()
+        self.isodose_values[2] = tk.DoubleVar()
+        self.isodose_values[3] = tk.DoubleVar()
+        self.isodose_values[4] = tk.DoubleVar()
+        
+        self.multislider = MultiSlider(self, cursors_values=self.isodose_values,
+                                       from_=0.001, to=0.15, resolution=0.001,
+                                       command=self.OnChangeIsodose)
+        self.multislider.grid(row=20, column=0)
+        
+        # tk.Label(self, text="Bornes des isodoses").grid(row=20, column=0, sticky=tk.E)
+        
+        # self.isodose_max = tk.DoubleVar(value=0.015)       
+        # slider_isodose_max = tk.Scale(self, from_=0.0, to=1.0, \
+        #                              resolution=0.001, \
+        #                              digits=4, \
+        #                              variable=self.isodose_max, \
+        #                              orient=tk.VERTICAL, \
+        #                              command=self.OnChangeIsodose)
+        # slider_isodose_max.grid(row=22, column=0)
+
+        # self.isodose_min = tk.DoubleVar(value=0.005)
+        # tk.Label(self, text="Min").grid(row=21, column=0, sticky=tk.E)
+        # slider_isodose_min = tk.Scale(self, from_=0.0, to=1.0, \
+        #                              resolution=0.001, \
+        #                              digits=4, \
+        #                              variable=self.isodose_min, \
+        #                              orient=tk.VERTICAL, \
+        #                              command=self.OnChangeIsodose)
+        # slider_isodose_min.grid(row=22, column=0, sticky=tk.E)
+
 
     def load_initial_values(self):
         """ Chargement des valeurs par défaut lorsqu'on a fini le parsing """
         self.dicom_navigation.dicom_parser.set_granularite_source(self.granularite_source.get())
         self.dicom_navigation.dicom_parser.set_zone_influence(self.zone_influence.get())
+
+
+    def OnChangeIsodose(self):
+        if self.dicom_navigation.dicom_parser is None:
+            return
+
+        isodose_real_values = [ isodose_value.get() for isodose_value in self.isodose_values ]
+        self.dicom_navigation.dicom_parser.set_isodose_values(isodose_real_values)
+
+        if self.dicom_navigation.slice.get_dose_mode() == 1:
+            self.dicom_navigation.refresh()
 
 
     def OnSelectWorkingDirectory(self):
@@ -211,6 +261,9 @@ class DicomPrevisualisation(tk.Frame):
         self.dicom_navigation.dicom_parser.set_granularite_source(self.granularite_source.get())
         self.dicom_navigation.dicom_parser.set_zone_influence(self.zone_influence.get())
         self.dicom_navigation.dicom_parser.set_raffinement(self.raffinement.get())
+        
+        isodose_real_values = [ isodose_value.get() for isodose_value in self.isodose_values ]
+        self.dicom_navigation.dicom_parser.set_isodose_values(isodose_real_values)
 
         options = { 'algorithme': self.algorithme.get(),
                     'rayon': (self.rayon_x.get(),

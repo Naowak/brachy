@@ -11,6 +11,7 @@ import Tkinter as tk
 import tkFileDialog
 import ttk
 import tkColorChooser as tkc
+import matplotlib.pyplot as plt
 
 from subprocess import call
 from functools import partial
@@ -329,6 +330,7 @@ class DicomInfo(tk.Frame):
         # Figure DVH
         self.canvas_HDV = FigureCanvasTkAgg(figure_hdv, self.top_canvas)
         self.canvas_HDV.show()
+        self.canvas_HDV.get_tk_widget().pack_propagate(True) 
         self.canvas_HDV.get_tk_widget().configure(background='black',  highlightcolor='black',\
                                                   highlightbackground='black')
         self.canvas_HDV.get_tk_widget().config(width=600, height=270)
@@ -340,6 +342,7 @@ class DicomInfo(tk.Frame):
         axes.set_axis_bgcolor("black")
         axes.set_axis_off()
         self.canvas_dicom = FigureCanvasTkAgg(fig, self.top_canvas)
+        self.canvas_dicom.get_tk_widget().pack_propagate(True) 
         self.canvas_dicom.get_tk_widget().config(width=500, height=270)
         self.canvas_dicom._tkcanvas.config(highlightthickness=1, relief=tk.RAISED)
 

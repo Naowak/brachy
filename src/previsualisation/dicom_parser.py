@@ -71,6 +71,9 @@ class DicomParser:
         self.granularite_source = None
         self.zone_influence = None
         self.contourage_cible_id = None
+
+        # Options isodoses
+        self.isodose_values = None
         
 
 ########################### Metadata ###########################
@@ -95,7 +98,12 @@ class DicomParser:
         """ Utilisé lorsqu'on change le raffinement """
         (lf, mf, nf) = self.n_points
         self.n_points_raffines = (raffinement * lf, raffinement * mf, nf)
-    
+
+
+    def set_isodose_values(self, isodose_values):
+        """ Isodoses à prendre en compte pour l'affichage """
+        self.isodose_values = isodose_values
+        
 
     def get_DICOM_files(self, DICOM_path):
         """ Permet de recuperer l'ensemble des fichiers DICOM (slices) dans un tableau
@@ -695,7 +703,7 @@ class DicomParser:
         plot_DICOM_pixel_array(ax, pixel_array, vmin, vmax)
 
         if (dose_matrix is not None):
-            plot_DICOM_dose(ax, dose_matrix, self.n_points)
+            plot_DICOM_dose(ax, dose_matrix, self.n_points, self.isodose_values)
 
         if (contourages_array is not None):
             plot_DICOM_contourages_array(ax, contourages_array)
@@ -747,7 +755,7 @@ def plot_DICOM_pixel_array(ax, pixel_array, vmin=None, vmax=None):
     ax.imshow(pixel_array, origin='upper', cmap=plt.cm.bone, vmin=vmin, vmax=vmax)
 
 
-def plot_DICOM_dose(ax, dose_matrix, n_points):
+def plot_DICOM_dose(ax, dose_matrix, n_points, isodose_values):
     """ Ajoute la visualisation de la dose sur la figure
     [Params]
     - ax : l'axe correspondant à la figure
@@ -755,14 +763,20 @@ def plot_DICOM_dose(ax, dose_matrix, n_points):
     """
     (lf, mf, nf) = n_points
     dose_matrix = dose_matrix.T
-    levelsXZ = (0.05, 0.25, 0.5, 0.85, 0.95)
     maxhom = np.amax(dose_matrix)
+
+    # Calcul des limites d'isodoses
+    # levelsXZ = (0.05, 0.25, 0.5, 0.85, 0.95)
+    #min = options_isodoses['isodose_min']
+    #max = options_isodoses['isodose_max']
+    #step = (max - min) / 4
+    #levelsXZ = (min, min + step, min + (2 * step), min + (3 * step), max)
 
     #isodose = dose_matrix/maxhom
     #print isodose[179+51, 194+61]
     #ax.imshow(dose_matrix, origin='upper', zorder=2, cmap='hot')
     
-    CS = ax.contour(dose_matrix/maxhom, levelsXZ, origin='upper', extent=[0, lf, mf, 0], linewidths=2, zorder=3)
+    CS = ax.contour(dose_matrix/maxhom, isodose_values, origin='upper', extent=[0, lf, mf, 0], linewidths=2, zorder=3)
     #ax.clabel(CS, inline=1, fontsize=15, inline_spacing=0, linestyles='dashed', zorder=3)
 
 
