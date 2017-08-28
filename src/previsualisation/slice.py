@@ -119,6 +119,8 @@ class Slice:
         # Creation du repertoire pour la slice s'il n'existe pas deja
         if not os.path.exists(self.slice_directory):
             os.makedirs(self.slice_directory)
+            os.makedirs(self.slice_directory + "/densite_constante")
+            os.makedirs(self.slice_directory + "/densite_lu")
         
 
     def add_contourage(self, ROI_id, name, color, array):
@@ -212,8 +214,13 @@ class Slice:
     def dose_already_calculated(self):
         """ Permet de savoir si des resultats de calculs passés sont en mémoire """
         n_sources_calculated = 0
+
+        if self.dicomparser.get_densite_lu() == 1:
+            path = self.slice_directory + "/densite_lu"
+        else:
+            path = self.slice_directory + "/densite_constante"
         
-        for (dir_name, sub_dir_list, file_list) in os.walk(self.slice_directory):
+        for (dir_name, sub_dir_list, file_list) in os.walk(path):
             for filename in file_list:
                 if ".dat" in filename.lower():  
                     n_sources_calculated += 1
@@ -256,7 +263,13 @@ class Slice:
 
         # Calcul de la nouvelle matrice de doses
         domaine_dose_matrix = matrix_to_domaine(self.dose_matrix, self.domaine)
-        domaine_merged_dose_matrix = dose_matrix_add_source(self.slice_directory,
+
+        if self.dicomparser.get_densite_lu() == 1:
+            path = self.slice_directory + "densite_lu/"
+        else:
+            path = self.slice_directory + "densite_constante/"
+
+        domaine_merged_dose_matrix = dose_matrix_add_source(path,
                                                             domaine_dose_matrix,
                                                             source_id)
         
@@ -277,7 +290,13 @@ class Slice:
 
         # Calcul de la nouvelle matrice de doses
         domaine_dose_matrix = matrix_to_domaine(self.dose_matrix, self.domaine)
-        domaine_merged_dose_matrix = dose_matrix_remove_source(self.slice_directory,
+
+        if self.dicomparser.get_densite_lu() == 1:
+            path = self.slice_directory + "densite_lu/"
+        else:
+            path = self.slice_directory + "densite_constante/"
+
+        domaine_merged_dose_matrix = dose_matrix_remove_source(path,
                                                                domaine_dose_matrix,
                                                                source_id)
 
@@ -296,6 +315,9 @@ class Slice:
     def add_all_sources(self):
         (lf, mf, nf) = self.dicomparser.n_points
 
+        self.dic_sources_displayed = {}
+        self.dose_matrix = None
+
         # Cas de la premiere source ajoutee (matrice nulle)
         if self.dose_matrix is None:
             self.dose_matrix = np.zeros([lf, mf])
@@ -303,10 +325,16 @@ class Slice:
         # Conversion aux bonnes dimensions (retrecissement)
         domaine_dose_matrix = matrix_to_domaine(self.dose_matrix, self.domaine)
 
+        if self.dicomparser.get_densite_lu() == 1:
+            path = self.slice_directory + "densite_lu/"
+        else:
+            path = self.slice_directory + "densite_constante/"
+
         # Ajout de toutes les sources
         for (id, source) in enumerate(self.sources, start=1):
             self.dic_sources_displayed[id] = source
-            domaine_dose_matrix = dose_matrix_add_source(self.slice_directory,
+
+            domaine_dose_matrix = dose_matrix_add_source(path,
                                                          domaine_dose_matrix,
                                                          id)
         

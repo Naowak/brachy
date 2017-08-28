@@ -152,8 +152,8 @@ def ajouter_header(f, algorithme, n_points, dimensions):
     f.write(res)
 
 
-def ajouter_densite(f, densite_lu):
-    if not(densite_lu):
+def ajouter_densite(f, densite_lu):    
+    if densite_lu == 0:
         res = "-densite constante 1.0\n"
     else:
         res = "-densite lu_HU densite_hu.don\n"
@@ -225,7 +225,7 @@ def ajouter_source(f, groupe, type_particule, direction_M1, volume_sphere, spect
     f.write(res)
     
 
-def lancer_generation(filename, sources, n_points, dimensions, options, densite_lu=False, calculs_finaux=False):
+def lancer_generation(filename, sources, n_points, dimensions, options, calculs_finaux=False):
     """ Lance la generation d'un fichier de configuration .don
     On place n_sources sources réparties uniformement sur le maillage
     Une source est placée si elle est située dans la zone contourée avec une densité cohérente
@@ -251,6 +251,7 @@ def lancer_generation(filename, sources, n_points, dimensions, options, densite_
     (rx, ry, rz) = options['rayon']
     direction_M1 = options['direction_M1']
     spectre_mono = options['spectre_mono']
+    densite_lu = options['densite_lu']
 
     # ID slice (choix arbitraire)
     z = Lx/2.0

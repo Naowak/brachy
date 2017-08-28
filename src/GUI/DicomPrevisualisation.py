@@ -169,28 +169,15 @@ class DicomPrevisualisation(tk.Frame):
                                        from_=0.001, to=0.15, resolution=0.001,
                                        command=self.OnChangeIsodose)
         self.multislider.grid(row=20, column=0)
-        
-        # tk.Label(self, text="Bornes des isodoses").grid(row=20, column=0, sticky=tk.E)
-        
-        # self.isodose_max = tk.DoubleVar(value=0.015)       
-        # slider_isodose_max = tk.Scale(self, from_=0.0, to=1.0, \
-        #                              resolution=0.001, \
-        #                              digits=4, \
-        #                              variable=self.isodose_max, \
-        #                              orient=tk.VERTICAL, \
-        #                              command=self.OnChangeIsodose)
-        # slider_isodose_max.grid(row=22, column=0)
 
-        # self.isodose_min = tk.DoubleVar(value=0.005)
-        # tk.Label(self, text="Min").grid(row=21, column=0, sticky=tk.E)
-        # slider_isodose_min = tk.Scale(self, from_=0.0, to=1.0, \
-        #                              resolution=0.001, \
-        #                              digits=4, \
-        #                              variable=self.isodose_min, \
-        #                              orient=tk.VERTICAL, \
-        #                              command=self.OnChangeIsodose)
-        # slider_isodose_min.grid(row=22, column=0, sticky=tk.E)
+        # Densite lu
+        tk.Label(self, text="Densité lue").grid(row=21, column=0, sticky=tk.W)
 
+        self.densite_lu = tk.IntVar(value=1)
+        checkbox = tk.Checkbutton(self, variable=self.densite_lu,
+                                  command=self.OnUpdateDensiteLu)
+        checkbox.grid(row=21, column=1, sticky=tk.E)
+    
 
     def load_initial_values(self):
         """ Chargement des valeurs par défaut lorsqu'on a fini le parsing """
@@ -217,6 +204,15 @@ class DicomPrevisualisation(tk.Frame):
             return
     
         self.dicom_navigation.set_working_directory(working_directory)
+
+
+    def OnUpdateDensiteLu(self):
+        """ On a déjà calculé les doses correspondant à densité constante ou densité lu """
+        self.dicom_navigation.dicom_parser.set_densite_lu(self.densite_lu.get())
+
+        if self.dicom_navigation.slice.get_dose_mode() == 1:
+            self.dicom_navigation.slice.set_dose_mode_OFF()
+            self.OnRemoveAllSources()
 
 
     def OnUpdateAfficherSources(self):
@@ -261,6 +257,7 @@ class DicomPrevisualisation(tk.Frame):
         self.dicom_navigation.dicom_parser.set_granularite_source(self.granularite_source.get())
         self.dicom_navigation.dicom_parser.set_zone_influence(self.zone_influence.get())
         self.dicom_navigation.dicom_parser.set_raffinement(self.raffinement.get())
+        self.dicom_navigation.dicom_parser.set_densite_lu(self.densite_lu.get())
         
         isodose_real_values = [ isodose_value.get() for isodose_value in self.isodose_values ]
         self.dicom_navigation.dicom_parser.set_isodose_values(isodose_real_values)
@@ -269,7 +266,8 @@ class DicomPrevisualisation(tk.Frame):
                     'rayon': (self.rayon_x.get(),
                               self.rayon_y.get(), 1),
                     'direction_M1': (0., 0., 0.), # Curietherapie
-                    'spectre_mono': (self.intensite.get(), self.energie.get()) }
+                    'spectre_mono': (self.intensite.get(), self.energie.get()),
+                    'densite_lu': self.densite_lu.get() }
 
         if self.checkbox_all_slices.get() == 0:
             # Lancement du thread pour la slice courante
@@ -400,10 +398,11 @@ class LancerCalculs(Thread):
                 self.slice.preparatifs_precalculs() # Calcul de la densite, HU_array, etc.
                 self.dicom_navigation.dicom_parser.generate_DICOM_previsualisation(self.slice.get_slice_id(),
                                                                                    self.dicom_navigation.working_directory,
+                                                                                   self.densite_lu.get(),
                                                                                    self.options)
 
             # Puis Lancement du calcul M1
-            command = self.dicom_navigation.PATH_start_previsualisation + " " + self.slice.get_slice_directory() 
+            command = self.dicom_navigation.PATH_start_previsualisation + " " + self.slice.get_slice_directory() + " " + str(self.dicom_navigation.densite_lu.get())
             os.system(command)
 
             # On retire l'affichage de "Calculs en cours..."

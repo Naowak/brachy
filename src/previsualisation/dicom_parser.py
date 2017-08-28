@@ -74,6 +74,9 @@ class DicomParser:
 
         # Options isodoses
         self.isodose_values = None
+
+        # Densite lu
+        self.densite_lu = None
         
 
 ########################### Metadata ###########################
@@ -93,7 +96,15 @@ class DicomParser:
     def get_contourage_cible_id(self):
         return self.contourage_cible_id
 
+    
+    def get_densite_lu(self):
+        return self.densite_lu
 
+
+    def set_densite_lu(self, value):
+        self.densite_lu = value
+
+    
     def set_raffinement(self, raffinement):
         """ Utilisé lorsqu'on change le raffinement """
         (lf, mf, nf) = self.n_points
@@ -558,7 +569,7 @@ class DicomParser:
         lancer_generation(filename, domaine_sources, domaine_n_points, domaine_dimensions, rayon, direction_M1, spectre_mono, densite_lu=True)
 
 
-    def generate_DICOM_previsualisation(self, slice_id, working_directory, options):
+    def generate_DICOM_previsualisation(self, slice_id, working_directory, densite_lu, options):
         """ Lance la generation d'un fichier .don pour un fichier DICOM avec contourage donné
         [Params]
         - filename_header : le nom du cas traité
@@ -583,12 +594,17 @@ class DicomParser:
         domaine_HU_array = get_domaine_HU_array(domaine, HU_array)
 
         # Generation du fichier correspondant a la densite HU
-        filename_hounsfield = working_directory + "/slice_" + str(slice_id).zfill(3) + "/densite_hu.don"
-        self.generate_DICOM_hounsfield(filename_hounsfield, domaine_HU_array)
+        if densite_lu == 1:
+            filename_hounsfield = working_directory + "/slice_" + str(slice_id).zfill(3) + "/densite_lu/densite_hu.don"
+            self.generate_DICOM_hounsfield(filename_hounsfield, domaine_HU_array)
 
         # Generation fichier configuration DON
-        filename = working_directory + "/slice_" + str(slice_id).zfill(3) + "/config_KIDS.don"
-        lancer_generation(filename, domaine_sources, domaine_n_points, domaine_dimensions, options, densite_lu=True)
+        if densite_lu == 1:
+            filename = working_directory + "/slice_" + str(slice_id).zfill(3) + "/densite_lu/config_KIDS.don"
+        else:
+            filename = working_directory + "/slice_" + str(slice_id).zfill(3) + "/densite_constante/config_KIDS.don"
+            
+        lancer_generation(filename, domaine_sources, domaine_n_points, domaine_dimensions, options)
 
 
     def generate_DICOM_calculs_finaux(self, slice_id, working_directory, options):
@@ -613,8 +629,8 @@ class DicomParser:
         domaine_HU_array = get_domaine_HU_array(domaine, HU_array)
 
         # Generation fichier configuration DON
-        filename = working_directory + "/slice_" + str(slice_id).zfill(3) + "/config_KIDS_calculs_finaux.don"
-        lancer_generation(filename, domaine_sources, domaine_n_points, domaine_dimensions, options, densite_lu=True, calculs_finaux=True)
+        filename = working_directory + "/slice_" + str(slice_id).zfill(3) + "/calculs_finaux/config_KIDS_calculs_finaux.don"
+        lancer_generation(filename, domaine_sources, domaine_n_points, domaine_dimensions, options, calculs_finaux=True)
 
 
     
@@ -764,9 +780,8 @@ def plot_DICOM_dose(ax, dose_matrix, n_points, isodose_values):
     (lf, mf, nf) = n_points
     dose_matrix = dose_matrix.T
     maxhom = np.amax(dose_matrix)
-    
-    #CS = ax.contour(dose_matrix/maxhom, isodose_values, origin='upper', extent=[0, lf, mf, 0], linewidths=2, zorder=3)
-    CS = ax.contourf(dose_matrix/maxhom, isodose_values, origin='upper', extent=[0, lf, mf, 0], linewidths=2, zorder=3, alpha=0.2)
+    CS = ax.contour(dose_matrix/maxhom, isodose_values, origin='upper', extent=[0, lf, mf, 0], linewidths=2, zorder=3)
+    #CS = ax.contourf(dose_matrix/maxhom, isodose_values, origin='upper', extent=[0, lf, mf, 0], linewidths=2, zorder=3, alpha=0.2)
 
     
 def plot_DICOM_contourage(ax, contourage, color):

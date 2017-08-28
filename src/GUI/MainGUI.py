@@ -34,6 +34,8 @@ class MainApplication(tk.Tk):
     def __init__(self, parent):
         tk.Tk.__init__(self)
         self.parent = parent
+        self.style = ttk.Style()
+        self.style.theme_use("clam")
         self.initialize()
 
     def initialize(self):
@@ -85,7 +87,8 @@ class DicomNavigation:
 
         # Current state
         self.var_etat_abs_rel = tk.StringVar(value="r")  # variable d'etat relatif/absolu
-
+        self.densite_lu = tk.IntVar(value=1)
+        
         # Luminosite
         self.vmin = tk.IntVar(value=0)
         self.vmax = tk.IntVar(value=3000)
@@ -155,6 +158,10 @@ class DicomNavigation:
 
     def get_working_directory(self):
         return self.working_directory
+
+
+    def get_densite_lu(self):
+        return self.densite_lu
     
 
     def set_working_directory(self, working_directory):

@@ -12,19 +12,25 @@ EXEC_PATH="/home/thibault/KIDS_cythi/lance_KIDS"
 
 usage()
 {
-    echo "usage: $0 slice_directory"
+    echo "usage: $0 slice_directory densite_lu?"
     exit 1
 }
 
 
 # Boucle principale
-if [ $# -ne 1 ]
+if [ $# -ne 2 ]
 then
     usage
 else
     # Recuperation param et deplacement
-    SLICE_DIRECTORY=$1
-    cd $SLICE_DIRECTORY/
+    if [ $2 -eq 0 ]
+    then
+        SLICE_DIRECTORY=$1/densite_constante
+    else
+        SLICE_DIRECTORY=$1/densite_lu
+    fi
+
+    cd $SLICE_DIRECTORY
 
     # Nettoyage du repertoire
     rm -rf *.dat 2> /dev/null
