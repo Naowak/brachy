@@ -395,10 +395,9 @@ class LancerCalculs(Thread):
                                                                                  self.dicom_navigation.working_directory,
                                                                                  self.options)
             else:
-                self.slice.preparatifs_precalculs() # Calcul de la densite, HU_array, etc.
+                self.slice.preparatifs_precalculs(self.options) # Calcul de la densite, HU_array, etc.
                 self.dicom_navigation.dicom_parser.generate_DICOM_previsualisation(self.slice.get_slice_id(),
                                                                                    self.dicom_navigation.working_directory,
-                                                                                   self.densite_lu.get(),
                                                                                    self.options)
 
             # Puis Lancement du calcul M1

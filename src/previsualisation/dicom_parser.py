@@ -569,7 +569,7 @@ class DicomParser:
         lancer_generation(filename, domaine_sources, domaine_n_points, domaine_dimensions, rayon, direction_M1, spectre_mono, densite_lu=True)
 
 
-    def generate_DICOM_previsualisation(self, slice_id, working_directory, densite_lu, options):
+    def generate_DICOM_previsualisation(self, slice_id, working_directory, options):
         """ Lance la generation d'un fichier .don pour un fichier DICOM avec contourage donné
         [Params]
         - filename_header : le nom du cas traité
@@ -577,9 +577,6 @@ class DicomParser:
         - contourage : une sequence de points representant un polygone ferme
         """
         slice = self.slices[slice_id]
-
-        # Densite
-        HU_array = slice.get_HU_array()
 
         # Sources
         sources = slice.get_sources()
@@ -591,15 +588,16 @@ class DicomParser:
         domaine_n_points = get_domaine_n_points(domaine, self.n_points_raffines)
         domaine_dimensions = get_domaine_dimensions(domaine, self.dimensions, self.maillage)
         domaine_sources = get_domaine_sources(domaine, sources)
-        domaine_HU_array = get_domaine_HU_array(domaine, HU_array)
 
         # Generation du fichier correspondant a la densite HU
+        densite_lu = options['densite_lu']
+        
         if densite_lu == 1:
+            # Generation du fichier Hounsfield
+            HU_array = slice.get_HU_array()
+            domaine_HU_array = get_domaine_HU_array(domaine, HU_array)
             filename_hounsfield = working_directory + "/slice_" + str(slice_id).zfill(3) + "/densite_lu/densite_hu.don"
             self.generate_DICOM_hounsfield(filename_hounsfield, domaine_HU_array)
-
-        # Generation fichier configuration DON
-        if densite_lu == 1:
             filename = working_directory + "/slice_" + str(slice_id).zfill(3) + "/densite_lu/config_KIDS.don"
         else:
             filename = working_directory + "/slice_" + str(slice_id).zfill(3) + "/densite_constante/config_KIDS.don"

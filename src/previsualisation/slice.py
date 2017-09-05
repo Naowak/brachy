@@ -114,7 +114,7 @@ class Slice:
 
     def set_working_directory(self, working_directory):
         """ C'est le répertoire où sont stockés les calculs """
-        self.slice_directory = working_directory + "/slice_" + str(self.slice_id).zfill(3) + "/"
+        self.slice_directory = working_directory + "/slice_" + str(self.slice_id).zfill(3)
 
         # Creation du repertoire pour la slice s'il n'existe pas deja
         if not os.path.exists(self.slice_directory):
@@ -161,10 +161,19 @@ class Slice:
         self.contourages[ROI_id]['appartenance_contourage'] = appartenance_contourage         
         
 
-    def preparatifs_precalculs(self):
-        """ Calcule les matrices de densité et densité HOUNSFIELD avant de lancer M1 """
-        self.densite = self.dicomparser.get_DICOM_densite(self.slice_id)
-        self.HU_array = self.dicomparser.get_DICOM_hounsfield(self.slice_id)
+    def preparatifs_precalculs(self, options):
+        """
+        Calcule les matrices de densité et densité HOUNSFIELD avant de lancer M1
+        Si densite_constante on considère un fantome d'eau
+        """
+        densite_lu = options['densite_lu']
+
+        if densite_lu == 1:
+            self.densite = self.dicomparser.get_DICOM_densite(self.slice_id)
+            self.HU_array = self.dicomparser.get_DICOM_hounsfield(self.slice_id)
+        else:
+            self.densite = get_densite_fantome_eau(self.dicomparser.n_points)
+            self.HU_array = None
 
         self.appartenance_contourage_cible = get_appartenance_contourage(self.dicomparser.n_points, \
                                                                    self.dicomparser.maillage, \
@@ -265,9 +274,9 @@ class Slice:
         domaine_dose_matrix = matrix_to_domaine(self.dose_matrix, self.domaine)
 
         if self.dicomparser.get_densite_lu() == 1:
-            path = self.slice_directory + "densite_lu/"
+            path = self.slice_directory + "/densite_lu/"
         else:
-            path = self.slice_directory + "densite_constante/"
+            path = self.slice_directory + "/densite_constante/"
 
         domaine_merged_dose_matrix = dose_matrix_add_source(path,
                                                             domaine_dose_matrix,
@@ -292,9 +301,9 @@ class Slice:
         domaine_dose_matrix = matrix_to_domaine(self.dose_matrix, self.domaine)
 
         if self.dicomparser.get_densite_lu() == 1:
-            path = self.slice_directory + "densite_lu/"
+            path = self.slice_directory + "/densite_lu/"
         else:
-            path = self.slice_directory + "densite_constante/"
+            path = self.slice_directory + "/densite_constante/"
 
         domaine_merged_dose_matrix = dose_matrix_remove_source(path,
                                                                domaine_dose_matrix,
@@ -326,9 +335,9 @@ class Slice:
         domaine_dose_matrix = matrix_to_domaine(self.dose_matrix, self.domaine)
 
         if self.dicomparser.get_densite_lu() == 1:
-            path = self.slice_directory + "densite_lu/"
+            path = self.slice_directory + "/densite_lu/"
         else:
-            path = self.slice_directory + "densite_constante/"
+            path = self.slice_directory + "/densite_constante/"
 
         # Ajout de toutes les sources
         for (id, source) in enumerate(self.sources, start=1):
