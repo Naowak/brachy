@@ -144,7 +144,7 @@ class Img_Density :
 # ---------------------- Fonction -------------------
 
 def calcul_matrix_similarity(img1, img2) :
-	"""Calcul la similarité entre deux matrices
+	"""Calcul la matrice de similarité entre deux matrices
 
 	Param :
 		- img1, img2 : Une matrice de matériaux : ici une sub_img
@@ -155,6 +155,15 @@ def calcul_matrix_similarity(img1, img2) :
 	return [[1 if img1[i][j]==img2[i][j] else 0 for i in range(size)] for j in range(size)]
 
 def calcul_similarity(matrix_similarity) :
+	""" Calcul le score de similarité entre deux matrices.
+
+	Param :
+		- matrix_similarity : Matrice de similarité entre les deux matrices
+				pour lesquelles on souhaite calculer le score.
+
+	Retour :
+		- int : score de similarité
+	"""
 	size = 2*Img_Density.RAYON_SUB_IMG
 	res = 0
 	for j in range(size) :
@@ -183,6 +192,18 @@ def calcul_similarity(matrix_similarity) :
 				except IndexError :
 					pass
 	return res
+
+def max_score_similarity(size_img) :
+	""" Retour le score max de similarité obtenable en fonction de la taille
+	des images que l'ont compare.
+
+	Param :
+		- size_img : int : taille de l'image (qui doit être un carré)
+
+	Retour :
+		- int : score de similirité maximum possible
+	"""
+	return pow(size_img-2, 2)*5 + (size_img-2)*4*4 + 4*3
 
 
 

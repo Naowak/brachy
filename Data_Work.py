@@ -8,6 +8,8 @@ import random
 class Data_Work :
 	"""Classe effectuant les calculs sur nos données (Img_Density)"""
 
+	SEUIL_MIN_SIMILARITY = imd.max_score_similarity(imd.Img_Density.RAYON_SUB_IMG*2)*0.9
+
 	def __init__(self, list_Img_Density) :
 		"""
 		Param :
@@ -25,9 +27,14 @@ class Data_Work :
 		"""
 		print("Chargement des images...")
 		#self.load_img(list_Img_Density)
-		self.create_N_random_img(199)
+		self.create_N_random_img(499)
 		print("Calcul des similarités...")
 		self.compute_similarity()
+		print("Calcul des clusters...")
+		self.intelligent_k_means()
+		print("Clusters : ", self.clusters)
+		#print(self.ind_img_not_managed)
+		self.display_clusters()
 
 		#self.load_similarity()
 
@@ -47,39 +54,125 @@ class Data_Work :
 				score_similarity = imd.calcul_similarity(matrix_similarity)
 				self.dict_similarity[str((i,j))] = score_similarity
 
-	def define_clusters(self, ind_center_img = 0) :
+	def intelligent_k_means(self) :
+		self.clusters = []
+
+		list_ind_imgs = list(range(len(self.imgs)))
+		ind_center_img = self.find_new_representant(list_ind_imgs)
+		list_ind_imgs.remove(ind_center_img)
+		self.define_intelligent_clusters(ind_center_img, list_ind_imgs)
+
+		list_ind_imgs = self.remove_singleton_cluster()
+		centers_clusters = [elem[0] for elem in self.clusters]
+
+		ind_img_managed = []
+		for ind_img in list_ind_imgs :
+			(center, score_sim) = self.find_closest_cluster_for_an_img(ind_img, centers_clusters)
+			if score_sim >= self.SEUIL_MIN_SIMILARITY :
+				#Si on a une similarité minimum, on ajoute l'image au cluster
+				self.add_img_to_cluster(center, ind_img)
+				ind_img_managed += [ind_img]
+
+		self.ind_img_not_managed = [i for i in list_ind_imgs if i not in ind_img_managed]
+
+
+	def add_img_to_cluster(self, center_cluster, ind_img) :
+		""" Ajoute au cluster représenter par center_cluster l'image ind_img.
+
+		Param :
+			- center_cluster : int : indice de l'image représentant le cluster
+			- ind_img : int : indice de l'image à ajouter dans le cluster
+
+		"""
+		for (center, cluster) in self.clusters :
+			if center == center_cluster :
+				cluster.append(ind_img)
+
+
+	def find_closest_cluster_for_an_img(self, ind_img, centers_clusters) :
+		""" Trouve le cluster ayant le centre le plus proche de ind_img.
+
+		Param :
+			- ind_img : int : indice de l'image
+			- centers_clusters : indice des images étant les centres de nos clusters
+
+		Retour :
+			- tuple : (c, sim_min)
+				- c : int : indice du centre le plus proche
+				- sim_min : int : score de similarité du centre le plus proches
+		""" 
+		sim_max = 0
+		c = None
+		for center in centers_clusters :
+			key = find_key(ind_img, center)
+			score_sim = self.dict_similarity[key]
+			if score_sim > sim_max :
+				c = center
+				sim_max = score_sim
+		return (c, sim_max)
+
+	def remove_singleton_cluster(self) :
+		""" Supprime de self.cluster tous les clusters ne possèdant qu'un element.
+
+		Retour :
+			La liste des indices des images étant dans des clusters singletons 
+		"""
+		list_ind_imgs_not_in_cluster = []
+
+		for (representant_cluster, cluster) in self.clusters :
+			if len(cluster) == 1 :
+				#Un seul élément dans le cluster, on en veut pas.
+				list_ind_imgs_not_in_cluster += [representant_cluster]
+				#vu qu'il n'y a qu'un seul élément, il n'y a que le représentant
+
+		self.clusters = [elem for elem in self.clusters if elem[0] not in list_ind_imgs_not_in_cluster]
+		return list_ind_imgs_not_in_cluster
+
+
+	def define_intelligent_clusters(self, ind_center_img, list_ind_imgs) :
 		""" Utilise l'algorithme des K-means Intelligents pour définirs les clusters.
 		Ils seront retourner sous la forme suivante  :
 			[[2, 5, 3, 9, 7, 15], [12, 78, 32, 56], [12, 4]]
 		Où chaque sous liste est un cluster.
 		"""
-		self.clusters = []
-		nb_imgs = len(self.imgs)
-		list_ind_imgs = list(range(nb_imgs))
-
-		ind_center_img = 0
-		list_ind_imgs.remove(center_ind)
 
 		while len(list_ind_imgs) > 0 :
-			ind_farest_img = find_farest_img(ind_center_img, list_ind_imgs)
-			cluster = [ind_farest_img]
-			cluster += find_all_img_closest_to_the_farest_img(ind_center_img, ind_farest_img, list_ind_imgs)
-			new_representant = self.find_new_representant(cluster)
+			(representant, cluster) = self.find_one_cluster(ind_center_img, list_ind_imgs)
+			list_ind_imgs = [elem for elem in list_ind_imgs if elem not in cluster]
+			self.clusters += [(representant, cluster)]
 
 
+	def find_one_cluster(self, ind_center_img, list_ind_imgs) :
+		"""Trouve le cluster le plus éloigné avec l'algo des K-Means Intelligent
 
-	def find_farest_img(self, id_img, list_ind_img) :
-		""" Retourne l'indice de l'image la plus éloigné de id_img
+		Retour : 
+			- (int, [int, int ..., int]) : (représentant du cluster, cluster)"""
+		old_cluster = list()
+		representant_cluster = self.find_farest_img_from_center(ind_center_img, list_ind_imgs)
+		cluster = self.find_all_img_closest_to_representant_than_center(ind_center_img, representant_cluster, list_ind_imgs) + [representant_cluster]
+
+		while(not are_clusters_equal(old_cluster, cluster)) :
+			#Si le représentant change, on recalcule le cluster
+			representant_cluster = self.find_new_representant(cluster)
+			old_cluster = cluster
+			cluster = self.find_all_img_closest_to_representant_than_center(ind_center_img, representant_cluster, list_ind_imgs) + [representant_cluster]
+
+		return (representant_cluster, cluster)
+
+
+	def find_farest_img_from_center(self, id_center_img, list_ind_img) :
+		""" Retourne l'indice de l'image la plus éloigné de id_center_img
 
 		Param :
-			- id_img : int : indice de l'image pour laquelle on cherche l'image la plus éloigné
+			- id_center_img : int : indice de l'image pour laquelle on cherche l'image la plus éloigné
 			- list_ind_img : list d'indice : Liste des indices correspondants aux images encore
 			non attribuées.
 		"""
 		score_sim_min = 9999999
 		farest_img_id = None
 		for i in list_ind_img :
-				key = find_key(i, id_img)
+			if i != id_center_img :	
+				key = find_key(i, id_center_img)
 				score = self.dict_similarity[str(key)]
 				if score < score_sim_min :
 					score_sim_min = score
@@ -87,25 +180,26 @@ class Data_Work :
 
 		return farest_img_id
 
-	def find_all_img_closest_to_the_farest_img(self, center_ind, farest_ind, list_ind_img) :
-		"""Retourne une liste d'indice des images les plus proches de farest_ind
+	def find_all_img_closest_to_representant_than_center(self, center_ind, representant_ind, list_ind_img) :
+		"""Retourne une liste d'indice des images les plus proches de representant_ind
 		que de center_ind.
 
 		Param :
 			- center_ind : int : indice de l'image central
-			- farest_ind : int : indice de l'image la plus éloignée
+			- representant_ind : int : indice de l'image la plus éloignée
 
 		Retour :
 			liste d'indice correspondant à toutes les images plus proches de 
-			farest_ind que de center_ind
+			representant_ind que de center_ind
 		"""
 		cluster = []
 		for i in list_ind_img :
-			key_center = find_key(center_ind, i)
-			key_farest = find_key(farest_ind, i)
-			if self.dict_similarity[key_center] < self.dict_similarity[key_farest] :
-				#l'image d'indice i a plus de similarité avec farest_ind qu'avec center_ind
-				cluster += [i]
+			if i != center_ind and i != representant_ind :
+				key_center = find_key(center_ind, i)
+				key_representant = find_key(representant_ind, i)
+				if self.dict_similarity[key_center] <= self.dict_similarity[key_representant] :
+					#l'image d'indice i a plus de similarité avec representant_ind qu'avec center_ind
+					cluster += [i]
 		return cluster
 
 
@@ -133,10 +227,26 @@ class Data_Work :
 
 		return cluster[vector.index(max(vector))]
 
+
+	# ------------------------ Display -----------------------------------
+
+	def display_clusters(self) :
+		for (representant, cluster) in self.clusters :
+			taille = len(cluster)
+			X = 15
+			Y = taille/X
+			if taille%X > 0 :
+				Y += 1
+			fig = plt.figure()
+			for i,ind in enumerate(cluster) :
+				fig.add_subplot(Y, X, i+1)
+				plt.imshow(self.imgs[ind])
+		plt.show()
+
 		
 	# ------------------------ Gestion de sauvegarde -----------------------------
 	
-	def load_img(self, list_Img_Density) :
+	def load_img_from_list_Img_Density(self, list_Img_Density) :
 		""" Charge les sub_imgs de chaque Img_Density
 
 		Param :
@@ -145,7 +255,7 @@ class Data_Work :
 		self.imgs = []
 		#On ajoute en premier l'image d'eau, elle nous servira d'image de base
 		# --- > origine du repère
-		self.imgs.append(create_water_img())
+		# self.imgs.append(create_water_img())
 
 		#On ajoute les autre image 
 		for img in list_Img_Density :
@@ -198,12 +308,12 @@ def create_water_img() :
 
 
 def create_pseudo_random_img() :
-	"""Créer des images aléatoires"""
+	"""Créer et retourne une image aléatoire"""
 	size_img = imd.Img_Density.RAYON_SUB_IMG*2
 	img = [[0 for i in range(size_img)] for j in range(size_img)]
 	seuil_elem_1 = 0.0025
 	seuil_elem_2 = 0.0050
-	proba_propagation = 0.25
+	proba_propagation = 0.4
 
 	propagation_1 = []
 	propagation_2 = []
@@ -221,14 +331,14 @@ def create_pseudo_random_img() :
 	while len(propagation_1) > 0 :
 		r = random.random()
 		p = propagation_1.pop()
-		if r < proba_propagation :
+		if img[p[0]][p[1]] == 0 and r < proba_propagation :
 			img[p[0]][p[1]] = 1
 			propagation_1 += get_voisin(p[0], p[1], size_img)
 
 	while len(propagation_2) > 0 :
 		r = random.random()
 		p = propagation_2.pop()
-		if r < proba_propagation :
+		if img[p[0]][p[1]] == 0 and r < proba_propagation :
 			img[p[0]][p[1]] = 2
 			propagation_2 += get_voisin(p[0], p[1], size_img)
 
@@ -253,6 +363,16 @@ def get_voisin(i, j, size) :
 		v.append((i, j+1))
 	return v
 
+def are_clusters_equal(cluster1, cluster2) :
+	""" Retourne True si les deux clusters sont égaux,
+		False sinon
+
+		Param :
+			- cluster1 : list int : liste d'indice représentant le premier cluster
+			- cluster2 : list int : liste d'indice représentant le second cluster
+	"""
+	return set(cluster1) == set(cluster2)
+
 
 
 
@@ -265,31 +385,38 @@ if __name__ == "__main__" :
 
 	dw = Data_Work(None)
 
-	list_ind_img = list(range(200))
-	list_ind_img.remove(0)
-	ind_farest = dw.find_farest_img(0, list_ind_img)
-	print(ind_farest)
-	list_ind_img.remove(ind_farest)
-	cluster = dw.find_all_img_closest_to_the_farest_img(0, ind_farest, list_ind_img) + [ind_farest]
-	print(cluster)
-	new_representant = dw.find_new_representant(cluster)
-	print(new_representant)
+	# list_ind_img = list(range(200))
+	# list_ind_img.remove(0)
+	# ind_farest = dw.find_farest_img_from_center(0, list_ind_img)
+	# list_ind_img.remove(ind_farest)
+	# cluster = dw.find_all_img_closest_to_representant_than_center(0, ind_farest, list_ind_img) + [ind_farest]
+	# new_representant = dw.find_new_representant(cluster)
+	# print(cluster)
+	# cluster = dw.find_all_img_closest_to_representant_than_center(0, new_representant, list_ind_img) + []
 
-	for ind in cluster :
-		plt.imshow(dw.imgs[ind])
-		plt.show()
+	# nb_imgs = len(dw.imgs)
+	# list_ind_img = list(range(nb_imgs))
+	# ind_img_center = 0
+	# (center_cluster, cluster) = dw.find_one_cluster(ind_img_center, list_ind_img)
+	# print(center_cluster, cluster)
+
+	# for ind in cluster :
+	# 	plt.imshow(dw.imgs[ind])
+	# 	plt.show()
 
 
 	# fig = plt.figure()
-	# for i in range(20) :
-	# 	fig.add_subplot(4, 5, i+1)
+	# for i in range(60) :
+	# 	sp = fig.add_subplot(4, 15, i+1)
+	# 	if not i in dw.ind_img_not_managed :
+	# 		sp.title.set_text(str(i))
 	# 	plt.imshow(dw.imgs[i])
 	# plt.show()
 
 	# img_den = imd.Img_Density(density_file, config_file)
 	# dw = Data_Work([img_den])
 
-	# ind = dw.find_farest_img(0)
+	# ind = dw.find_farest_img_from_center(0)
 
 	# fig = plt.figure()
 	# fig.add_subplot(1, 2, 1)
