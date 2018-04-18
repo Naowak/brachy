@@ -4,11 +4,14 @@ from matplotlib import pyplot as plt
 import Img_Density as imd
 import json
 import random
+import numpy as np
 
 class Data_Work :
 	"""Classe effectuant les calculs sur nos données (Img_Density)"""
 
 	SEUIL_MIN_SIMILARITY = imd.max_score_similarity(imd.Img_Density.RAYON_SUB_IMG*2)*0.9
+
+	NB_IMG = 500
 
 	def __init__(self, list_Img_Density) :
 		"""
@@ -26,14 +29,15 @@ class Data_Work :
 					tuple (i, j) tel que i < j.
 		"""
 		print("Chargement des images...")
-		#self.load_img(list_Img_Density)
-		self.create_N_random_img(499)
+		#self.load_img_from_list_Img_Density(list_Img_Density)
+		self.create_N_random_img(self.NB_IMG)
 		print("Calcul des similarités...")
 		self.compute_similarity()
 		print("Calcul des clusters...")
 		self.intelligent_k_means()
 		print("Clusters : ", self.clusters)
 		#print(self.ind_img_not_managed)
+		self.display_stats()
 		self.display_clusters()
 
 		#self.load_similarity()
@@ -48,8 +52,8 @@ class Data_Work :
 		aussi la matrice de similarité dans self.dict_matrix_similarity"""
 
 		self.dict_similarity = dict()
-		for i in range(len(self.imgs)) :
-			for j in range(i+1, len(self.imgs)) :
+		for i in range(self.NB_IMG) :
+			for j in range(i+1, self.NB_IMG) :
 				matrix_similarity = imd.calcul_matrix_similarity(self.imgs[i], self.imgs[j])
 				score_similarity = imd.calcul_similarity(matrix_similarity)
 				self.dict_similarity[str((i,j))] = score_similarity
@@ -57,12 +61,13 @@ class Data_Work :
 	def intelligent_k_means(self) :
 		self.clusters = []
 
-		list_ind_imgs = list(range(len(self.imgs)))
+		list_ind_imgs = list(range(self.NB_IMG))
 		ind_center_img = self.find_new_representant(list_ind_imgs)
 		list_ind_imgs.remove(ind_center_img)
 		self.define_intelligent_clusters(ind_center_img, list_ind_imgs)
 
 		list_ind_imgs = self.remove_singleton_cluster()
+		list_ind_imgs.append(ind_center_img)
 		centers_clusters = [elem[0] for elem in self.clusters]
 
 		ind_img_managed = []
@@ -132,7 +137,7 @@ class Data_Work :
 	def define_intelligent_clusters(self, ind_center_img, list_ind_imgs) :
 		""" Utilise l'algorithme des K-means Intelligents pour définirs les clusters.
 		Ils seront retourner sous la forme suivante  :
-			[[2, 5, 3, 9, 7, 15], [12, 78, 32, 56], [12, 4]]
+			[(centre, [2, 5, 3, 9, 7, 15]), (centre, [12, 78, 32, 56], [12, 4])]
 		Où chaque sous liste est un cluster.
 		"""
 
@@ -243,6 +248,20 @@ class Data_Work :
 				plt.imshow(self.imgs[ind])
 		plt.show()
 
+	def display_stats(self) :
+		nb_imgs_not_managed = len(self.ind_img_not_managed)
+		nb_imgs_managed = self.NB_IMG - nb_imgs_not_managed
+		pourcentage_managed = float(nb_imgs_managed) / float(self.NB_IMG)
+		pourcentage_not_managed = float(nb_imgs_not_managed) / float(self.NB_IMG)
+		nb_clusters = len(self.clusters)
+		mean_cluster_size = np.mean([len(c[1]) for c in self.clusters])
+		
+		print("Nombre d'images traitées : " + str(self.NB_IMG))
+		print("Nombre d'images associées : " + str(nb_imgs_managed) + " -----> " + str(pourcentage_managed))
+		print("Nombre d'images non associées : " + str(nb_imgs_not_managed) + " -----> " + str(pourcentage_not_managed))
+		print("Nombre de clusters : " + str(nb_clusters))
+		print("Taille moyenne cluster : " + str(mean_cluster_size))
+
 		
 	# ------------------------ Gestion de sauvegarde -----------------------------
 	
@@ -255,11 +274,11 @@ class Data_Work :
 		self.imgs = []
 		#On ajoute en premier l'image d'eau, elle nous servira d'image de base
 		# --- > origine du repère
-		# self.imgs.append(create_water_img())
+		self.imgs.append(create_water_img())
 
 		#On ajoute les autre image 
 		for img in list_Img_Density :
-			self.imgs += img.sub_imgs[400:600] #on se limite à 200 images pour le test
+			self.imgs += img.sub_imgs[:self.NB_IMG] 
 
 	def create_N_random_img(self, N) :
 		""" Créer N random images pour notre database
@@ -380,10 +399,11 @@ def are_clusters_equal(cluster1, cluster2) :
 
 
 if __name__ == "__main__" :
-	density_file = "../../working_dir/slice_090/densite_lu/densite_hu.don"
-	config_file = "../../working_dir/slice_090/densite_lu/config_KIDS.don"
+	density_file = "./working_dir/slice_090/densite_lu/densite_hu.don"
+	config_file = "./working_dir/slice_090/densite_lu/config_KIDS.don"
 
-	dw = Data_Work(None)
+
+	#dw = Data_Work(None)
 
 	# list_ind_img = list(range(200))
 	# list_ind_img.remove(0)
@@ -413,8 +433,8 @@ if __name__ == "__main__" :
 	# 	plt.imshow(dw.imgs[i])
 	# plt.show()
 
-	# img_den = imd.Img_Density(density_file, config_file)
-	# dw = Data_Work([img_den])
+	#img_den = imd.Img_Density(density_file, config_file)
+	dw = Data_Work([None])
 
 	# ind = dw.find_farest_img_from_center(0)
 

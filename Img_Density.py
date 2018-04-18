@@ -1,6 +1,7 @@
 #!/usr/lib/env python2.7
 #-*- coding: utf-8 -*-
 from matplotlib import pyplot as plt
+import math
 
 class Img_Density :
 	"""Classe représentant une image de densité quantifier
@@ -170,27 +171,28 @@ def calcul_similarity(matrix_similarity) :
 		for i in range(size) :
 			if matrix_similarity[j][i] == 1 :
 				#Dans le cas où les deux pixels sont égaux
-				res += 1
+				tmp = 1
 				try :
 					if matrix_similarity[j-1][i] == 1 :
-						res += 1
+						tmp += 1
 				except IndexError :
 					pass
 				try :
 					if matrix_similarity[j][i-1] == 1 :
-						res += 1
+						tmp += 1
 				except IndexError :
 					pass
 				try :
 					if matrix_similarity[j+1][i] == 1 :
-						res += 1
+						tmp += 1
 				except IndexError :
 					pass
 				try :
 					if matrix_similarity[j][i+1] == 1 :
-						res += 1
+						tmp += 1
 				except IndexError :
 					pass
+				res += tmp*gaussienne(i, j, 20)
 	return res
 
 def max_score_similarity(size_img) :
@@ -205,7 +207,23 @@ def max_score_similarity(size_img) :
 	"""
 	return pow(size_img-2, 2)*5 + (size_img-2)*4*4 + 4*3
 
+def gaussienne(x, y, var) :
+	rayon = Img_Density.RAYON_SUB_IMG
+	x0 = rayon
+	y0 = rayon
+	x -= x0
+	y -= y0
+	return math.exp(-(pow(x,2)/(float(2*var)) + pow(y,2)/(float(2*var))))
 
+def propotionnelle(x, y) :
+	rayon = float(Img_Density.RAYON_SUB_IMG)
+	x0 = rayon 
+	y0 = rayon 
+	x -= x0
+	y -= y0
+	x = float(x)
+	y = float(y)
+	return math.sqrt(pow(x/rayon,2) + pow(y/rayon, 2))
 
 # ----------------------- Main -----------------------
 
@@ -213,15 +231,24 @@ if __name__ == "__main__" :
 	density_file = "../../working_dir/slice_092/densite_lu/densite_hu.don"
 	config_file = "../../working_dir/slice_092/densite_lu/config_KIDS.don"
 
-	img = Img_Density(density_file, config_file)
-	#img.show_imgs()
-	#img.show_sub_imgs()
-	sub_img1 = img.sub_imgs[0]
-	sub_img2 = img.sub_imgs[1]
-	sub_img3 = img.sub_imgs[2]
 
-	matrix_sim1_3 = calcul_matrix_similarity(sub_img1, sub_img3)
-	matrix_sim2_3 = calcul_matrix_similarity(sub_img2, sub_img3)
+	var = 20
+	m = [[propotionnelle(i,j) for i in range(20)] for j in range(20)]
+	print(m)
+	plt.imshow(m)
+	plt.show(m)
+	# plt.plot(m)
+	# plt.show()
+
+	# img = Img_Density(density_file, config_file)
+	# img.show_imgs()
+	# img.show_sub_imgs()
+	# sub_img1 = img.sub_imgs[0]
+	# sub_img2 = img.sub_imgs[1]
+	# sub_img3 = img.sub_imgs[2]
+
+	# matrix_sim1_3 = calcul_matrix_similarity(sub_img1, sub_img3)
+	# matrix_sim2_3 = calcul_matrix_similarity(sub_img2, sub_img3)
 
 	# fig = plt.figure()
 	# fig.add_subplot(3, 1, 1)
@@ -233,4 +260,4 @@ if __name__ == "__main__" :
 
 	# plt.show()
 
-	print(calcul_similarity(matrix_sim1_3), calcul_similarity(matrix_sim2_3))
+	# print(calcul_similarity(matrix_sim1_3), calcul_similarity(matrix_sim2_3))
