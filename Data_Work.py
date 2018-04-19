@@ -5,15 +5,15 @@ import Img_Density as imd
 import json
 import random
 import numpy as np
+import sys
+import time 
 
 class Data_Work :
 	"""Classe effectuant les calculs sur nos données (Img_Density)"""
 
-	SEUIL_MIN_SIMILARITY = imd.max_score_similarity(imd.Img_Density.RAYON_SUB_IMG*2)*0.9
+	NB_IMG = 2000
 
-	NB_IMG = 500
-
-	def __init__(self, list_Img_Density) :
+	def __init__(self, list_Img_Density, filtre=None) :
 		"""
 		Param :
 			list_Img_Density : list de imd.Img_Density
@@ -28,22 +28,89 @@ class Data_Work :
 					Clé pour un score entre l'image indice i et l'image indice j
 					tuple (i, j) tel que i < j.
 		"""
+		self.filtre = filtre
+		self.maximum_similarity = imd.max_score_similarity(imd.Img_Density.RAYON_SUB_IMG*2, filtre)
+		self.seuil_min_similarity = self.maximum_similarity*0.9
+
 		print("Chargement des images...")
 		#self.load_img_from_list_Img_Density(list_Img_Density)
 		self.create_N_random_img(self.NB_IMG)
 		print("Calcul des similarités...")
 		self.compute_similarity()
 		print("Calcul des clusters...")
-		self.intelligent_k_means()
+		self.recursive_intelligent_k_means()
 		print("Clusters : ", self.clusters)
 		#print(self.ind_img_not_managed)
 		self.display_stats()
-		self.display_clusters()
+		#self.display_clusters()
 
 		#self.load_similarity()
 
 
-	# ----------------------------- Travail sur les données ---------------------
+	# ----------------------------- Travail sur les données : Prédiction -----------------------
+
+	def calcul_similarity_with_all_center_cluster(self, img) :
+		"""Retourne un dictionnaire contenant les simiarités avec tous les autres clusters.
+		La clef est l'indice du représentant du cluster
+
+		Param :
+			-img : list double dimension: l'image
+		"""
+		dict_sim = {}
+		for (center, cluster) in self.clusters :
+			m = imd.calcul_matrix_similarity(self.imgs[center], img)
+			dict_sim[center] = imd.calcul_similarity(m, self.filtre)
+		return dict_sim
+
+
+	def predict_closest_img(self, img) :
+		""" Prédit l'image la plus proche dans notre base de données et la retourne.
+
+		Param : 
+			- img : double list : l'image pour laquelle on souhaite trouver son homologue
+
+		Retour :
+			- double list : image trouvée
+		"""
+		dict_sim = self.calcul_similarity_with_all_center_cluster(img)
+		# print("Dict_sim center : \n" + str(dict_sim))
+		sim_max = 0
+		center_max = None
+		for center, sim in dict_sim.items() :
+			if sim > sim_max :
+				sim_max = sim
+				center_max = center
+		# print("Sim max : " + str(sim_max))
+		# print("Center max : " + str(center_max))
+
+		cluster_max = None
+		for center, cluster in self.clusters :
+			if center == center_max :
+				cluster_max = cluster
+		# print("Cluster max : " + str(cluster_max))
+
+		dict_sim_img = {}
+		for ind_img in cluster_max :
+			m = imd.calcul_matrix_similarity(self.imgs[ind_img], img)
+			dict_sim_img[ind_img] = imd.calcul_similarity(m, self.filtre)
+		# print("Dict_sim img in cluster : \n" + str(dict_sim_img))
+
+
+		sim_max = 0
+		ind_img_max = None
+		for ind_img, sim in dict_sim_img.items() :
+			if sim > sim_max :
+				sim_max = sim
+				ind_img_max = ind_img
+		#print("Méthode prédiction : ")
+		#print("Image Max : " + str(ind_img_max))
+		print("Sim max : " + str(sim_max))
+		#print("\n")
+
+		return self.imgs[ind_img_max]
+
+
+	# ----------------------------- Travail sur les données : Entrainement ---------------------
 
 
 	def compute_similarity(self) :
@@ -55,13 +122,31 @@ class Data_Work :
 		for i in range(self.NB_IMG) :
 			for j in range(i+1, self.NB_IMG) :
 				matrix_similarity = imd.calcul_matrix_similarity(self.imgs[i], self.imgs[j])
-				score_similarity = imd.calcul_similarity(matrix_similarity)
+				score_similarity = imd.calcul_similarity(matrix_similarity, self.filtre)
 				self.dict_similarity[str((i,j))] = score_similarity
 
-	def intelligent_k_means(self) :
+	def recursive_intelligent_k_means(self) :
+		""" Lance récursivement la méthode des k_means intelligent sur les groupes 
+		non attribués et sur les groupes trop gros."""
 		self.clusters = []
-
 		list_ind_imgs = list(range(self.NB_IMG))
+		self.intelligent_k_means(list_ind_imgs)
+
+		old_ind_img_not_managed = None
+		while(old_ind_img_not_managed != self.ind_img_not_managed) :
+			old_ind_img_not_managed = list(self.ind_img_not_managed)
+			self.intelligent_k_means(self.ind_img_not_managed)
+
+		self.create_clusters_with_img_not_managed()
+
+
+	def intelligent_k_means(self, list_ind_imgs) :
+		""" Utilise la méthode des k_means intelligent pour trier nos données
+		en différents clusters.
+
+		Param :	
+			- list_ind_imgs : list de int : liste des indices de nos images à trier
+		"""
 		ind_center_img = self.find_new_representant(list_ind_imgs)
 		list_ind_imgs.remove(ind_center_img)
 		self.define_intelligent_clusters(ind_center_img, list_ind_imgs)
@@ -73,7 +158,7 @@ class Data_Work :
 		ind_img_managed = []
 		for ind_img in list_ind_imgs :
 			(center, score_sim) = self.find_closest_cluster_for_an_img(ind_img, centers_clusters)
-			if score_sim >= self.SEUIL_MIN_SIMILARITY :
+			if score_sim >= self.seuil_min_similarity :
 				#Si on a une similarité minimum, on ajoute l'image au cluster
 				self.add_img_to_cluster(center, ind_img)
 				ind_img_managed += [ind_img]
@@ -92,6 +177,13 @@ class Data_Work :
 		for (center, cluster) in self.clusters :
 			if center == center_cluster :
 				cluster.append(ind_img)
+
+
+	def create_clusters_with_img_not_managed(self) :
+		"""Ajoute les self.ind_img_not_managed en tant que cluster singleton dans self.clusters"""
+		for ind_img in self.ind_img_not_managed :
+			self.clusters.append((ind_img, [ind_img]))
+		self.ind_img_not_managed = []
 
 
 	def find_closest_cluster_for_an_img(self, ind_img, centers_clusters) :
@@ -235,7 +327,7 @@ class Data_Work :
 
 	# ------------------------ Display -----------------------------------
 
-	def display_clusters(self) :
+	def plot_clusters(self) :
 		for (representant, cluster) in self.clusters :
 			taille = len(cluster)
 			X = 15
@@ -251,16 +343,23 @@ class Data_Work :
 	def display_stats(self) :
 		nb_imgs_not_managed = len(self.ind_img_not_managed)
 		nb_imgs_managed = self.NB_IMG - nb_imgs_not_managed
-		pourcentage_managed = float(nb_imgs_managed) / float(self.NB_IMG)
-		pourcentage_not_managed = float(nb_imgs_not_managed) / float(self.NB_IMG)
+		pourcentage_managed = (float(nb_imgs_managed) / float(self.NB_IMG))*100
+		pourcentage_not_managed = (float(nb_imgs_not_managed) / float(self.NB_IMG))*100
 		nb_clusters = len(self.clusters)
 		mean_cluster_size = np.mean([len(c[1]) for c in self.clusters])
+		rapport_sn = (mean_cluster_size/float(self.NB_IMG))*100
 		
-		print("Nombre d'images traitées : " + str(self.NB_IMG))
-		print("Nombre d'images associées : " + str(nb_imgs_managed) + " -----> " + str(pourcentage_managed))
-		print("Nombre d'images non associées : " + str(nb_imgs_not_managed) + " -----> " + str(pourcentage_not_managed))
+		print("Nombre d'images traitées (N): " + str(self.NB_IMG))
+		print("Nombre d'images associées : " + str(nb_imgs_managed) + " -----> " + str(pourcentage_managed) + "%")
+		print("Nombre d'images non associées : " + str(nb_imgs_not_managed) + " -----> " + str(pourcentage_not_managed) + "%")
 		print("Nombre de clusters : " + str(nb_clusters))
-		print("Taille moyenne cluster : " + str(mean_cluster_size))
+		print("Taille moyenne cluster (S): " + str(mean_cluster_size))
+		print("Rapport S/N : " +  str(rapport_sn) + "%")
+
+	def display_clusters(self) :
+		print("Clusters :")
+		for center, cluster in self.clusters :
+			print(str(center) + " -----> " + str(cluster))
 
 		
 	# ------------------------ Gestion de sauvegarde -----------------------------
@@ -402,8 +501,57 @@ if __name__ == "__main__" :
 	density_file = "./working_dir/slice_090/densite_lu/densite_hu.don"
 	config_file = "./working_dir/slice_090/densite_lu/config_KIDS.don"
 
+	filtre = None
+	if len(sys.argv) > 1 :
+		filtre = sys.argv[1]
 
-	#dw = Data_Work(None)
+	dw = Data_Work(None, filtre)
+
+	nb_img = 10
+	my_imgs = [create_pseudo_random_img() for _ in range(nb_img)]
+	time_begin_predict = time.time()
+	my_results = [dw.predict_closest_img(my_imgs[i]) for i in range(nb_img)]
+	time_end_predict = time.time()
+	naiv_results = []
+
+	print(" -------- ")
+
+	time_begin_find = time.time()
+	for img in my_imgs :
+		indice_max = None
+		sim_max = 0
+		for i in range(dw.NB_IMG) :
+			m = imd.calcul_matrix_similarity(img, dw.imgs[i])
+			sim = imd.calcul_similarity(m, filtre)
+			if sim > sim_max :
+				sim_max = sim 
+				indice_max = i
+		naiv_results += [dw.imgs[indice_max]]
+		# print("Méthode full")
+		# print("Meilleur image : " + str(indice_max))
+		print("Max sim : " + str(sim_max))
+		# print("\n")
+	time_end_find = time.time()
+
+	print("Temps prédiction : " + str(time_end_predict - time_begin_predict))
+	print("Temps recherche : " + str(time_end_find - time_begin_find))
+
+	fig = plt.figure()
+	for i in range(nb_img) :		
+		indice = i + 1
+		sp1 = fig.add_subplot(nb_img, 3, 3*indice - 2)
+		# sp1.title.set_text(str(indice))
+		plt.imshow(my_imgs[i])
+
+		sp2 = fig.add_subplot(nb_img, 3, 3*indice - 1)
+		# sp2.title.set_text(str(indice))
+		plt.imshow(my_results[i])
+
+		sp3 = fig.add_subplot(nb_img, 3, 3*indice)
+		# sp3.title.set_text(str(indice))
+		plt.imshow(naiv_results[i])
+
+	plt.show()
 
 	# list_ind_img = list(range(200))
 	# list_ind_img.remove(0)
@@ -434,7 +582,7 @@ if __name__ == "__main__" :
 	# plt.show()
 
 	#img_den = imd.Img_Density(density_file, config_file)
-	dw = Data_Work([None])
+	# dw = Data_Work([None])
 
 	# ind = dw.find_farest_img_from_center(0)
 

@@ -155,12 +155,32 @@ def calcul_matrix_similarity(img1, img2) :
 	size = 2*Img_Density.RAYON_SUB_IMG
 	return [[1 if img1[i][j]==img2[i][j] else 0 for i in range(size)] for j in range(size)]
 
-def calcul_similarity(matrix_similarity) :
+def activate_filed_of_view(matrix) :
+	""" Permet à une matrice de similarité de prendre en compte le champs de vu
+	En effet, les voxels espacé par un 0 avec la source ne doit pas être égal à 1
+	mais à 0.
+
+	Param : 
+		- matrix : matrice de similarité
+	"""
+	size = 2*Img_Density.RAYON_SUB_IMG
+	for j in range(size) :
+		for i in range(size) :
+			if i != 10 and j != 10 :
+				#sinon division par zéro, et ça n'a pas de sens sur le point central
+				if matrix[j][i] == 1 :
+					my_line = line(j - 10, i - 10)
+					for p in my_line :
+						if matrix[p[1]][p[0]] == 0 :
+							matrix[j][i] = 0
+
+def calcul_similarity(matrix_similarity, filtre=None) :
 	""" Calcul le score de similarité entre deux matrices.
 
 	Param :
 		- matrix_similarity : Matrice de similarité entre les deux matrices
 				pour lesquelles on souhaite calculer le score.
+		- filtre : String : ["gaussien", "proportionnel", "lineaire"]
 
 	Retour :
 		- int : score de similarité
@@ -173,12 +193,12 @@ def calcul_similarity(matrix_similarity) :
 				#Dans le cas où les deux pixels sont égaux
 				tmp = 1
 				try :
-					if matrix_similarity[j-1][i] == 1 :
+					if j-1 >= 0 and matrix_similarity[j-1][i] == 1 :
 						tmp += 1
 				except IndexError :
 					pass
 				try :
-					if matrix_similarity[j][i-1] == 1 :
+					if i-1 >= 0 and matrix_similarity[j][i-1] == 1 :
 						tmp += 1
 				except IndexError :
 					pass
@@ -192,20 +212,27 @@ def calcul_similarity(matrix_similarity) :
 						tmp += 1
 				except IndexError :
 					pass
-				res += tmp*gaussienne(i, j, 20)
+				if filtre == None :
+					res += tmp
+				elif filtre == "gaussien" :
+					res += tmp*gaussienne(i, j, 20)
+				elif filtre == "proportionnel" :
+					res += tmp*proportionnelle(i,j)
 	return res
 
-def max_score_similarity(size_img) :
+def max_score_similarity(size_img, filtre=None) :
 	""" Retour le score max de similarité obtenable en fonction de la taille
 	des images que l'ont compare.
 
 	Param :
 		- size_img : int : taille de l'image (qui doit être un carré)
+		- filtre : String : ["gaussien", "proportionnel", "lineaire"]
 
 	Retour :
 		- int : score de similirité maximum possible
 	"""
-	return pow(size_img-2, 2)*5 + (size_img-2)*4*4 + 4*3
+	img = [[1 for i in range(size_img)] for j in range(size_img)]
+	return calcul_similarity(img, filtre)
 
 def gaussienne(x, y, var) :
 	rayon = Img_Density.RAYON_SUB_IMG
@@ -215,7 +242,7 @@ def gaussienne(x, y, var) :
 	y -= y0
 	return math.exp(-(pow(x,2)/(float(2*var)) + pow(y,2)/(float(2*var))))
 
-def propotionnelle(x, y) :
+def proportionnelle(x, y) :
 	rayon = float(Img_Density.RAYON_SUB_IMG)
 	x0 = rayon 
 	y0 = rayon 
@@ -225,6 +252,26 @@ def propotionnelle(x, y) :
 	y = float(y)
 	return math.sqrt(pow(x/rayon,2) + pow(y/rayon, 2))
 
+def line(x, y) :
+	coef1 = float(x)/float(y)
+	coef2 = float(y)/float(x)
+	my_line = []
+	if abs(coef1) <= 1 :
+		if y >= 0 :
+			for i in range(y) :
+				my_line += [(int(coef1*i) , i)]
+		else :
+			for i in range(y, -1) :
+				my_line += [(int(coef1*i) , i)]
+	else :
+		if x >= 0 :
+			for i in range(x) :
+				my_line += [(i, int(coef2*i))]
+		else :
+			for i in range(x, -1) :
+				my_line += [(i, int(coef2*i))]
+	return my_line
+
 # ----------------------- Main -----------------------
 
 if __name__ == "__main__" :
@@ -233,12 +280,18 @@ if __name__ == "__main__" :
 
 
 	var = 20
-	m = [[propotionnelle(i,j) for i in range(20)] for j in range(20)]
-	print(m)
-	plt.imshow(m)
-	plt.show(m)
+	# m = [[proportionnelle(i,j) for i in range(20)] for j in range(20)]
+	# print(m)
 	# plt.plot(m)
 	# plt.show()
+
+	m = [[1 for i in range(20)] for i in range(20)]
+	m[6][2] = 0
+	m[13][18] = 0
+	activate_filed_of_view(m)
+	plt.imshow(m)
+	plt.show(m)
+	
 
 	# img = Img_Density(density_file, config_file)
 	# img.show_imgs()
