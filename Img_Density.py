@@ -2,6 +2,8 @@
 #-*- coding: utf-8 -*-
 from matplotlib import pyplot as plt
 import math
+import random
+import fov
 
 class Img_Density :
 	"""Classe représentant une image de densité quantifier
@@ -11,6 +13,7 @@ class Img_Density :
 	 Nous récupérons aussi la position des sources dans config_KIDS.don"""
 
 	RAYON_SUB_IMG = 10
+	CENTER_IMG = RAYON_SUB_IMG - 0.5
 
 	 # ------------------------ Init -----------------------------
 
@@ -155,6 +158,8 @@ def calcul_matrix_similarity(img1, img2) :
 	size = 2*Img_Density.RAYON_SUB_IMG
 	return [[1 if img1[i][j]==img2[i][j] else 0 for i in range(size)] for j in range(size)]
 
+
+
 def activate_filed_of_view(matrix) :
 	""" Permet à une matrice de similarité de prendre en compte le champs de vu
 	En effet, les voxels espacé par un 0 avec la source ne doit pas être égal à 1
@@ -164,15 +169,34 @@ def activate_filed_of_view(matrix) :
 		- matrix : matrice de similarité
 	"""
 	size = 2*Img_Density.RAYON_SUB_IMG
-	for j in range(size) :
-		for i in range(size) :
-			if i != 10 and j != 10 :
-				#sinon division par zéro, et ça n'a pas de sens sur le point central
-				if matrix[j][i] == 1 :
-					my_line = line(j - 10, i - 10)
-					for p in my_line :
-						if matrix[p[1]][p[0]] == 0 :
-							matrix[j][i] = 0
+	# new = [list(ligne) for ligne in matrix]
+	new = [[0 for i in range(size)] for j in range(size)]
+
+	def visit(x, y) :
+		if x >= 0 and y >= 0 and x < size and y < size :
+			if matrix[y][x] != 0 :
+				new[y][x] = 1
+
+	def tileblocked(x, y) :
+		if x >= 0 and y >= 0 and x < size and y < size :
+			return matrix[y][x] == 0
+
+	def visit_2(x, y) :
+		if x >= 0 and y >= 0 and x < size and y < size :
+			if matrix[y][x] != 0 :
+				new[y][x] = 1
+				return False
+			else :
+				return True
+
+
+	#fov.fieldOfView(10, 10, 20, 20, 10, visit, tileblocked)
+	fov.fov(10, 10, 15, visit_2)
+	return new
+
+
+
+	
 
 def calcul_similarity(matrix_similarity, filtre=None) :
 	""" Calcul le score de similarité entre deux matrices.
@@ -252,25 +276,76 @@ def proportionnelle(x, y) :
 	y = float(y)
 	return math.sqrt(pow(x/rayon,2) + pow(y/rayon, 2))
 
-def line(x, y) :
+def line(x, y, center_x = Img_Density.CENTER_IMG, center_y = Img_Density.CENTER_IMG) :
+	#longueur en x
+	x -= center_x
+	#longueur en y
+	y -= center_y
+	rayon = Img_Density.RAYON_SUB_IMG
+
 	coef1 = float(x)/float(y)
 	coef2 = float(y)/float(x)
 	my_line = []
-	if abs(coef1) <= 1 :
+	if abs(x) <= abs(y) :
 		if y >= 0 :
-			for i in range(y) :
-				my_line += [(int(coef1*i) , i)]
+			print("1")
+			for i in range(0, int(round(y))) :
+				my_line += [(int(round(coef1*i + rayon)) - 1 , i + rayon)]
 		else :
-			for i in range(y, -1) :
-				my_line += [(int(coef1*i) , i)]
+			print("2")
+			for i in range(0, int(round(y)), -1) :
+				my_line += [(int(round(coef1*i + rayon)) - 1, i + rayon - 1)]
 	else :
 		if x >= 0 :
-			for i in range(x) :
-				my_line += [(i, int(coef2*i))]
+			print("3")
+			for i in range(0, int(round(x))) :
+				my_line += [(int(round(i + rayon)) - 1, int(round(coef2*i + rayon)) - 1)]
 		else :
-			for i in range(x, -1) :
-				my_line += [(i, int(coef2*i))]
+			print("4")
+			for i in range(0, int(round(x)), -1) :
+				my_line += [(int(round(i + rayon)) - 1, int(round(coef2*i + rayon)) - 1)]
 	return my_line
+
+def get_intersection_with_side(x, y, center_x = Img_Density.CENTER_IMG, center_y = Img_Density.CENTER_IMG) :
+	x -= center_x
+	y -= center_y
+
+	length_max = float(Img_Density.CENTER_IMG)
+
+	if abs(x) <= abs(y) :
+		y_max = length_max * (-1 if y <= 0 else 1)
+		x_max = x*y_max/y
+	else :
+		x_max = length_max * (-1 if x <= 0 else 1)
+		y_max = y*x_max/x
+
+	return (int(round(x_max + center_x)), int(round(y_max + center_y)))
+
+
+def get_two_lines_around_a_point(x, y) :
+	min_x = x - 0.5
+	max_x = x + 0.5
+	min_y = y - 0.5
+	max_y = y + 0.5
+
+	line_1 = None
+	line_2 = None
+
+	if x <= 0 and y <= 0 or x > 0 and y > 0:
+		#coin haut gauche
+		point_limit1 = get_intersection_with_side(min_x, max_y)
+		point_limit2 = get_intersection_with_side(max_x, min_y)
+		line_1 = line(point_limit1[0], point_limit1[1])
+		line_2 = line(point_limit2[0], point_limit2[1])
+	else :
+		#coin bas gauche
+		point_limit1 = get_intersection_with_side(min_x, min_y)
+		point_limit2 = get_intersection_with_side(max_x, max_y)
+		line_1 = line(point_limit1[0], point_limit1[1])
+		line_2 = line(point_limit2[0], point_limit2[1])
+
+	return (line_1, line_2)
+
 
 # ----------------------- Main -----------------------
 
@@ -286,12 +361,37 @@ if __name__ == "__main__" :
 	# plt.show()
 
 	m = [[1 for i in range(20)] for i in range(20)]
-	m[6][2] = 0
-	m[13][18] = 0
-	activate_filed_of_view(m)
+	point = (4, 12)
+	lines = get_two_lines_around_a_point(point[1], point[0])
+	for l in lines :
+		print(l)
+		for p in l :
+			m[p[0]][p[1]] = 0
+	m[point[1]][point[0]] = 2
+
+
+	# p2 = (-10,-10)
+	# l = line(p2[0], p2[1])
+	# for p in l :
+	# 	print(p)
+	# 	try :
+	# 		m[p[1]-10][p[0]-10] = 0
+	# 	except IndexError :
+	# 		pass
+
+	# coords = list(range(20))
+	# for _ in range(10) :
+	# 	x = random.choice(coords)
+	# 	y = random.choice(coords)
+	# 	m[y][x] = 0
+	# fig = plt.figure()
+	# fig.add_subplot(1, 2, 1)
+	# plt.imshow(m)
+	# m = activate_filed_of_view(m)
+	# fig.add_subplot(1, 2, 2)
 	plt.imshow(m)
 	plt.show(m)
-	
+	# print(m)
 
 	# img = Img_Density(density_file, config_file)
 	# img.show_imgs()
