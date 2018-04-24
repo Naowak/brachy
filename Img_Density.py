@@ -350,18 +350,65 @@ def get_two_lines_around_a_point(x, y) :
 		#coin haut gauche
 		point_limit1 = get_intersection_with_side(min_x, max_y)
 		point_limit2 = get_intersection_with_side(max_x, min_y)
-		print(point_limit1, point_limit2)
 		line_1 = line(point_limit1[0], point_limit1[1])
 		line_2 = line(point_limit2[0], point_limit2[1])
 	else :
 		#coin bas gauche
 		point_limit1 = get_intersection_with_side(min_x, min_y)
 		point_limit2 = get_intersection_with_side(max_x, max_y)
-		print(point_limit1, point_limit2)
 		line_1 = line(point_limit1[0], point_limit1[1])
 		line_2 = line(point_limit2[0], point_limit2[1])
 
 	return (line_1, line_2)
+
+def get_infos_line(line) :
+	last = line[-1]
+	limit = None
+	if last[0] == 0 or Img_Density.RAYON_SUB_IMG * 2 - 1 :
+		limit = ('x', last[0])
+	else :
+		limit = ('y', last[1])
+	return limit
+
+def hide_behind_point(matrix, x, y) :
+	(line1, line2) = get_two_lines_around_a_point(x, y)
+	limit1 = get_infos_line(line1)
+	limit2 = get_infos_line(line2)
+
+	indice_max = 2* Img_Density.RAYON_SUB_IMG - 1
+
+	if limit1[0] == 'x' and limit2[0] == 'x' :
+		if limit1[1] == indice_max and limit2[1] == indice_max :
+			# cas les deux limites à droite
+			# on ne garde que les points qui dépassent
+			line1 = [p for p in line1 if p[0] >= x]
+			line2 = [p for p in line2 if p[0] >= x]
+		elif limit1[1] == 0 and limit2[1] == 0 :
+			# cas les deux limites à gauche
+			# on ne garde que les points qui dépassent
+			line1 = [p for p in line1 if p[0] <= x]
+			line2 = [p for p in line2 if p[0] <= x]
+
+		if line1[0][1] > line2[0][1] :
+			#on switch nos deux lignes pour que line1 soit celle la plus
+			#proche de l'origine
+			tmp = line1
+			line1 = line2
+			line2 = tmp
+
+		length = len(line1)
+		for i in range(length) :
+			p = list(line1[i])
+			boolean = True
+			while boolean :
+				#tant que l'on a pas atteint le point équivalent sur l'autre ligne on continue
+				if p == list(line2[i]) :
+					boolean = False
+				if (p[1] >= y and y >= Img_Density.RAYON_SUB_IMG) or (p[1] <= y and y <= Img_Density.RAYON_SUB_IMG) :
+					matrix[p[1]][p[0]] = 0
+				p[1] += 1
+
+
 
 
 # ----------------------- Main -----------------------
@@ -378,13 +425,10 @@ if __name__ == "__main__" :
 	# plt.show()
 
 	m = [[1 for i in range(20)] for i in range(20)]
-	list_points = [(17, 7), (17,13)]
+	list_points = [(2, 9), (3,12)]
 	for point in list_points :
-		lines = get_two_lines_around_a_point(point[0], point[1])
-		for l in lines :
-			print(l)
-			for p in l :
-				m[p[1]][p[0]] = 0
+		hide_behind_point(m, point[0], point[1])
+		# lines = get_two_lines_around_a_point(point[0], point[1])
 		m[point[1]][point[0]] = 2
 
 
