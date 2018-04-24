@@ -364,7 +364,7 @@ def get_two_lines_around_a_point(x, y) :
 def get_infos_line(line) :
 	last = line[-1]
 	limit = None
-	if last[0] == 0 or Img_Density.RAYON_SUB_IMG * 2 - 1 :
+	if last[0] == 0 or last[0] == Img_Density.RAYON_SUB_IMG * 2 - 1 :
 		limit = ('x', last[0])
 	else :
 		limit = ('y', last[1])
@@ -408,6 +408,110 @@ def hide_behind_point(matrix, x, y) :
 					matrix[p[1]][p[0]] = 0
 				p[1] += 1
 
+	elif limit1[0] == 'y' and limit2[0] == 'y' :
+		if limit1[1] == indice_max and limit2[1] == indice_max :
+			# cas les deux limites en bas
+			# on ne garde que les points qui dépassent
+			line1 = [p for p in line1 if p[1] >= y]
+			line2 = [p for p in line2 if p[1] >= y]
+		elif limit1[1] == 0 and limit2[1] == 0 :
+			# cas les deux limites en haut
+			# on ne garde que les points qui dépassent
+			line1 = [p for p in line1 if p[1] <= y]
+			line2 = [p for p in line2 if p[1] <= y]
+
+		if line1[0][0] > line2[0][0] :
+			#on switch nos deux lignes pour que line1 soit celle la plus
+			#proche de l'origine
+			tmp = line1
+			line1 = line2
+			line2 = tmp
+
+		length = len(line1)
+		for i in range(length) :
+			p = list(line1[i])
+			boolean = True
+			while boolean :
+				#tant que l'on a pas atteint le point équivalent sur l'autre ligne on continue
+				if p == list(line2[i]) :
+					boolean = False
+				if (p[0] >= x and x >= Img_Density.RAYON_SUB_IMG) or (p[0] <= x and x <= Img_Density.RAYON_SUB_IMG) :
+					matrix[p[1]][p[0]] = 0
+				p[0] += 1
+
+	elif (limit1[0] == 'y' and limit2[0] == 'x') or (limit1[0] == 'x' and limit2[0] == 'y') :
+		#on ne prends que les points intéressants de line1
+		if limit1[0] == 'x' and limit1[1] == 0 :
+			line1 = [p for p in line1 if p[0] < x]
+		elif limit1[0] == 'x' and limit1[1] == indice_max :
+			line1 = [p for p in line1 if p[0] > x]
+		elif limit1[0] == 'y' and limit1[1] == 0 :
+			line1 = [p for p in line1 if p[1] < y]
+		elif limit1[0] == 'y' and limit1[1] == indice_max :
+			line1 = [p for p in line1 if p[1] > y]
+
+		#on ne prends que les points intéressants de line2
+		if limit2[0] == 'x' and limit2[1] == 0 :
+			line2 = [p for p in line2 if p[0] < x]
+		elif limit2[0] == 'x' and limit2[1] == indice_max :
+			line2 = [p for p in line2 if p[0] > x]
+		elif limit2[0] == 'y' and limit2[1] == 0 :
+			line2 = [p for p in line2 if p[1] < y]
+		elif limit2[0] == 'y' and limit2[1] == indice_max :
+			line2 = [p for p in line2 if p[1] > y]
+
+		for i in range(len(line1)) :
+			#on parcours tous les points de line1
+			p = list(line1[i])
+			while not point_in_line(p, line2) :
+				#pour chacun des points, on remonte selon l'autre axe jusqu'à rencontré
+				#soit le bord, soit un point de line2
+				print(p)
+				matrix[p[1]][p[0]] = 0
+				if limit1[0] == 'x' and limit2[1] == 0 :
+					p[1] -= 1
+					if p[1] < 0 :
+						break
+				elif limit1[0] == 'x' and limit2[1] == indice_max :
+					p[1] += 1
+					if p[1] > indice_max :
+						break
+				if limit1[0] == 'y' and limit2[1] == 0 :
+					p[0] -= 1
+					if p[0] < 0 :
+						break
+				elif limit1[0] == 'y' and limit2[1] == indice_max :
+					p[0] += 1
+					if p[0] > indice_max :
+						break
+
+		for i in range(len(line2)) :
+			p = list(line2[i])
+			while not point_in_line(p, line1) :
+				print(p)
+				matrix[p[1]][p[0]] = 0
+				if limit2[0] == 'x' and limit1[1] == 0 :
+					p[1] -= 1
+					if p[1] < 0 :
+						break
+				elif limit2[0] == 'x' and limit1[1] == indice_max :
+					p[1] += 1
+					if p[1] > indice_max :
+						break
+				if limit2[0] == 'y' and limit1[1] == 0 :
+					p[0] -= 1
+					if p[0] < 0 :
+						break
+				elif limit2[0] == 'y' and limit1[1] == indice_max :
+					p[0] += 1
+					if p[0] > indice_max :
+						break
+
+def point_in_line(point, line) :
+	for p in line :
+		if point[0] == p[0] and point[1] == p[1] :
+			return True
+	return False
 
 
 
@@ -424,11 +528,14 @@ if __name__ == "__main__" :
 	# plt.plot(m)
 	# plt.show()
 
+	nb_point = 5
+	list_points = [(random.choice(list(range(20))), random.choice(list(range(20)))) for _ in range(nb_point)]
+
 	m = [[1 for i in range(20)] for i in range(20)]
-	list_points = [(2, 9), (3,12)]
 	for point in list_points :
 		hide_behind_point(m, point[0], point[1])
 		# lines = get_two_lines_around_a_point(point[0], point[1])
+	for point in list_points :
 		m[point[1]][point[0]] = 2
 
 
