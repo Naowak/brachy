@@ -11,7 +11,7 @@ import time
 class Data_Work :
 	"""Classe effectuant les calculs sur nos données (Img_Density)"""
 
-	NB_IMG = 500
+	NB_IMG = 20
 
 	def __init__(self, list_Img_Density, filtre=None) :
 		"""

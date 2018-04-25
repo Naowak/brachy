@@ -223,6 +223,14 @@ def similarity_between_two_imgs(img1, img2, filtre = None) :
 	list_points_hidden = activate_field_of_view(m)
 	for p in list_points_hidden :
 		m[p[1]][p[0]] = 0
+	fig = plt.figure()
+	fig.add_subplot(3, 1, 1)
+	plt.imshow(m)
+	fig.add_subplot(3, 1, 2)
+	plt.imshow(img1)
+	fig.add_subplot(3, 1, 3)
+	plt.imshow(img2)
+	plt.show()
 	return calcul_similarity(m, filtre)
 
 
@@ -618,8 +626,6 @@ def activate_field_of_view(matrix) :
 		if matrix[p[1]][p[0]] == 0 and point not in list_points_hidden :
 			list_points_hidden += points_hidden_behind_point(matrix, p[0], p[1])
 
-	go_on = True
-
 	while True :
 		#boucle pos x
 		while point[0] <= lim_pos_x :
@@ -664,7 +670,7 @@ def activate_field_of_view(matrix) :
 				break
 		lim_neg_y -= 1
 
-
+	print("coucou", list_points_hidden)
 	return list_points_hidden
 
 
