@@ -3,6 +3,7 @@
 from matplotlib import pyplot as plt
 import math
 import random
+import copy
 
 class Img_Density :
 	"""Classe représentant une image de densité quantifier
@@ -156,44 +157,6 @@ def calcul_matrix_similarity(img1, img2) :
 		- Retourne la matrice de similarité entre les deux images"""
 	size = 2*Img_Density.RAYON_SUB_IMG
 	return [[1 if img1[i][j]==img2[i][j] else 0 for i in range(size)] for j in range(size)]
-
-
-
-# def activate_filed_of_view(matrix) :
-# 	""" Permet à une matrice de similarité de prendre en compte le champs de vu
-# 	En effet, les voxels espacé par un 0 avec la source ne doit pas être égal à 1
-# 	mais à 0.
-
-# 	Param : 
-# 		- matrix : matrice de similarité
-# 	"""
-# 	size = 2*Img_Density.RAYON_SUB_IMG
-# 	# new = [list(ligne) for ligne in matrix]
-# 	new = [[0 for i in range(size)] for j in range(size)]
-
-# 	def visit(x, y) :
-# 		if x >= 0 and y >= 0 and x < size and y < size :
-# 			if matrix[y][x] != 0 :
-# 				new[y][x] = 1
-
-# 	def tileblocked(x, y) :
-# 		if x >= 0 and y >= 0 and x < size and y < size :
-# 			return matrix[y][x] == 0
-
-# 	def visit_2(x, y) :
-# 		if x >= 0 and y >= 0 and x < size and y < size :
-# 			if matrix[y][x] != 0 :
-# 				new[y][x] = 1
-# 				return False
-# 			else :
-# 				return True
-
-
-# 	#fov.fieldOfView(10, 10, 20, 20, 10, visit, tileblocked)
-# 	fov.fov(10, 10, 15, visit_2)
-# 	return new
-
-
 
 	
 
@@ -370,10 +333,12 @@ def get_infos_line(line) :
 		limit = ('y', last[1])
 	return limit
 
-def hide_behind_point(matrix, x, y) :
+def points_hidden_behind_point(matrix, x, y) :
 	(line1, line2) = get_two_lines_around_a_point(x, y)
 	limit1 = get_infos_line(line1)
 	limit2 = get_infos_line(line2)
+
+	points_hidden = list()
 
 	indice_max = 2* Img_Density.RAYON_SUB_IMG - 1
 
@@ -405,7 +370,7 @@ def hide_behind_point(matrix, x, y) :
 				if p == list(line2[i]) :
 					boolean = False
 				if (p[1] >= y and y >= Img_Density.RAYON_SUB_IMG) or (p[1] <= y and y <= Img_Density.RAYON_SUB_IMG) :
-					matrix[p[1]][p[0]] = 0
+					points_hidden += [copy.copy(p)]
 				p[1] += 1
 
 	elif limit1[0] == 'y' and limit2[0] == 'y' :
@@ -436,7 +401,7 @@ def hide_behind_point(matrix, x, y) :
 				if p == list(line2[i]) :
 					boolean = False
 				if (p[0] >= x and x >= Img_Density.RAYON_SUB_IMG) or (p[0] <= x and x <= Img_Density.RAYON_SUB_IMG) :
-					matrix[p[1]][p[0]] = 0
+					points_hidden += [copy.copy(p)]
 				p[0] += 1
 
 	elif (limit1[0] == 'y' and limit2[0] == 'x') or (limit1[0] == 'x' and limit2[0] == 'y') :
@@ -466,8 +431,7 @@ def hide_behind_point(matrix, x, y) :
 			while not point_in_line(p, line2) :
 				#pour chacun des points, on remonte selon l'autre axe jusqu'à rencontré
 				#soit le bord, soit un point de line2
-				print(p)
-				matrix[p[1]][p[0]] = 0
+				points_hidden += [copy.copy(p)]
 				if limit1[0] == 'x' and limit2[1] == 0 :
 					p[1] -= 1
 					if p[1] < 0 :
@@ -488,8 +452,7 @@ def hide_behind_point(matrix, x, y) :
 		for i in range(len(line2)) :
 			p = list(line2[i])
 			while not point_in_line(p, line1) :
-				print(p)
-				matrix[p[1]][p[0]] = 0
+				points_hidden += [copy.copy(p)]
 				if limit2[0] == 'x' and limit1[1] == 0 :
 					p[1] -= 1
 					if p[1] < 0 :
@@ -507,11 +470,90 @@ def hide_behind_point(matrix, x, y) :
 					if p[0] > indice_max :
 						break
 
+	return points_hidden
+
+
+
 def point_in_line(point, line) :
 	for p in line :
 		if point[0] == p[0] and point[1] == p[1] :
 			return True
 	return False
+
+
+def activate_field_of_view(matrix) :
+	center = [int(Img_Density.CENTER_IMG), int(Img_Density.CENTER_IMG)]
+	point = [0, 0]
+	lim_pos_x = 1
+	lim_pos_y = 1
+	lim_neg_x = -1
+	lim_neg_y = -1
+
+	list_points_hidden = list()
+
+	def end_while(lim_pos_x, lim_pos_y, lim_neg_x, lim_neg_y) :
+		return lim_pos_x > Img_Density.RAYON_SUB_IMG and \
+			lim_pos_y > Img_Density.RAYON_SUB_IMG and \
+			lim_neg_x < -int(Img_Density.CENTER_IMG) and \
+			lim_neg_y < -int(Img_Density.CENTER_IMG)
+
+	def fov(matrix, point, center, list_points_hidden) :
+		p = [point[0] + center[0], point[1] + center[1]]
+		if matrix[p[1]][p[0]] == 0 and point not in list_points_hidden :
+			list_points_hidden += points_hidden_behind_point(matrix, p[0], p[1])
+
+	go_on = True
+
+	while True :
+		print(point)
+
+		#boucle pos x
+		while point[0] <= lim_pos_x :
+			fov(matrix, point, center, list_points_hidden)
+			if point[0] < lim_pos_x :
+				point[0] += 1
+			else :
+				#égalité donc fin du parcours sur cet axe
+				break
+		lim_pos_x += 1
+
+		#boucle pos y
+		while point[1] <= lim_pos_y :
+			fov(matrix, point, center, list_points_hidden)
+			if point[1] < lim_pos_y :
+				point[1] += 1
+			else :
+				#égalité donc fin du parcours sur cet axe
+				break
+		lim_pos_y += 1
+
+		#boucle neg x
+		while point[0] >= lim_neg_x :
+			fov(matrix, point, center, list_points_hidden)
+			if point[0] > lim_neg_x :
+				point[0] -= 1
+			else :
+				#égalité donc fin du parcours sur cet axe
+				break
+		lim_neg_x -= 1
+
+		if end_while(lim_pos_x, lim_pos_y, lim_neg_x, lim_neg_y) :
+			break
+
+		#boucle en neg_y
+		while point[1] >= lim_neg_y :
+			fov(matrix, point, center, list_points_hidden)
+			if point[1] > lim_neg_y :
+				point[1] -= 1
+			else :
+				#égalité donc fin du parcours sur cet axe
+				break
+		lim_neg_y -= 1
+
+
+	return list_points_hidden
+
+
 
 
 
@@ -528,15 +570,25 @@ if __name__ == "__main__" :
 	# plt.plot(m)
 	# plt.show()
 
+	m = [[1 for i in range(20)] for i in range(20)]
 	nb_point = 5
 	list_points = [(random.choice(list(range(20))), random.choice(list(range(20)))) for _ in range(nb_point)]
+	for p in list_points :
+		m[p[1]][p[0]] = 0
 
-	m = [[1 for i in range(20)] for i in range(20)]
-	for point in list_points :
-		hide_behind_point(m, point[0], point[1])
-		# lines = get_two_lines_around_a_point(point[0], point[1])
-	for point in list_points :
-		m[point[1]][point[0]] = 2
+	hidden_points = activate_field_of_view(m)
+
+	for p in hidden_points :
+		m[p[1]][p[0]] = 0
+
+	for p in list_points :
+		m[p[1]][p[0]] = 5
+
+	# for point in list_points :
+	# 	points_hidden_behind_point(m, point[0], point[1])
+	# 	# lines = get_two_lines_around_a_point(point[0], point[1])
+	# for point in list_points :
+	# 	m[point[1]][point[0]] = 2
 
 
 	# p2 = (-10,-10)
