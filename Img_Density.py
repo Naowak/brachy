@@ -125,6 +125,7 @@ class Img_Density :
 		plt.show()
 
 	def add_sources_plot(self) :
+		"""Affiche les sources sur la dernière image chargé par plot"""
 		for source in self.sources :
 			plt.scatter(source[0], source[1], c='r')
 
@@ -206,6 +207,25 @@ def calcul_similarity(matrix_similarity, filtre=None) :
 					res += tmp*proportionnelle(i,j)
 	return res
 
+def similarity_between_two_imgs(img1, img2, filtre = None) :
+	""" Retourne le score de similarité entre img1 et img2 en prenant en compte le filtre
+	et le champs de vue.
+
+	Param :
+		- img1 : double list de int : représente l'image 1
+		- img2 : double list de int : représente l'image 2
+		- filtre : String : Nom du filtre à utiliser. Exemple : ["gaussien", "proportionnel"]
+
+	Retour :
+		- int : score de similarité entre img1 et img2
+	"""
+	m = calcul_matrix_similarity(img1, img2)
+	list_points_hidden = activate_field_of_view(m)
+	for p in list_points_hidden :
+		m[p[1]][p[0]] = 0
+	return calcul_similarity(m, filtre)
+
+
 def max_score_similarity(size_img, filtre=None) :
 	""" Retour le score max de similarité obtenable en fonction de la taille
 	des images que l'ont compare.
@@ -221,6 +241,17 @@ def max_score_similarity(size_img, filtre=None) :
 	return calcul_similarity(img, filtre)
 
 def gaussienne(x, y, var) :
+	""" Retourne la valeur Gaussienne du point (x,y) pour une gaussienne situé au centre
+	de l'image et de variance var
+
+	Param :
+		- x : int : position en x
+		- y : int : position en y
+		- var : float : variance de la gaussienne
+
+	Retour :
+		float : valeur de la gaussienne au point (x,y)
+	"""
 	rayon = Img_Density.RAYON_SUB_IMG
 	x0 = rayon
 	y0 = rayon
@@ -229,6 +260,16 @@ def gaussienne(x, y, var) :
 	return math.exp(-(pow(x,2)/(float(2*var)) + pow(y,2)/(float(2*var))))
 
 def proportionnelle(x, y) :
+	""" Retourne la valeur du point (x,y). Celle ci correspond proportionnellement
+	à la distance au centre. 
+
+	Param :
+		- x : int : position en x
+		- y : int : position en y
+
+	Retour :
+		float : valeur du point (x,y)
+	"""
 	rayon = float(Img_Density.RAYON_SUB_IMG)
 	x0 = rayon 
 	y0 = rayon 
@@ -239,6 +280,18 @@ def proportionnelle(x, y) :
 	return math.sqrt(pow(x/rayon,2) + pow(y/rayon, 2))
 
 def line(x, y, center_x = Img_Density.CENTER_IMG, center_y = Img_Density.CENTER_IMG) :
+	""" Retourne les coordonnées de tous les points où passe la droite allant du 
+	centre au point (x,y).
+
+	Param :
+		- x : int/float : position en x
+		- y : int/float : position en y
+		- center_x : int/float : centre de l'image en x
+		- center_y : int/float : centre de l'image en y
+	
+	Retour :
+		list de tuple : [(x1,y1), (x2,y2), ...] : coordonnée des points de la droite
+	"""
 	#longueur en x
 	x -= center_x
 	#longueur en y
@@ -282,6 +335,18 @@ def line(x, y, center_x = Img_Density.CENTER_IMG, center_y = Img_Density.CENTER_
 	return my_line
 
 def get_intersection_with_side(x, y, center_x = Img_Density.CENTER_IMG, center_y = Img_Density.CENTER_IMG) :
+	""" Retourne le point d'intersection entre la droite qui passe par le centre de l'image et le point (x,y) 
+	et le bord de l'image
+
+	Param :
+		- x : int/float : position en x
+		- y : int/float : position en y
+		- center_x : int/float : centre de l'image en x
+		- center_y : int/float : centre de l'image en y
+	
+	Retour :
+		tuple : (x1,y1) : coordonnée du point d'intersection en la droite et les limites de l'image
+	""" 
 	x -= center_x
 	y -= center_y
 
@@ -298,6 +363,17 @@ def get_intersection_with_side(x, y, center_x = Img_Density.CENTER_IMG, center_y
 
 
 def get_two_lines_around_a_point(x, y) :
+	""" Retourne les coordonnées des points des deux droites entourant le point (x,y)
+
+	Param :
+		- x : int/float : position en x
+		- y : int/float : position en y
+		- center_x : int/float : centre de l'image en x
+		- center_y : int/float : centre de l'image en y
+	
+	Retour :
+		tuple de list de tuple : (line1, line2) ou line1 = [(x1,y1), (x2,y2), ...] : coordonnée des points de la droite
+	"""
 	min_x = x - 0.5
 	max_x = x + 0.5
 	min_y = y - 0.5
@@ -325,6 +401,14 @@ def get_two_lines_around_a_point(x, y) :
 	return (line_1, line_2)
 
 def get_infos_line(line) :
+	""" Retourne les informations utiles sur une ligne line :
+
+	Param :
+		line : liste de tuple : [(x1, y1), (x2, y2), ...]
+
+	Retour :
+		(char, int) : où char = axe où la droite s'intersecte avec les bords de l'image
+	"""
 	last = line[-1]
 	limit = None
 	if last[0] == 0 or last[0] == Img_Density.RAYON_SUB_IMG * 2 - 1 :
@@ -334,6 +418,19 @@ def get_infos_line(line) :
 	return limit
 
 def points_hidden_behind_point(matrix, x, y) :
+	""" Retourne la liste des points cachés par un obstacle en position (x,y),
+	du point de vu du centre, dans notre matrix.
+
+	Param :
+		- matrix : double list de int (0 ou 1) : représente la matrice 
+			de similarité entre deux images 
+		- x : int : position en x de l'obstacle
+		- y : int : position en y de l'obstacle
+
+	Retour :
+		liste de tuple : [(x1, y1), (x2, y2), ...] : ensemble des points 
+		caché par l'obstacle en (x,y)
+	"""
 	(line1, line2) = get_two_lines_around_a_point(x, y)
 	limit1 = get_infos_line(line1)
 	limit2 = get_infos_line(line2)
@@ -354,14 +451,14 @@ def points_hidden_behind_point(matrix, x, y) :
 			line1 = [p for p in line1 if p[0] <= x]
 			line2 = [p for p in line2 if p[0] <= x]
 
-		if line1[0][1] > line2[0][1] :
+		length = len(line1)
+		if length > 0 and line1[0][1] > line2[0][1] :
 			#on switch nos deux lignes pour que line1 soit celle la plus
 			#proche de l'origine
 			tmp = line1
 			line1 = line2
 			line2 = tmp
 
-		length = len(line1)
 		for i in range(length) :
 			p = list(line1[i])
 			boolean = True
@@ -385,14 +482,14 @@ def points_hidden_behind_point(matrix, x, y) :
 			line1 = [p for p in line1 if p[1] <= y]
 			line2 = [p for p in line2 if p[1] <= y]
 
-		if line1[0][0] > line2[0][0] :
+		length = len(line1)
+		if length > 0 and line1[0][0] > line2[0][0] :
 			#on switch nos deux lignes pour que line1 soit celle la plus
 			#proche de l'origine
 			tmp = line1
 			line1 = line2
 			line2 = tmp
 
-		length = len(line1)
 		for i in range(length) :
 			p = list(line1[i])
 			boolean = True
@@ -475,6 +572,12 @@ def points_hidden_behind_point(matrix, x, y) :
 
 
 def point_in_line(point, line) :
+	""" Retour true si point appartient à line, False sinon
+
+	Param :
+		- point : tuple de int : (x, y) : coordonnées du point
+		- line : list de tuple : ensemble des points représentant la ligne
+	""" 
 	for p in line :
 		if point[0] == p[0] and point[1] == p[1] :
 			return True
@@ -482,6 +585,19 @@ def point_in_line(point, line) :
 
 
 def activate_field_of_view(matrix) :
+	""" Etablit un champs de vu du point de vu du centre de l'image (matrix).
+	Les obstacles sont les points ayant pour valeur 0 : ces points sont 
+	ceux qui ont changé entre les deux images comparés, par conséquent, 
+	ceux derrières sont aussi à changer.
+
+	Param :
+		- matrix : double liste de int (0 ou 1): représente la matrice de 
+			similarité entre deux images
+	
+	Retour :
+		list de tuple : [(x1, y1), (x2, y2), ...] : Ensemble des points 
+			non visbile à cause des obstacles
+	"""
 	center = [int(Img_Density.CENTER_IMG), int(Img_Density.CENTER_IMG)]
 	point = [0, 0]
 	lim_pos_x = 1
@@ -505,8 +621,6 @@ def activate_field_of_view(matrix) :
 	go_on = True
 
 	while True :
-		print(point)
-
 		#boucle pos x
 		while point[0] <= lim_pos_x :
 			fov(matrix, point, center, list_points_hidden)
