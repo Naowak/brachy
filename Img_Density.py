@@ -155,7 +155,7 @@ def calcul_matrix_similarity(img1, img2) :
 	Retour :
 		- Retourne la matrice de similarité entre les deux images"""
 	size = 2*Img_Density.RAYON_SUB_IMG
-	return [[1 if img1[i][j]==img2[i][j] else 0 for i in range(size)] for j in range(size)]
+	return [[1 if img1[i][j]==img2[i][j] else 0 for j in range(size)] for i in range(size)]
 
 
 
@@ -371,21 +371,21 @@ if __name__ == "__main__" :
 	config_file = "../../working_dir/slice_092/densite_lu/config_KIDS.don"
 
 
-	var = 20
-	# m = [[proportionnelle(i,j) for i in range(20)] for j in range(20)]
-	# print(m)
-	# plt.plot(m)
-	# plt.show()
+	# var = 20
+	# # m = [[proportionnelle(i,j) for i in range(20)] for j in range(20)]
+	# # print(m)
+	# # plt.plot(m)
+	# # plt.show()
 
-	m = [[1 for i in range(20)] for i in range(20)]
-	list_points = [(17, 7), (17,13)]
-	for point in list_points :
-		lines = get_two_lines_around_a_point(point[0], point[1])
-		for l in lines :
-			print(l)
-			for p in l :
-				m[p[1]][p[0]] = 0
-		m[point[1]][point[0]] = 2
+	# m = [[1 for i in range(20)] for i in range(20)]
+	# list_points = [(17, 7), (17,13)]
+	# for point in list_points :
+	# 	lines = get_two_lines_around_a_point(point[0], point[1])
+	# 	for l in lines :
+	# 		print(l)
+	# 		for p in l :
+	# 			m[p[1]][p[0]] = 0
+	# 	m[point[1]][point[0]] = 2
 
 
 	# p2 = (-10,-10)
@@ -407,13 +407,13 @@ if __name__ == "__main__" :
 	# plt.imshow(m)
 	# m = activate_filed_of_view(m)
 	# fig.add_subplot(1, 2, 2)
-	plt.imshow(m)
-	plt.show(m)
+	# plt.imshow(m)
+	# plt.show(m)
 	# print(m)
 
-	# img = Img_Density(density_file, config_file)
-	# img.show_imgs()
-	# img.show_sub_imgs()
+	img = Img_Density(density_file, config_file)
+	img.show_imgs()
+	img.show_sub_imgs()
 	# sub_img1 = img.sub_imgs[0]
 	# sub_img2 = img.sub_imgs[1]
 	# sub_img3 = img.sub_imgs[2]

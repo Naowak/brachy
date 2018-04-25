@@ -11,7 +11,7 @@ import time
 class Data_Work :
 	"""Classe effectuant les calculs sur nos données (Img_Density)"""
 
-	NB_IMG = 2000
+	NB_IMG = 500
 
 	def __init__(self, list_Img_Density, filtre=None) :
 		"""
@@ -539,17 +539,20 @@ if __name__ == "__main__" :
 	fig = plt.figure()
 	for i in range(nb_img) :		
 		indice = i + 1
-		sp1 = fig.add_subplot(nb_img, 3, 3*indice - 2)
+		sp1 = fig.add_subplot(nb_img, 4, 4*indice - 3)
 		# sp1.title.set_text(str(indice))
 		plt.imshow(my_imgs[i])
 
-		sp2 = fig.add_subplot(nb_img, 3, 3*indice - 1)
+		sp2 = fig.add_subplot(nb_img, 4, 4*indice - 2)
 		# sp2.title.set_text(str(indice))
 		plt.imshow(my_results[i])
 
-		sp3 = fig.add_subplot(nb_img, 3, 3*indice)
+		sp3 = fig.add_subplot(nb_img, 4, 4*indice - 1)
 		# sp3.title.set_text(str(indice))
 		plt.imshow(naiv_results[i])
+
+		sp4 = fig.add_subplot(nb_img, 4, 4*indice)
+		plt.imshow(imd.calcul_matrix_similarity(my_imgs[i], my_results[i]))
 
 	plt.show()
 
