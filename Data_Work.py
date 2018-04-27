@@ -11,7 +11,10 @@ import time
 class Data_Work :
 	"""Classe effectuant les calculs sur nos données (Img_Density)"""
 
-	NB_IMG = 500
+
+	NB_IMG = 50
+	NB_SIMS = NB_IMG*(NB_IMG+1)/2
+	NB_TEST = 20
 
 	def __init__(self, list_Img_Density, filtre=None) :
 		"""
@@ -24,7 +27,7 @@ class Data_Work :
 			- self.dict_matrix_similarity : dictionnaire de matrice de similarité
 					Clé pour une matrice entre l'image indice i et l'image indice j
 					tuple (i, j) tel que i < j.
-			- self.dict_similarity : dictionnaire de score de similarité
+			- self.tab_similarity : dictionnaire de score de similarité
 					Clé pour un score entre l'image indice i et l'image indice j
 					tuple (i, j) tel que i < j.
 		"""
@@ -33,8 +36,9 @@ class Data_Work :
 		self.seuil_min_similarity = self.maximum_similarity*0.9
 
 		print("Chargement des images...")
-		#self.load_img_from_list_Img_Density(list_Img_Density)
-		self.create_N_random_img(self.NB_IMG)
+		self.load_img_from_list_Img_Density(list_Img_Density)
+		self.extract_N_samples_for_test(self.NB_TEST)
+		# self.create_N_random_img(self.NB_IMG)
 		print("Calcul des similarités...")
 		self.compute_similarity()
 		print("Calcul des clusters...")
@@ -58,8 +62,7 @@ class Data_Work :
 		"""
 		dict_sim = {}
 		for (center, cluster) in self.clusters :
-			m = imd.calcul_matrix_similarity(self.imgs[center], img)
-			dict_sim[center] = imd.calcul_similarity(m, self.filtre)
+			dict_sim[center] = imd.similarity_between_two_imgs(self.imgs[center], img, self.filtre)
 		return dict_sim
 
 
@@ -91,8 +94,7 @@ class Data_Work :
 
 		dict_sim_img = {}
 		for ind_img in cluster_max :
-			m = imd.calcul_matrix_similarity(self.imgs[ind_img], img)
-			dict_sim_img[ind_img] = imd.calcul_similarity(m, self.filtre)
+			dict_sim_img[ind_img] = imd.similarity_between_two_imgs(self.imgs[ind_img], img, self.filtre)
 		# print("Dict_sim img in cluster : \n" + str(dict_sim_img))
 
 
@@ -115,15 +117,21 @@ class Data_Work :
 
 	def compute_similarity(self) :
 		"""Calcul la similarité entre toutes nos images,
-		enregistre les résultats dans self.dict_similarity. enregistre
+		enregistre les résultats dans self.tab_similarity. enregistre
 		aussi la matrice de similarité dans self.dict_matrix_similarity"""
 
-		self.dict_similarity = dict()
+		self.tab_similarity = list()
+		cpt = 0
 		for i in range(self.NB_IMG) :
+			self.tab_similarity += [list()]
+			#temporaire dans le cas ou on prends toutes nos images il faut recalculer
+			self.NB_SIMS = (self.NB_IMG * (self.NB_IMG + 1))/2
+			avancement_pourcentage = float(float(cpt) / float(self.NB_SIMS) * 100)
+			avancement_pourcentage = float(int(avancement_pourcentage*100))/100
+			print(str(avancement_pourcentage) + "%")
 			for j in range(i+1, self.NB_IMG) :
-				matrix_similarity = imd.calcul_matrix_similarity(self.imgs[i], self.imgs[j])
-				score_similarity = imd.calcul_similarity(matrix_similarity, self.filtre)
-				self.dict_similarity[str((i,j))] = score_similarity
+				self.tab_similarity[i] += [imd.similarity_between_two_imgs(self.imgs[i], self.imgs[j], self.filtre)]
+				cpt += 1
 
 	def recursive_intelligent_k_means(self) :
 		""" Lance récursivement la méthode des k_means intelligent sur les groupes 
@@ -147,6 +155,8 @@ class Data_Work :
 		Param :	
 			- list_ind_imgs : list de int : liste des indices de nos images à trier
 		"""
+		if(len(list_ind_imgs) == 0) :
+			return
 		ind_center_img = self.find_new_representant(list_ind_imgs)
 		list_ind_imgs.remove(ind_center_img)
 		self.define_intelligent_clusters(ind_center_img, list_ind_imgs)
@@ -201,8 +211,7 @@ class Data_Work :
 		sim_max = 0
 		c = None
 		for center in centers_clusters :
-			key = find_key(ind_img, center)
-			score_sim = self.dict_similarity[key]
+			score_sim = self.get_score_similarity(ind_img, center)
 			if score_sim > sim_max :
 				c = center
 				sim_max = score_sim
@@ -231,6 +240,14 @@ class Data_Work :
 		Ils seront retourner sous la forme suivante  :
 			[(centre, [2, 5, 3, 9, 7, 15]), (centre, [12, 78, 32, 56], [12, 4])]
 		Où chaque sous liste est un cluster.
+
+		Param :
+			- ind_center_img : int : indice de l'image "centrale" (ayant le max de 
+			similarité avec toutes les autres) dans notre liste d'image
+			- list_ind_imgs : list de int : liste des indices de toutes les images
+			que l'on souhaite classée.
+
+		Les clusters calculés s'ajoute à self.clusters
 		"""
 
 		while len(list_ind_imgs) > 0 :
@@ -240,7 +257,13 @@ class Data_Work :
 
 
 	def find_one_cluster(self, ind_center_img, list_ind_imgs) :
-		"""Trouve le cluster le plus éloigné avec l'algo des K-Means Intelligent
+		"""Trouve le cluster le plus éloigné de l'image centrale avec l'algo des K-Means Intelligent
+
+		Param :
+			- ind_center_img : int : indice de l'image "centrale" (ayant le max de 
+			similarité avec toutes les autres) dans notre liste d'image
+			- list_ind_imgs : list de int : liste des indices de toutes les images
+			que l'on souhaite classée.
 
 		Retour : 
 			- (int, [int, int ..., int]) : (représentant du cluster, cluster)"""
@@ -264,13 +287,15 @@ class Data_Work :
 			- id_center_img : int : indice de l'image pour laquelle on cherche l'image la plus éloigné
 			- list_ind_img : list d'indice : Liste des indices correspondants aux images encore
 			non attribuées.
+
+		Retour :
+			- int : indice de l'image la plus éloigné du centre
 		"""
 		score_sim_min = 9999999
 		farest_img_id = None
 		for i in list_ind_img :
 			if i != id_center_img :	
-				key = find_key(i, id_center_img)
-				score = self.dict_similarity[str(key)]
+				score = self.get_score_similarity(i, id_center_img)
 				if score < score_sim_min :
 					score_sim_min = score
 					farest_img_id = i
@@ -284,6 +309,7 @@ class Data_Work :
 		Param :
 			- center_ind : int : indice de l'image central
 			- representant_ind : int : indice de l'image la plus éloignée
+			- list_ind_img : list de int : liste des indices des images à traiter
 
 		Retour :
 			liste d'indice correspondant à toutes les images plus proches de 
@@ -292,9 +318,7 @@ class Data_Work :
 		cluster = []
 		for i in list_ind_img :
 			if i != center_ind and i != representant_ind :
-				key_center = find_key(center_ind, i)
-				key_representant = find_key(representant_ind, i)
-				if self.dict_similarity[key_center] <= self.dict_similarity[key_representant] :
+				if self.get_score_similarity(center_ind, i) <= self.get_score_similarity(representant_ind, i):
 					#l'image d'indice i a plus de similarité avec representant_ind qu'avec center_ind
 					cluster += [i]
 		return cluster
@@ -313,21 +337,50 @@ class Data_Work :
 		# solution : ->>> somme des similarités pour chaque image.
 
 		vector = [0 for _ in range(len(cluster))] 
-
 		for i,ind1 in enumerate(cluster) :
 			s = 0
 			for ind2 in cluster :
 				if ind1 != ind2 :
-					key = find_key(ind1, ind2)
-					s += self.dict_similarity[key]
+					s += self.get_score_similarity(ind1, ind2)
 			vector[i] = s
 
 		return cluster[vector.index(max(vector))]
 
 
+	# ------------------------ getter & setter ---------------------------
+
+	def get_score_similarity(self, ind_img1, ind_img2) :
+		ind_img2 += 1
+		ind_img1 += 1
+		if ind_img1 < ind_img2 :
+			ind_img2 -= ind_img1
+			ind_img1 -= 1
+			ind_img2 -= 1
+			return self.tab_similarity[ind_img1][ind_img2]
+		elif ind_img1 > ind_img2 :
+			ind_img1 -= ind_img2
+			ind_img1 -= 1
+			ind_img2 -= 1
+			return self.tab_similarity[ind_img2][ind_img1]
+
+	def set_score_similarity(self, ind_img1, ind_img2, score) :
+		ind_img2 += 1
+		ind_img1 += 1
+		if ind_img1 < ind_img2 :
+			ind_img2 -= ind_img1
+			ind_img1 -= 1
+			ind_img2 -= 1
+			self.tab_similarity[ind_img1][ind_img2] = score
+		elif ind_img1 > ind_img2 :
+			ind_img1 -= ind_img2
+			ind_img1 -= 1
+			ind_img2 -= 1
+			self.tab_similarity[ind_img2][ind_img1] = score
+
 	# ------------------------ Display -----------------------------------
 
 	def plot_clusters(self) :
+		"""Affiche tous les clusters à l'écran (une fenetre par cluster)"""
 		for (representant, cluster) in self.clusters :
 			taille = len(cluster)
 			X = 15
@@ -341,6 +394,7 @@ class Data_Work :
 		plt.show()
 
 	def display_stats(self) :
+		""" Affiche les statistiques calculées de notre classification dans le terminal"""
 		nb_imgs_not_managed = len(self.ind_img_not_managed)
 		nb_imgs_managed = self.NB_IMG - nb_imgs_not_managed
 		pourcentage_managed = (float(nb_imgs_managed) / float(self.NB_IMG))*100
@@ -357,6 +411,7 @@ class Data_Work :
 		print("Rapport S/N : " +  str(rapport_sn) + "%")
 
 	def display_clusters(self) :
+		""" Affiche les clusters obtenus dans le terminal"""
 		print("Clusters :")
 		for center, cluster in self.clusters :
 			print(str(center) + " -----> " + str(cluster))
@@ -364,7 +419,7 @@ class Data_Work :
 		
 	# ------------------------ Gestion de sauvegarde -----------------------------
 	
-	def load_img_from_list_Img_Density(self, list_Img_Density) :
+	def load_img_from_list_Img_Density(self, list_Img_Density, all_imgs=True) :
 		""" Charge les sub_imgs de chaque Img_Density
 
 		Param :
@@ -373,14 +428,35 @@ class Data_Work :
 		self.imgs = []
 		#On ajoute en premier l'image d'eau, elle nous servira d'image de base
 		# --- > origine du repère
-		self.imgs.append(create_water_img())
+		# self.imgs.append(create_water_img())
 
 		#On ajoute les autre image 
 		for img in list_Img_Density :
-			self.imgs += img.sub_imgs[:self.NB_IMG] 
+			self.imgs += img.sub_imgs
+
+		if all_imgs :
+			self.NB_IMG = len(self.imgs) - 1
+		print("Nombre Image : " + str(self.NB_IMG))
+
+
+	def extract_N_samples_for_test(self, N) :
+		""" Choisi de manière aléatoire N images dans self.imgs et les 
+		range dans self.test, réduit self.NB_IMG de N"""
+
+		self.test = []
+
+		for _ in range(N) :
+			ind_imgs = list(range(self.NB_IMG))
+			ind = random.choice(ind_imgs)
+			self.test += [self.imgs[ind]]
+			del(self.imgs[ind])
+			self.NB_IMG -= 1
+			
+
 
 	def create_N_random_img(self, N) :
-		""" Créer N random images pour notre database
+		""" Créer N random images pour notre database.
+		Toutes les images sont ajoutées à self.imgs
 
 		Param :
 			N : int : nombre d'image à Créer
@@ -392,29 +468,50 @@ class Data_Work :
 		for _ in range(N) :
 			self.imgs += [create_pseudo_random_img()]
 
+	def load_imgs_in_files(self, directory="./imgs/") :
+		pass
+
+	def save_imgs_in_files(self, directory="./imgs/") :
+		for i in range(len(self.imgs)) :
+			file_name = directory + "img_" + str(i)
+			with open(file_name, "w+") as f :
+				f.write(str(self.imgs[i]))
+
 	def load_similarity(self, file="s90_data_dist.don") :
-		"""Charge les scores de similarité précalculés en enregistrer dans file"""
+		"""Charge les scores de similarité préc alculés en enregistrer dans file
+
+		Param :
+			-file : string : nom du fichier
+		"""
 		with open(file, "r") as f :
-			self.dict_similarity = json.load(f)
+			dict_sim = json.load(f)
+
+		nb_img = max([elem[0] for elem in list(dict_sim.keys())]) + 1
+		self.tab_similarity = []
+		for j in range(nb_img) :
+			self.tab_similarity += [list()]
+			for i in range(nb_img - j - 1) :
+				self.tab_similarity[j][i] = dict_sim[(j, i)]
+
 
 	def save_similarity(self, file="s90_data_dist.don") :
-		"""Enregistre dans un fichier la similarité calculé entre toutes nos images"""
+		"""Enregistre dans un fichier la similarité calculé entre toutes nos images
+
+		Param :
+			- file : string : nom du fichier
+		"""
+		dict_sim = {}
+		for j in range(len(self.tab_similarity)) :
+			for i in range(len(self.tab_similarity[i])) :
+				dict_sim[(j, i)] = self.tab_similarity[j][i]
+
 		with open(file, "w+") as f :
-			json.dump(self.dict_similarity, f)
+			json.dump(dict_sim, f)
 
 
 
 
 # -------------------------- Fonctions utiles -------------------------------------
-
-
-def find_key(ind1, ind2) :
-	"""Retourne la clef permettant d'acceder au score de similarité entre 
-	les deux images d'indice ind1 et ind2 dans le dict self.dict_similarity
-	"""
-	if ind1 < ind2 :
-		return str((ind1, ind2))
-	return str((ind2, ind1))
 
 def create_water_img() :
 	"""Créer une image composée d'eau
@@ -426,7 +523,13 @@ def create_water_img() :
 
 
 def create_pseudo_random_img() :
-	"""Créer et retourne une image aléatoire"""
+	"""Créer et retourne une image aléatoire. 
+	L'image va préférentiellement créer des zones
+
+	Retour :
+		- double list : représente une image aléatoire"""
+
+
 	size_img = imd.Img_Density.RAYON_SUB_IMG*2
 	img = [[0 for i in range(size_img)] for j in range(size_img)]
 	seuil_elem_1 = 0.0025
@@ -469,6 +572,10 @@ def get_voisin(i, j, size) :
 		- i : int : indice ordonnee
 		- j : int : indice abscisse
 		- size : int : taille d'un coté de l'image
+
+	Retour :
+		list de tuple (u,v). Où u est l'abscisse et v et l'ordonnée de 
+		chacun des voisin de (i,j)
 	"""
 	v = []
 	if i - 1 >= 0 :
@@ -498,17 +605,21 @@ def are_clusters_equal(cluster1, cluster2) :
 
 
 if __name__ == "__main__" :
-	density_file = "./working_dir/slice_090/densite_lu/densite_hu.don"
-	config_file = "./working_dir/slice_090/densite_lu/config_KIDS.don"
+	density_file = "../../../working_dir/slice_096/densite_lu/densite_hu.don"
+	config_file = "../../../working_dir/slice_096/densite_lu/config_KIDS.don"
 
 	filtre = None
 	if len(sys.argv) > 1 :
 		filtre = sys.argv[1]
 
-	dw = Data_Work(None, filtre)
+	img_density = imd.Img_Density(density_file, config_file)
+	dw = Data_Work([img_density], filtre)
+	dw.plot_clusters()
 
-	nb_img = 10
-	my_imgs = [create_pseudo_random_img() for _ in range(nb_img)]
+	my_imgs = dw.test
+
+	nb_img = len(my_imgs)
+	# my_imgs = [create_pseudo_random_img() for _ in range(nb_img)]
 	time_begin_predict = time.time()
 	my_results = [dw.predict_closest_img(my_imgs[i]) for i in range(nb_img)]
 	time_end_predict = time.time()
@@ -521,8 +632,7 @@ if __name__ == "__main__" :
 		indice_max = None
 		sim_max = 0
 		for i in range(dw.NB_IMG) :
-			m = imd.calcul_matrix_similarity(img, dw.imgs[i])
-			sim = imd.calcul_similarity(m, filtre)
+			sim = imd.similarity_between_two_imgs(img, dw.imgs[i], filtre)
 			if sim > sim_max :
 				sim_max = sim 
 				indice_max = i
@@ -552,7 +662,11 @@ if __name__ == "__main__" :
 		plt.imshow(naiv_results[i])
 
 		sp4 = fig.add_subplot(nb_img, 4, 4*indice)
-		plt.imshow(imd.calcul_matrix_similarity(my_imgs[i], my_results[i]))
+		ms = imd.calcul_matrix_similarity(my_imgs[i], my_results[i])
+		hidden_points = imd.activate_field_of_view(ms)
+		for p in hidden_points :
+			ms[p[1]][p[0]] = 0
+		plt.imshow(ms)
 
 	plt.show()
 
