@@ -7,12 +7,13 @@ import random
 import numpy as np
 import sys
 import time 
+import os
 
 class Data_Work :
 	"""Classe effectuant les calculs sur nos données (Img_Density)"""
 
 
-	NB_IMG = 50
+	NB_IMG = 200
 	NB_SIMS = NB_IMG*(NB_IMG+1)/2
 	NB_TEST = 20
 
@@ -36,11 +37,17 @@ class Data_Work :
 		self.seuil_min_similarity = self.maximum_similarity*0.9
 
 		print("Chargement des images...")
-		self.load_img_from_list_Img_Density(list_Img_Density)
-		self.extract_N_samples_for_test(self.NB_TEST)
+		# self.load_img_from_list_Img_Density(list_Img_Density, False)
 		# self.create_N_random_img(self.NB_IMG)
+		self.load_imgs_in_files()
+		self.extract_N_samples_for_test(self.NB_TEST)
 		print("Calcul des similarités...")
-		self.compute_similarity()
+		# self.compute_similarity()
+		self.load_similarity()
+		print("Sauvegarde des similarités...")
+		self.save_similarity()
+		print("Sauvegarde des images...")
+		self.save_imgs_in_files()
 		print("Calcul des clusters...")
 		self.recursive_intelligent_k_means()
 		print("Clusters : ", self.clusters)
@@ -426,16 +433,32 @@ class Data_Work :
 			list_Img_Density : list de imd.Img_Density
 		"""
 		self.imgs = []
+		cpt = 0
 		#On ajoute en premier l'image d'eau, elle nous servira d'image de base
 		# --- > origine du repère
-		# self.imgs.append(create_water_img())
+		self.imgs.append(create_water_img())
+		cpt += 1
 
 		#On ajoute les autre image 
 		for img in list_Img_Density :
-			self.imgs += img.sub_imgs
+			if not all_imgs :
+				if cpt + len(img.sub_imgs) > self.NB_IMG :
+					#pas toutes les images, on arrive à la limite acceptable
+					nb_image_restantes = self.NB_IMG - cpt
+					self.imgs += img.sub_imgs[:nb_image_restantes]
+					cpt += nb_image_restantes
+					break
+				else :
+					#pas toutes les images, on dépasse pas encore la limite
+					self.imgs += img.sub_imgs
+					cpt += len(img.sub_imgs)
+			if all_imgs :
+				#toutes les images, on add tout
+				self.imgs += img.sub_imgs
 
 		if all_imgs :
-			self.NB_IMG = len(self.imgs) - 1
+			#toutes les images, on mets à jour la valeur de self.NB_IMG
+			self.NB_IMG = len(self.imgs)
 		print("Nombre Image : " + str(self.NB_IMG))
 
 
@@ -469,7 +492,24 @@ class Data_Work :
 			self.imgs += [create_pseudo_random_img()]
 
 	def load_imgs_in_files(self, directory="./imgs/") :
-		pass
+		def is_int(value) :
+			try :
+				int(value)
+				return True
+			except :
+				return False
+		files = os.listdir(directory) 
+		self.imgs = [0 for _ in range(len(files) - 1)]
+		for filename in files :
+			with open(directory + filename, "r") as f :
+				res = f.read()
+				f = filename.split("_")
+				if f[0] == "img" :
+					ind = int(f[-1])
+					self.imgs[ind] = [[int(i) for i in a if is_int(i)] for a in res.split("]") if len(a) > 0]
+
+		self.NB_IMG = len(self.imgs)
+
 
 	def save_imgs_in_files(self, directory="./imgs/") :
 		for i in range(len(self.imgs)) :
@@ -477,7 +517,7 @@ class Data_Work :
 			with open(file_name, "w+") as f :
 				f.write(str(self.imgs[i]))
 
-	def load_similarity(self, file="s90_data_dist.don") :
+	def load_similarity(self, file="./imgs/similarity.don") :
 		"""Charge les scores de similarité préc alculés en enregistrer dans file
 
 		Param :
@@ -486,15 +526,17 @@ class Data_Work :
 		with open(file, "r") as f :
 			dict_sim = json.load(f)
 
-		nb_img = max([elem[0] for elem in list(dict_sim.keys())]) + 1
-		self.tab_similarity = []
+
+		nb_img = max([int(elem.split(",")[0][1:]) for elem in list(dict_sim.keys())]) + 1 + 1 #indice donc + 1, 
+		self.tab_similarity = a = [[0 for i in range(j)] for j in range(nb_img - 1, 0, -1)]
+		#indice le plus gros est 499 pour couplé l'image 500 donc + 2
 		for j in range(nb_img) :
 			self.tab_similarity += [list()]
 			for i in range(nb_img - j - 1) :
-				self.tab_similarity[j][i] = dict_sim[(j, i)]
+				self.tab_similarity[j][i] = dict_sim[str((j, i))]
 
 
-	def save_similarity(self, file="s90_data_dist.don") :
+	def save_similarity(self, file="./imgs/similarity.don") :
 		"""Enregistre dans un fichier la similarité calculé entre toutes nos images
 
 		Param :
@@ -502,8 +544,8 @@ class Data_Work :
 		"""
 		dict_sim = {}
 		for j in range(len(self.tab_similarity)) :
-			for i in range(len(self.tab_similarity[i])) :
-				dict_sim[(j, i)] = self.tab_similarity[j][i]
+			for i in range(len(self.tab_similarity[j])) :
+				dict_sim[str((j, i))] = self.tab_similarity[j][i]
 
 		with open(file, "w+") as f :
 			json.dump(dict_sim, f)
@@ -614,7 +656,7 @@ if __name__ == "__main__" :
 
 	img_density = imd.Img_Density(density_file, config_file)
 	dw = Data_Work([img_density], filtre)
-	dw.plot_clusters()
+	# dw.plot_clusters()
 
 	my_imgs = dw.test
 
