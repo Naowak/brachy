@@ -14,9 +14,9 @@ class Data_Work :
 	"""Classe effectuant les calculs sur nos données (Img_Density)"""
 
 
-	NB_IMG = 200
+	NB_IMG = 100
 	NB_SIMS = NB_IMG*(NB_IMG+1)/2
-	NB_TEST = 20
+	NB_TEST = 5
 
 	def __init__(self, list_Img_Density, filtre=None) :
 		"""
@@ -24,7 +24,7 @@ class Data_Work :
 			list_Img_Density : list de imd.Img_Density
 
 		Une instance possède les attributs :
-			- self.imgs : list des images (une pour chaque source)
+			- self.learn_imgs : list des images (une pour chaque source)
 			- self.clusters : 
 			- self.dict_matrix_similarity : dictionnaire de matrice de similarité
 					Clé pour une matrice entre l'image indice i et l'image indice j
@@ -36,27 +36,7 @@ class Data_Work :
 		self.filtre = filtre
 		self.maximum_similarity = simy.max_score_similarity(imd.Img_Density.RAYON_SUB_IMG*2, filtre)
 		self.seuil_min_similarity = self.maximum_similarity*0.9
-
-		print("Chargement des images...")
-		# self.load_img_from_list_Img_Density(list_Img_Density, False)
-		# self.create_N_random_img(self.NB_IMG)
-		self.load_imgs_in_files()
-		self.extract_N_samples_for_test(self.NB_TEST)
-		print("Calcul des similarités...")
-		# self.compute_similarity()
-		self.load_similarity()
-		print("Sauvegarde des similarités...")
-		self.save_similarity()
-		print("Sauvegarde des images...")
-		self.save_imgs_in_files()
-		print("Calcul des clusters...")
-		self.recursive_intelligent_k_means()
-		print("Clusters : ", self.clusters)
-		#print(self.ind_img_not_managed)
-		self.display_stats()
-		#self.display_clusters()
-
-		#self.load_similarity()
+		self.list_Img_Density = list_Img_Density
 
 	# ----------------------------- Fonction tâche principale ----------------------------------
 
@@ -66,25 +46,104 @@ class Data_Work :
 					- test_imgs/
 					- learn_imgs/
 		"""
-		self.load_imgs_in_files(directory + "test_imgs/")
-		self.load_test_in_files(directory + "learn_imgs/")
+		self.learn_imgs = self.load_imgs_in_files(directory + "learn_imgs/")
+		self.test_imgs = self.load_imgs_in_files(directory + "test_imgs/")
+		self.NB_IMG = len(self.learn_imgs)
+		self.NB_TEST = len(self.test_imgs)
 
 	def load_from_img_density(self, list_Img_Density, all_imgs = False) :
 		self.load_img_from_list_Img_Density(list_Img_Density, all_imgs)
 		self.extract_N_samples_for_test()
 
-
 	def load_new_random_imgs(self, nb_learning_imgs = NB_IMG, nb_testing_imgs = NB_TEST) :
 		self.create_N_random_img(nb_learning_imgs)
 		self.create_N_random_img_for_test(nb_testing_imgs)
 
+	def load_imgs_and_similarity(self, how, param) :
+		if how == "saved_data" and param["directory"]:
+			directory = param["directory"]
+			self.load_from_saved_data(directory)
+			self.load_similarity()
+
+		elif how == "img_density" and param["list_Img_Density"] :
+			try :
+				all_imgs = param["all_imgs"]
+			except :
+				all_imgs = False
+			self.load_from_img_density(param["list_Img_Density"], all_imgs)
+			self.compute_similarity()
+
+		elif how == "random_img" :
+			self.load_new_random_imgs()
+			self.compute_similarity()
+
+	def save_data(self) :
+		print("Enregistrement des données dans ./data/ ...")
+		self.save_imgs_in_files(self.learn_imgs, "./data/learn_imgs/")
+		self.save_imgs_in_files(self.test_imgs, "./data/test_imgs/")
+		self.save_similarity()
 
 	def train(self) :
-		pass
+		print("Chargement des images et similarité...")
+		self.load_imgs_and_similarity("saved_data", {"directory" : "data/"})
+		# self.load_imgs_and_similarity("img_density", {"list_Img_Density" : self.list_Img_Density})
+		print("Classification de nos données...")
+		self.recursive_intelligent_k_means()
+		print("Fin entrainement :")
+		self.display_stats()
 
-	def predict(self) :
-		pass
+	def test(self, plot = False) :
+		print(" -------- ")
+		print("Prédiction sur nos données...")
+		nb_img = len(self.test_imgs)
 
+		print("Résultats prédictions")
+		time_begin_predict = time.time()
+		my_results = [self.predict_closest_img(self.test_imgs[i]) for i in range(nb_img)]
+		time_end_predict = time.time()
+		naiv_results = []
+
+		print("Résultats naifs")
+		time_begin_find = time.time()
+		for cpt, img in enumerate(self.test_imgs) :
+			indice_max = None
+			sim_max = 0
+			for i in range(self.NB_IMG) :
+				sim = simy.similarity_between_two_imgs(img, self.learn_imgs[i], filtre)
+				if sim > sim_max :
+					sim_max = sim 
+					indice_max = i
+			naiv_results += [self.learn_imgs[indice_max]]
+			print(str(cpt) + " - Sim Max : " + str(sim_max))
+		time_end_find = time.time()
+
+		print("Temps prédiction : " + str(time_end_predict - time_begin_predict))
+		print("Temps recherche : " + str(time_end_find - time_begin_find))
+
+		if plot :
+			fig = plt.figure()
+			for i in range(nb_img) :		
+				indice = i + 1
+				sp1 = fig.add_subplot(nb_img, 4, 4*indice - 3)
+				# sp1.title.set_text(str(indice))
+				plt.imshow(my_imgs[i])
+
+				sp2 = fig.add_subplot(nb_img, 4, 4*indice - 2)
+				# sp2.title.set_text(str(indice))
+				plt.imshow(my_results[i])
+
+				sp3 = fig.add_subplot(nb_img, 4, 4*indice - 1)
+				# sp3.title.set_text(str(indice))
+				plt.imshow(naiv_results[i])
+
+				sp4 = fig.add_subplot(nb_img, 4, 4*indice)
+				ms = simy.calcul_matrix_similarity(my_imgs[i], my_results[i])
+				hidden_points = simy.activate_field_of_view(ms)
+				for p in hidden_points :
+					ms[p[1]][p[0]] = 0
+				plt.imshow(ms)
+
+			plt.show()
 
 	# ----------------------------- Travail sur les données : Prédiction -----------------------
 
@@ -97,7 +156,7 @@ class Data_Work :
 		"""
 		dict_sim = {}
 		for (center, cluster) in self.clusters :
-			dict_sim[center] = simy.similarity_between_two_imgs(self.imgs[center], img, self.filtre)
+			dict_sim[center] = simy.similarity_between_two_imgs(self.learn_imgs[center], img, self.filtre)
 		return dict_sim
 
 
@@ -129,7 +188,7 @@ class Data_Work :
 
 		dict_sim_img = {}
 		for ind_img in cluster_max :
-			dict_sim_img[ind_img] = simy.similarity_between_two_imgs(self.imgs[ind_img], img, self.filtre)
+			dict_sim_img[ind_img] = simy.similarity_between_two_imgs(self.learn_imgs[ind_img], img, self.filtre)
 		# print("Dict_sim img in cluster : \n" + str(dict_sim_img))
 
 
@@ -144,11 +203,9 @@ class Data_Work :
 		print("Sim max : " + str(sim_max))
 		#print("\n")
 
-		return self.imgs[ind_img_max]
-
+		return self.learn_imgs[ind_img_max]
 
 	# ----------------------------- Travail sur les données : Entrainement ---------------------
-
 
 	def compute_similarity(self) :
 		"""Calcul la similarité entre toutes nos images,
@@ -165,7 +222,7 @@ class Data_Work :
 			avancement_pourcentage = float(int(avancement_pourcentage*100))/100
 			print(str(avancement_pourcentage) + "%")
 			for j in range(i+1, self.NB_IMG) :
-				self.tab_similarity[i] += [simy.similarity_between_two_imgs(self.imgs[i], self.imgs[j], self.filtre)]
+				self.tab_similarity[i] += [simy.similarity_between_two_imgs(self.learn_imgs[i], self.learn_imgs[j], self.filtre)]
 				cpt += 1
 
 	def recursive_intelligent_k_means(self) :
@@ -181,7 +238,6 @@ class Data_Work :
 			self.intelligent_k_means(self.ind_img_not_managed)
 
 		self.create_clusters_with_img_not_managed()
-
 
 	def intelligent_k_means(self, list_ind_imgs) :
 		""" Utilise la méthode des k_means intelligent pour trier nos données
@@ -210,7 +266,6 @@ class Data_Work :
 
 		self.ind_img_not_managed = [i for i in list_ind_imgs if i not in ind_img_managed]
 
-
 	def add_img_to_cluster(self, center_cluster, ind_img) :
 		""" Ajoute au cluster représenter par center_cluster l'image ind_img.
 
@@ -223,13 +278,11 @@ class Data_Work :
 			if center == center_cluster :
 				cluster.append(ind_img)
 
-
 	def create_clusters_with_img_not_managed(self) :
 		"""Ajoute les self.ind_img_not_managed en tant que cluster singleton dans self.clusters"""
 		for ind_img in self.ind_img_not_managed :
 			self.clusters.append((ind_img, [ind_img]))
-		self.ind_img_not_managed = []
-
+		# self.ind_img_not_managed = []
 
 	def find_closest_cluster_for_an_img(self, ind_img, centers_clusters) :
 		""" Trouve le cluster ayant le centre le plus proche de ind_img.
@@ -269,7 +322,6 @@ class Data_Work :
 		self.clusters = [elem for elem in self.clusters if elem[0] not in list_ind_imgs_not_in_cluster]
 		return list_ind_imgs_not_in_cluster
 
-
 	def define_intelligent_clusters(self, ind_center_img, list_ind_imgs) :
 		""" Utilise l'algorithme des K-means Intelligents pour définirs les clusters.
 		Ils seront retourner sous la forme suivante  :
@@ -289,7 +341,6 @@ class Data_Work :
 			(representant, cluster) = self.find_one_cluster(ind_center_img, list_ind_imgs)
 			list_ind_imgs = [elem for elem in list_ind_imgs if elem not in cluster]
 			self.clusters += [(representant, cluster)]
-
 
 	def find_one_cluster(self, ind_center_img, list_ind_imgs) :
 		"""Trouve le cluster le plus éloigné de l'image centrale avec l'algo des K-Means Intelligent
@@ -313,7 +364,6 @@ class Data_Work :
 			cluster = self.find_all_img_closest_to_representant_than_center(ind_center_img, representant_cluster, list_ind_imgs) + [representant_cluster]
 
 		return (representant_cluster, cluster)
-
 
 	def find_farest_img_from_center(self, id_center_img, list_ind_img) :
 		""" Retourne l'indice de l'image la plus éloigné de id_center_img
@@ -357,7 +407,6 @@ class Data_Work :
 					#l'image d'indice i a plus de similarité avec representant_ind qu'avec center_ind
 					cluster += [i]
 		return cluster
-
 
 	def find_new_representant(self, cluster) :
 		"""Trouve parmi le cluster quel est le meilleur représentant de la classe.
@@ -425,7 +474,7 @@ class Data_Work :
 			fig = plt.figure()
 			for i,ind in enumerate(cluster) :
 				fig.add_subplot(Y, X, i+1)
-				plt.imshow(self.imgs[ind])
+				plt.imshow(self.learn_imgs[ind])
 		plt.show()
 
 	def display_stats(self) :
@@ -434,7 +483,7 @@ class Data_Work :
 		nb_imgs_managed = self.NB_IMG - nb_imgs_not_managed
 		pourcentage_managed = (float(nb_imgs_managed) / float(self.NB_IMG))*100
 		pourcentage_not_managed = (float(nb_imgs_not_managed) / float(self.NB_IMG))*100
-		nb_clusters = len(self.clusters)
+		nb_clusters = len([elem for elem in self.clusters if len(elem[1]) > 1])
 		mean_cluster_size = np.mean([len(c[1]) for c in self.clusters])
 		rapport_sn = (mean_cluster_size/float(self.NB_IMG))*100
 		
@@ -450,7 +499,6 @@ class Data_Work :
 		print("Clusters :")
 		for center, cluster in self.clusters :
 			print(str(center) + " -----> " + str(cluster))
-
 		
 	# ------------------------ Gestion de sauvegarde -----------------------------
 	
@@ -460,11 +508,11 @@ class Data_Work :
 		Param :
 			list_Img_Density : list de imd.Img_Density
 		"""
-		self.imgs = []
+		self.learn_imgs = []
 		cpt = 0
 		#On ajoute en premier l'image d'eau, elle nous servira d'image de base
 		# --- > origine du repère
-		self.imgs.append(create_water_img())
+		self.learn_imgs.append(create_water_img())
 		cpt += 1
 
 		#On ajoute les autre image 
@@ -473,58 +521,55 @@ class Data_Work :
 				if cpt + len(img.sub_imgs) > self.NB_IMG :
 					#pas toutes les images, on arrive à la limite acceptable
 					nb_image_restantes = self.NB_IMG - cpt
-					self.imgs += img.sub_imgs[:nb_image_restantes]
+					self.learn_imgs += img.sub_imgs[:nb_image_restantes]
 					cpt += nb_image_restantes
 					break
 				else :
 					#pas toutes les images, on dépasse pas encore la limite
-					self.imgs += img.sub_imgs
+					self.learn_imgs += img.sub_imgs
 					cpt += len(img.sub_imgs)
 			if all_imgs :
 				#toutes les images, on add tout
-				self.imgs += img.sub_imgs
+				self.learn_imgs += img.sub_imgs
 
 		if all_imgs :
 			#toutes les images, on mets à jour la valeur de self.NB_IMG
-			self.NB_IMG = len(self.imgs)
+			self.NB_IMG = len(self.learn_imgs)
 		print("Nombre Image : " + str(self.NB_IMG))
 
-
 	def extract_N_samples_for_test(self, N = NB_TEST) :
-		""" Choisi de manière aléatoire N images dans self.imgs et les 
-		range dans self.test, réduit self.NB_IMG de N"""
+		""" Choisi de manière aléatoire N images dans self.learn_imgs et les 
+		range dans self.test_imgs, réduit self.NB_IMG de N"""
 
-		self.test = []
+		self.test_imgs = []
 
 		for _ in range(N) :
 			ind_imgs = list(range(self.NB_IMG))
 			ind = random.choice(ind_imgs)
-			self.test += [self.imgs[ind]]
-			del(self.imgs[ind])
+			self.test_imgs += [self.learn_imgs[ind]]
+			del(self.learn_imgs[ind])
 			self.NB_IMG -= 1
 			
-
-
 	def create_N_random_img(self, N) :
 		""" Créer N random images pour notre database.
-		Toutes les images sont ajoutées à self.imgs
+		Toutes les images sont ajoutées à self.learn_imgs
 
 		Param :
 			N : int : nombre d'image à Créer
 		"""
-		self.imgs = []
+		self.learn_imgs = []
 		#On ajoute en premier l'image d'eau, elle nous servira d'image de base
 		# --- > origine du repère
-		self.imgs.append(create_water_img())
+		self.learn_imgs.append(create_water_img())
 		for _ in range(N) :
-			self.imgs += [create_pseudo_random_img()]
+			self.learn_imgs += [create_pseudo_random_img()]
 
 	def create_N_random_img_for_test(self, N) :
 		self.test_imgs = []
 		for _ in range(N) :
 			self.test_imgs += [create_pseudo_random_img()]
 
-	def load_imgs_in_files(self, directory="./imgs/") :
+	def load_imgs_in_files(self, directory) :
 		def is_int(value) :
 			try :
 				int(value)
@@ -532,25 +577,24 @@ class Data_Work :
 			except :
 				return False
 		files = os.listdir(directory) 
-		self.imgs = [0 for _ in range(len(files) - 1)]
+		my_imgs = [0 for _ in range(len(files))]
 		for filename in files :
 			with open(directory + filename, "r") as f :
 				res = f.read()
 				f = filename.split("_")
 				if f[0] == "img" :
 					ind = int(f[-1])
-					self.imgs[ind] = [[int(i) for i in a if is_int(i)] for a in res.split("]") if len(a) > 0]
+					my_imgs[ind] = [[int(i) for i in a if is_int(i)] for a in res.split("]") if len(a) > 0]
 
-		self.NB_IMG = len(self.imgs)
+		return my_imgs
 
-
-	def save_imgs_in_files(self, directory="./imgs/") :
-		for i in range(len(self.imgs)) :
+	def save_imgs_in_files(self, my_imgs, directory="./data/learn_imgs/") :
+		for i in range(len(my_imgs)) :
 			file_name = directory + "img_" + str(i)
 			with open(file_name, "w+") as f :
-				f.write(str(self.imgs[i]))
+				f.write(str(my_imgs[i]))
 
-	def load_similarity(self, file="./imgs/similarity.don") :
+	def load_similarity(self, file="./data/similarity.don") :
 		"""Charge les scores de similarité préc alculés en enregistrer dans file
 
 		Param :
@@ -568,8 +612,7 @@ class Data_Work :
 			for i in range(nb_img - j - 1) :
 				self.tab_similarity[j][i] = dict_sim[str((j, i))]
 
-
-	def save_similarity(self, file="./imgs/similarity.don") :
+	def save_similarity(self, file="./data/similarity.don") :
 		"""Enregistre dans un fichier la similarité calculé entre toutes nos images
 
 		Param :
@@ -583,9 +626,6 @@ class Data_Work :
 		with open(file, "w+") as f :
 			json.dump(dict_sim, f)
 
-
-
-
 # -------------------------- Fonctions utiles -------------------------------------
 
 def create_water_img() :
@@ -595,7 +635,6 @@ def create_water_img() :
 	"""
 	size_img = imd.Img_Density.RAYON_SUB_IMG*2
 	return [[0 for i in range(size_img)] for j in range(size_img)]
-
 
 def create_pseudo_random_img() :
 	"""Créer et retourne une image aléatoire. 
@@ -673,9 +712,6 @@ def are_clusters_equal(cluster1, cluster2) :
 	"""
 	return set(cluster1) == set(cluster2)
 
-
-
-
 # ---------------------------  ----------------------------------------
 
 
@@ -689,102 +725,6 @@ if __name__ == "__main__" :
 
 	img_density = imd.Img_Density(density_file, config_file)
 	dw = Data_Work([img_density], filtre)
-	# dw.plot_clusters()
-
-	my_imgs = dw.test
-
-	nb_img = len(my_imgs)
-	# my_imgs = [create_pseudo_random_img() for _ in range(nb_img)]
-	time_begin_predict = time.time()
-	my_results = [dw.predict_closest_img(my_imgs[i]) for i in range(nb_img)]
-	time_end_predict = time.time()
-	naiv_results = []
-
-	print(" -------- ")
-
-	time_begin_find = time.time()
-	for img in my_imgs :
-		indice_max = None
-		sim_max = 0
-		for i in range(dw.NB_IMG) :
-			sim = simy.similarity_between_two_imgs(img, dw.imgs[i], filtre)
-			if sim > sim_max :
-				sim_max = sim 
-				indice_max = i
-		naiv_results += [dw.imgs[indice_max]]
-		# print("Méthode full")
-		# print("Meilleur image : " + str(indice_max))
-		print("Max sim : " + str(sim_max))
-		# print("\n")
-	time_end_find = time.time()
-
-	print("Temps prédiction : " + str(time_end_predict - time_begin_predict))
-	print("Temps recherche : " + str(time_end_find - time_begin_find))
-
-	fig = plt.figure()
-	for i in range(nb_img) :		
-		indice = i + 1
-		sp1 = fig.add_subplot(nb_img, 4, 4*indice - 3)
-		# sp1.title.set_text(str(indice))
-		plt.imshow(my_imgs[i])
-
-		sp2 = fig.add_subplot(nb_img, 4, 4*indice - 2)
-		# sp2.title.set_text(str(indice))
-		plt.imshow(my_results[i])
-
-		sp3 = fig.add_subplot(nb_img, 4, 4*indice - 1)
-		# sp3.title.set_text(str(indice))
-		plt.imshow(naiv_results[i])
-
-		sp4 = fig.add_subplot(nb_img, 4, 4*indice)
-		ms = simy.calcul_matrix_similarity(my_imgs[i], my_results[i])
-		hidden_points = simy.activate_field_of_view(ms)
-		for p in hidden_points :
-			ms[p[1]][p[0]] = 0
-		plt.imshow(ms)
-
-	plt.show()
-
-	# list_ind_img = list(range(200))
-	# list_ind_img.remove(0)
-	# ind_farest = dw.find_farest_img_from_center(0, list_ind_img)
-	# list_ind_img.remove(ind_farest)
-	# cluster = dw.find_all_img_closest_to_representant_than_center(0, ind_farest, list_ind_img) + [ind_farest]
-	# new_representant = dw.find_new_representant(cluster)
-	# print(cluster)
-	# cluster = dw.find_all_img_closest_to_representant_than_center(0, new_representant, list_ind_img) + []
-
-	# nb_imgs = len(dw.imgs)
-	# list_ind_img = list(range(nb_imgs))
-	# ind_img_center = 0
-	# (center_cluster, cluster) = dw.find_one_cluster(ind_img_center, list_ind_img)
-	# print(center_cluster, cluster)
-
-	# for ind in cluster :
-	# 	plt.imshow(dw.imgs[ind])
-	# 	plt.show()
-
-
-	# fig = plt.figure()
-	# for i in range(60) :
-	# 	sp = fig.add_subplot(4, 15, i+1)
-	# 	if not i in dw.ind_img_not_managed :
-	# 		sp.title.set_text(str(i))
-	# 	plt.imshow(dw.imgs[i])
-	# plt.show()
-
-	#img_den = imd.Img_Density(density_file, config_file)
-	# dw = Data_Work([None])
-
-	# ind = dw.find_farest_img_from_center(0)
-
-	# fig = plt.figure()
-	# fig.add_subplot(1, 2, 1)
-	# plt.imshow(dw.imgs[ind])
-	# fig.add_subplot(1, 2, 2)
-	# plt.imshow(dw.imgs[0])
-	# plt.show()
-	# with open("s90_data_dist.don", "w+") as f :
-	# 	json.dump(dw.dict_similarity, f)
-
-
+	dw.train()
+	dw.test()
+	# dw.save_data()
