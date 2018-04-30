@@ -2,6 +2,7 @@
 #-*- coding: utf-8 -*-
 from matplotlib import pyplot as plt
 import Img_Density as imd
+import Similarity as simy
 import json
 import random
 import numpy as np
@@ -33,7 +34,7 @@ class Data_Work :
 					tuple (i, j) tel que i < j.
 		"""
 		self.filtre = filtre
-		self.maximum_similarity = imd.max_score_similarity(imd.Img_Density.RAYON_SUB_IMG*2, filtre)
+		self.maximum_similarity = simy.max_score_similarity(imd.Img_Density.RAYON_SUB_IMG*2, filtre)
 		self.seuil_min_similarity = self.maximum_similarity*0.9
 
 		print("Chargement des images...")
@@ -57,6 +58,33 @@ class Data_Work :
 
 		#self.load_similarity()
 
+	# ----------------------------- Fonction tâche principale ----------------------------------
+
+	def load_from_saved_data(self, directory) :
+		""" Param : directory : string du path du repertoire de la forme :
+				directory :
+					- test_imgs/
+					- learn_imgs/
+		"""
+		self.load_imgs_in_files(directory + "test_imgs/")
+		self.load_test_in_files(directory + "learn_imgs/")
+
+	def load_from_img_density(self, list_Img_Density, all_imgs = False) :
+		self.load_img_from_list_Img_Density(list_Img_Density, all_imgs)
+		self.extract_N_samples_for_test()
+
+
+	def load_new_random_imgs(self, nb_learning_imgs = NB_IMG, nb_testing_imgs = NB_TEST) :
+		self.create_N_random_img(nb_learning_imgs)
+		self.create_N_random_img_for_test(nb_testing_imgs)
+
+
+	def train(self) :
+		pass
+
+	def predict(self) :
+		pass
+
 
 	# ----------------------------- Travail sur les données : Prédiction -----------------------
 
@@ -69,7 +97,7 @@ class Data_Work :
 		"""
 		dict_sim = {}
 		for (center, cluster) in self.clusters :
-			dict_sim[center] = imd.similarity_between_two_imgs(self.imgs[center], img, self.filtre)
+			dict_sim[center] = simy.similarity_between_two_imgs(self.imgs[center], img, self.filtre)
 		return dict_sim
 
 
@@ -101,7 +129,7 @@ class Data_Work :
 
 		dict_sim_img = {}
 		for ind_img in cluster_max :
-			dict_sim_img[ind_img] = imd.similarity_between_two_imgs(self.imgs[ind_img], img, self.filtre)
+			dict_sim_img[ind_img] = simy.similarity_between_two_imgs(self.imgs[ind_img], img, self.filtre)
 		# print("Dict_sim img in cluster : \n" + str(dict_sim_img))
 
 
@@ -137,7 +165,7 @@ class Data_Work :
 			avancement_pourcentage = float(int(avancement_pourcentage*100))/100
 			print(str(avancement_pourcentage) + "%")
 			for j in range(i+1, self.NB_IMG) :
-				self.tab_similarity[i] += [imd.similarity_between_two_imgs(self.imgs[i], self.imgs[j], self.filtre)]
+				self.tab_similarity[i] += [simy.similarity_between_two_imgs(self.imgs[i], self.imgs[j], self.filtre)]
 				cpt += 1
 
 	def recursive_intelligent_k_means(self) :
@@ -462,7 +490,7 @@ class Data_Work :
 		print("Nombre Image : " + str(self.NB_IMG))
 
 
-	def extract_N_samples_for_test(self, N) :
+	def extract_N_samples_for_test(self, N = NB_TEST) :
 		""" Choisi de manière aléatoire N images dans self.imgs et les 
 		range dans self.test, réduit self.NB_IMG de N"""
 
@@ -490,6 +518,11 @@ class Data_Work :
 		self.imgs.append(create_water_img())
 		for _ in range(N) :
 			self.imgs += [create_pseudo_random_img()]
+
+	def create_N_random_img_for_test(self, N) :
+		self.test_imgs = []
+		for _ in range(N) :
+			self.test_imgs += [create_pseudo_random_img()]
 
 	def load_imgs_in_files(self, directory="./imgs/") :
 		def is_int(value) :
@@ -643,7 +676,7 @@ def are_clusters_equal(cluster1, cluster2) :
 
 
 
-# --------------------------- Main ----------------------------------------
+# ---------------------------  ----------------------------------------
 
 
 if __name__ == "__main__" :
@@ -674,7 +707,7 @@ if __name__ == "__main__" :
 		indice_max = None
 		sim_max = 0
 		for i in range(dw.NB_IMG) :
-			sim = imd.similarity_between_two_imgs(img, dw.imgs[i], filtre)
+			sim = simy.similarity_between_two_imgs(img, dw.imgs[i], filtre)
 			if sim > sim_max :
 				sim_max = sim 
 				indice_max = i
@@ -704,8 +737,8 @@ if __name__ == "__main__" :
 		plt.imshow(naiv_results[i])
 
 		sp4 = fig.add_subplot(nb_img, 4, 4*indice)
-		ms = imd.calcul_matrix_similarity(my_imgs[i], my_results[i])
-		hidden_points = imd.activate_field_of_view(ms)
+		ms = simy.calcul_matrix_similarity(my_imgs[i], my_results[i])
+		hidden_points = simy.activate_field_of_view(ms)
 		for p in hidden_points :
 			ms[p[1]][p[0]] = 0
 		plt.imshow(ms)
