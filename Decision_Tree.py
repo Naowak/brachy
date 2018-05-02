@@ -36,8 +36,30 @@ class Decision_Tree() :
 
 	# ------------------------- Prediction -------------------------------
 
-	def predict_closest_img(self, list_imgs, ind_img) :
-		pass
+	def predict_closest_img(self, ind_img) :
+
+		def find_closest_img_in_cluster(dec_tree, ind_img, list_ind_imgs) :
+			return dec_tree.find_closest_cluster_for_an_img(ind_img, list_ind_imgs)
+
+		if len(self.list_ind_imgs) < self.k :
+			#on est sur qu'il n'y a pas de sous cluster
+			return find_closest_img_in_cluster(self, ind_img, self.list_ind_imgs)
+
+		node = self
+		#Tant que l'on est pas dans un noeud trop petit
+		while len(node.list_ind_imgs) >= self.k :
+			#On cherche le centre le plus proche
+			centers = [son.representant for son in node.sons]
+			max_center = self.find_closest_cluster_for_an_img(ind_img, centers)
+			#On attribut à node le bon fils
+			for son in node.sons :
+				if son.representant == max_center :
+					print("new")
+					node = son
+					break
+
+		return find_closest_img_in_cluster(node, ind_img, node.list_ind_imgs)
+
 		
 	# ------------------------ Apprentissage -----------------------------
 
@@ -170,16 +192,6 @@ class Decision_Tree() :
 
 	# ------------------------ Display & Plot ----------------------------
 
-	# def __str__(self) :
-	# 	string = ""
-	# 	string += "Profondeur : " + str(self.profondeur) + "\n"
-	# 	string += "Représentant : " + str(self.representant) + "\n"
-	# 	string += "Population : " + str(self.list_ind_imgs) + "\n"
-	# 	string += "Sons :\n\n" 
-	# 	for son in self.sons :
-	# 		string += str(son) + "\n"
-	# 	return string
-
 	def __str__(self) :
 		string = ""
 		for _ in range(self.profondeur) :
@@ -196,6 +208,12 @@ if __name__ == "__main__" :
 	dw = Data_Work.Data_Work([])
 	dw.load_imgs_and_similarity("saved_data", {"directory" : "data/"})
 
-	dt = Decision_Tree(None, list(range(len(dw.learn_imgs))), dw.tab_similarity)
+	nb_test = 5
+	imgs =  list(range(len(dw.learn_imgs)))
+
+	dt = Decision_Tree(None, imgs[:-nb_test], dw.tab_similarity)
 	dt.create_tree()
 	print(dt)
+
+	for img in imgs : 
+		print(dt.predict_closest_img(img))
