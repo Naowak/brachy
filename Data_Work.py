@@ -15,9 +15,9 @@ class Data_Work :
 	"""Classe effectuant les calculs sur nos données (Img_Density)"""
 
 
-	NB_IMG = 65
+	NB_IMG = 200
 	NB_SIMS = NB_IMG*(NB_IMG+1)/2
-	NB_TEST = 15
+	NB_TEST = 20
 	NB_MAX_ELEM_IN_CLUSTER = 20
 
 	def __init__(self, list_Img_Density, filtre=None) :
@@ -747,8 +747,8 @@ if __name__ == "__main__" :
 	if len(sys.argv) > 1 :
 		filtre = sys.argv[1]
 
-	# img_density = imd.Img_Density(density_file, config_file)
-	dw = Data_Work([], filtre)
+	img_density = imd.Img_Density(density_file, config_file)
+	dw = Data_Work([img_density], filtre)
 	dw.train()
 	# dw.test()
 	dw.save_data()

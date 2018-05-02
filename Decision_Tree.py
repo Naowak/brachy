@@ -2,8 +2,8 @@
 #-*- coding: utf-8 -*-
 
 import random
-import Tree
 import Data_Work
+from matplotlib import pyplot as plt
 
 
 class Decision_Tree() :
@@ -50,15 +50,15 @@ class Decision_Tree() :
 		while len(node.list_ind_imgs) >= self.k :
 			#On cherche le centre le plus proche
 			centers = [son.representant for son in node.sons]
-			max_center = self.find_closest_cluster_for_an_img(ind_img, centers)
+			max_center, score_sim = self.find_closest_cluster_for_an_img(ind_img, centers)
 			#On attribut à node le bon fils
 			for son in node.sons :
 				if son.representant == max_center :
-					print("new")
 					node = son
 					break
 
-		return find_closest_img_in_cluster(node, ind_img, node.list_ind_imgs)
+		center, score = find_closest_img_in_cluster(node, ind_img, node.list_ind_imgs)
+		return center, score
 
 		
 	# ------------------------ Apprentissage -----------------------------
@@ -101,13 +101,6 @@ class Decision_Tree() :
 			return centers
 
 		def calcul_new_families_for_centers(dec_tree, centers, list_ind_imgs) :
-
-
-			#################"""
-			##### /!\
-			#### DES FAMILLES DEVEINNENT VIDES PAR LA SUITE, CA CREER UN PROBLEME
-			#### On A DES DOUBLES
-
 			families = [[] for _ in range(dec_tree.k)]
 			for ind_img in list_ind_imgs :
 				is_a_center = False
@@ -163,7 +156,6 @@ class Decision_Tree() :
 		c = None
 		for i,center in enumerate(centers_clusters) :
 			score_sim = self.get_score_similarity(ind_img, center)
-			# print(str(center) + " / " + str(ind_img) + "  --  " + str(score_sim))
 			if score_sim > sim_max :
 				c = center
 				sim_max = score_sim
@@ -193,9 +185,9 @@ class Decision_Tree() :
 	# ------------------------ Display & Plot ----------------------------
 
 	def __str__(self) :
-		string = ""
+		string = str(self.profondeur) + "."
 		for _ in range(self.profondeur) :
-			string += "  "
+			string +=  "    "
 		string += str(self.representant) + " --> " + str(self.list_ind_imgs) + "\n"
 		for son in self.sons :
 			string += str(son)
@@ -208,12 +200,36 @@ if __name__ == "__main__" :
 	dw = Data_Work.Data_Work([])
 	dw.load_imgs_and_similarity("saved_data", {"directory" : "data/"})
 
-	nb_test = 5
+	nb_test = 20
 	imgs =  list(range(len(dw.learn_imgs)))
+	test = []
+	for _ in range(nb_test) :
+		img = random.choice(imgs)
+		imgs.remove(img)
+		test.append(img)
 
-	dt = Decision_Tree(None, imgs[:-nb_test], dw.tab_similarity)
+	dt = Decision_Tree(None, imgs, dw.tab_similarity)
 	dt.create_tree()
 	print(dt)
 
-	for img in imgs : 
-		print(dt.predict_closest_img(img))
+	for img in test : 
+		predict, score_pred = dt.predict_closest_img(img)
+
+		scores = [(dt.get_score_similarity(img, learn_img), learn_img) for learn_img in imgs]
+		max_score = 0
+		best = None
+		for s in scores :
+			if s[0] > max_score :
+				max_score = s[0]
+				best = s[1]
+		research = best
+
+		print(predict, research, score_pred, max_score, float(score_pred)/max_score*100)
+		# fig = plt.figure()
+		# fig.add_subplot(3, 1, 1)
+		# plt.imshow(dw.learn_imgs[img])
+		# fig.add_subplot(3, 1, 2)
+		# plt.imshow(dw.learn_imgs[predict])
+		# fig.add_subplot(3, 1, 3)
+		# plt.imshow(dw.learn_imgs[research])
+		# plt.show()
