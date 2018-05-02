@@ -446,6 +446,7 @@ class Data_Work :
 			for ind2 in cluster :
 				if ind1 != ind2 :
 					s += self.get_score_similarity(ind1, ind2)
+					print("hello " + str(s))
 			vector[i] = s
 
 		return cluster[vector.index(max(vector))]
@@ -730,7 +731,7 @@ def are_clusters_equal(cluster1, cluster2) :
 		False sinon
 
 		Param :
-			- cluster1 : list int : liste d'indice représentant le premier cluster
+			- cluster1 : listi nt : liste d'indice représentant le premier cluster
 			- cluster2 : list int : liste d'indice représentant le second cluster
 	"""
 	return set(cluster1) == set(cluster2)
@@ -746,8 +747,8 @@ if __name__ == "__main__" :
 	if len(sys.argv) > 1 :
 		filtre = sys.argv[1]
 
-	img_density = imd.Img_Density(density_file, config_file)
-	dw = Data_Work([img_density], filtre)
+	# img_density = imd.Img_Density(density_file, config_file)
+	dw = Data_Work([], filtre)
 	dw.train()
 	dw.test()
 	# dw.save_data()
