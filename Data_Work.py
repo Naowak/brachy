@@ -15,7 +15,7 @@ class Data_Work :
 	"""Classe effectuant les calculs sur nos données (Img_Density)"""
 
 
-	NB_IMG = 500
+	NB_IMG = 65
 	NB_SIMS = NB_IMG*(NB_IMG+1)/2
 	NB_TEST = 15
 	NB_MAX_ELEM_IN_CLUSTER = 20
@@ -87,8 +87,8 @@ class Data_Work :
 
 	def train(self) :
 		print("Chargement des images et similarité...")
-		self.load_imgs_and_similarity("saved_data", {"directory" : "data/"})
-		# self.load_imgs_and_similarity("img_density", {"list_Img_Density" : self.list_Img_Density, "all_imgs" : True})
+		# self.load_imgs_and_similarity("saved_data", {"directory" : "data/"})
+		self.load_imgs_and_similarity("img_density", {"list_Img_Density" : self.list_Img_Density, "all_imgs" : False})
 		# self.load_imgs_and_similarity("random_img", {})
 		print("Classification de nos données...")
 		list_ind_imgs = list(range(self.NB_IMG))
@@ -749,5 +749,5 @@ if __name__ == "__main__" :
 	img_density = imd.Img_Density(density_file, config_file)
 	dw = Data_Work([img_density], filtre)
 	dw.train()
-	dw.test()
-	# dw.save_data()
+	# dw.test()
+	dw.save_data()
