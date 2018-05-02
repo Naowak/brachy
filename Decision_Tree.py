@@ -8,7 +8,7 @@ import Data_Work
 
 class Decision_Tree() :
 	
-	def __init__(self, representant, list_ind_imgs, similarity, profondeur = 0, k = 2,) :
+	def __init__(self, representant, list_ind_imgs, similarity, profondeur = 0, k = 5) :
 		self.list_ind_imgs = list_ind_imgs
 		self.k = k
 		self.tab_similarity = similarity
@@ -36,7 +36,7 @@ class Decision_Tree() :
 
 	# ------------------------- Prediction -------------------------------
 
-	def predict_closest_img(self, img) :
+	def predict_closest_img(self, list_imgs, ind_img) :
 		pass
 		
 	# ------------------------ Apprentissage -----------------------------
@@ -56,6 +56,7 @@ class Decision_Tree() :
 
 
 		def create_k_random_families(dec_tree, list_ind_imgs) :
+			#On initialise d'abord nos familles avec un element
 			list_ind_imgs = list(list_ind_imgs)
 			families = [[] for _ in range(dec_tree.k)]
 			for i in range(dec_tree.k) :
@@ -64,7 +65,7 @@ class Decision_Tree() :
 
 			# On créer des familles aléatoires
 			indice_families = list(range(dec_tree.k))
-			for ind_img in list_ind_imgs[2:] :
+			for ind_img in list_ind_imgs[dec_tree.k:] :
 				ind_fam = random.choice(indice_families)
 				families[ind_fam] += [ind_img]
 			return families
@@ -78,6 +79,13 @@ class Decision_Tree() :
 			return centers
 
 		def calcul_new_families_for_centers(dec_tree, centers, list_ind_imgs) :
+
+
+			#################"""
+			##### /!\
+			#### DES FAMILLES DEVEINNENT VIDES PAR LA SUITE, CA CREER UN PROBLEME
+			#### On A DES DOUBLES
+
 			families = [[] for _ in range(dec_tree.k)]
 			for ind_img in list_ind_imgs :
 				is_a_center = False
