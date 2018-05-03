@@ -3,7 +3,9 @@
 
 import random
 import Data_Work
+import Similarity as simy
 from matplotlib import pyplot as plt
+
 
 
 class Decision_Tree() :
@@ -40,6 +42,9 @@ class Decision_Tree() :
 
 		def find_closest_img_in_cluster(dec_tree, ind_img, list_ind_imgs) :
 			return dec_tree.find_closest_cluster_for_an_img(ind_img, list_ind_imgs)
+
+		def find_closest_img(dec_tree, ind_img) :
+			pass
 
 		if len(self.list_ind_imgs) < self.k :
 			#on est sur qu'il n'y a pas de sous cluster
@@ -200,7 +205,7 @@ if __name__ == "__main__" :
 	dw = Data_Work.Data_Work([])
 	dw.load_imgs_and_similarity("saved_data", {"directory" : "data/"})
 
-	nb_test = 20
+	nb_test = 50
 	imgs =  list(range(len(dw.learn_imgs)))
 	test = []
 	for _ in range(nb_test) :
@@ -225,11 +230,17 @@ if __name__ == "__main__" :
 		research = best
 
 		print(predict, research, score_pred, max_score, float(score_pred)/max_score*100)
-		# fig = plt.figure()
-		# fig.add_subplot(3, 1, 1)
-		# plt.imshow(dw.learn_imgs[img])
-		# fig.add_subplot(3, 1, 2)
-		# plt.imshow(dw.learn_imgs[predict])
-		# fig.add_subplot(3, 1, 3)
-		# plt.imshow(dw.learn_imgs[research])
-		# plt.show()
+		fig = plt.figure()
+		fig.add_subplot(4, 1, 1)
+		plt.imshow(dw.learn_imgs[img])
+		fig.add_subplot(4, 1, 2)
+		plt.imshow(dw.learn_imgs[predict])
+		fig.add_subplot(4, 1, 3)
+		plt.imshow(dw.learn_imgs[research])
+		fig.add_subplot(4, 1, 4)
+		ms = simy.calcul_matrix_similarity(dw.learn_imgs[img], dw.learn_imgs[predict])
+		hidden_points = simy.activate_field_of_view(ms)
+		for p in hidden_points :
+			ms[p[1]][p[0]] = 0
+		plt.imshow(ms)
+		plt.show()

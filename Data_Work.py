@@ -15,9 +15,9 @@ class Data_Work :
 	"""Classe effectuant les calculs sur nos données (Img_Density)"""
 
 
-	NB_IMG = 200
+	NB_IMG = 500
 	NB_SIMS = NB_IMG*(NB_IMG+1)/2
-	NB_TEST = 20
+	NB_TEST = 0
 	NB_MAX_ELEM_IN_CLUSTER = 20
 
 	def __init__(self, list_Img_Density, filtre=None) :
