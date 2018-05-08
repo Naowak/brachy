@@ -74,7 +74,26 @@ class Extract_Data :
 				else :
 					self.test_imgs += img_d.sub_imgs
 			#on met à jour la variable contenant le nombre d'image de test
+			self.learn_imgs = remove_duplicates(self.learn_imgs)
 			self.nb_test_imgs = len(self.test_imgs)
+
+		def remove_duplicates(imgs) :
+			def are_imgs_equal(img1, img2) :
+				for i in range(len(img1)) :
+					line1 = img1[i]
+					line2 = img2[i]
+					for j in range(len(line1)) :
+						if line1[j] != line2[j] :
+							return False
+				return True
+
+			duplicates = []
+			for i in range(len(imgs)) :
+				for j in range(i + 1, len(imgs)) :
+					if are_imgs_equal(imgs[i], imgs[j]) :
+						duplicates += [j]
+
+			return [imgs[i] for i in range(len(imgs)) if i not in duplicates]
 
 		get_list_img_density(self)
 		extract_learn_imgs_from_first_img_density(self, self.list_img_density[0], nb_learn_imgs)
@@ -145,7 +164,12 @@ class Extract_Data :
 
 		def load_all_imgs_in_directory(directory) :
 			list_files = os.listdir(directory)
+			if len(list_files) <= 0 :
+				return []
 			list_imgs = [None for _ in range(len(list_files))]
+			avancement = 0
+			fin = len(list_files)
+			progress_bar = ProgressBar(avancement, fin)
 			for f in list_files :
 				tmp = f.split("_")
 				if len(tmp) != 2 :
@@ -156,13 +180,17 @@ class Extract_Data :
 					#c'est une image
 					ind_img = int(tmp[1])
 					list_imgs[ind_img] = load_img(directory + f)
+				avancement += 1
+				progress_bar.updateProgress(avancement, "")
 			return list_imgs
 
 		path_learn = save_directory + "learn_imgs/"
 		path_test = save_directory + "test_imgs/"
 		path_similarity = save_directory + "similarity.don"
 
+		print("Chargement des images d'apprentissage...")
 		self.learn_imgs = load_all_imgs_in_directory(path_learn)
+		print("Chargement des images de tests...")
 		self.test_imgs = load_all_imgs_in_directory(path_test)
 		self.dict_sim.load_similarity(path_similarity)
 
@@ -196,4 +224,4 @@ if __name__ == "__main__" :
 
 	load, path_load, path_save = parse_arg(sys.argv)
 	ed = Extract_Data(path_load, load = load, path_save = path_save)
-	print(ed.decision_tree)
+	# print(ed.decision_tree)

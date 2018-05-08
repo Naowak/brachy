@@ -11,7 +11,7 @@ import time
 
 class Decision_Tree() :
 	
-	def __init__(self, representant, list_ind_imgs, similarity, imgs, profondeur = 0, k = 5) :
+	def __init__(self, representant, list_ind_imgs, similarity, imgs, profondeur = 0, k = 7) :
 		self.list_ind_imgs = list_ind_imgs
 		self.k = k
 		self.tab_similarity = similarity
@@ -88,6 +88,7 @@ class Decision_Tree() :
 
 	def create_tree(self) :
 		centers, families = self.split_in_k_sons(self.list_ind_imgs)
+		print(str([len(f) for f in families]))
 		for i,fam in enumerate(families) :
 			dt = Decision_Tree(centers[i], fam, self.tab_similarity, self.imgs, self.profondeur + 1, self.k)
 			self.sons.append(dt)
