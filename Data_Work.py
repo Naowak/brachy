@@ -17,7 +17,7 @@ class Data_Work :
 
 	NB_IMG = 500
 	NB_SIMS = NB_IMG*(NB_IMG+1)/2
-	NB_TEST = 0
+	NB_TEST = 50
 	NB_MAX_ELEM_IN_CLUSTER = 20
 
 	def __init__(self, list_Img_Density, filtre=None) :

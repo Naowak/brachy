@@ -5,46 +5,59 @@ import random
 import Data_Work
 import Similarity as simy
 from matplotlib import pyplot as plt
+import time
 
 
 
 class Decision_Tree() :
 	
-	def __init__(self, representant, list_ind_imgs, similarity, profondeur = 0, k = 5) :
+	def __init__(self, representant, list_ind_imgs, similarity, imgs, profondeur = 0, k = 5) :
 		self.list_ind_imgs = list_ind_imgs
 		self.k = k
 		self.tab_similarity = similarity
 		self.sons = []
 		self.representant = representant
 		self.profondeur = profondeur
+		self.imgs = imgs
 
 
 	# ------------------------ Getter & Setter ---------------------------
 
 	def get_score_similarity(self, ind_img1, ind_img2) :
-		ind_img2 += 1
-		ind_img1 += 1
-		if ind_img1 < ind_img2 :
-			ind_img2 -= ind_img1
-			ind_img1 -= 1
-			ind_img2 -= 1
-			return self.tab_similarity[ind_img1][ind_img2]
-		elif ind_img1 > ind_img2 :
-			ind_img1 -= ind_img2
-			ind_img1 -= 1
-			ind_img2 -= 1
-			return self.tab_similarity[ind_img2][ind_img1]
+		# ind_img2 += 1
+		# ind_img1 += 1
+		# if ind_img1 < ind_img2 :
+		# 	ind_img2 -= ind_img1
+		# 	ind_img1 -= 1
+		# 	ind_img2 -= 1
+		# 	return self.tab_similarity[ind_img1][ind_img2]
+		# elif ind_img1 > ind_img2 :
+		# 	ind_img1 -= ind_img2
+		# 	ind_img1 -= 1
+		# 	ind_img2 -= 1
+		# 	return self.tab_similarity[ind_img2][ind_img1]
+		return self.tab_similarity.get_similarity(ind_img1, ind_img2)
 
 
 	# ------------------------- Prediction -------------------------------
 
 	def predict_closest_img(self, ind_img) :
 
-		def find_closest_img_in_cluster(dec_tree, ind_img, list_ind_imgs) :
-			return dec_tree.find_closest_cluster_for_an_img(ind_img, list_ind_imgs)
+		def calcul_similarity_with_all_imgs(ind_test, ind_imgs) :
+			dict_sim = {}
+			for ind_img in ind_imgs :
+				dict_sim[ind_img] = simy.similarity_between_two_imgs(self.imgs[ind_test], self.imgs[ind_img])
+			return dict_sim
 
-		def find_closest_img(dec_tree, ind_img) :
-			pass
+		def find_closest_img_in_cluster(dec_tree, ind_img, list_ind_imgs) :
+			dict_sim = calcul_similarity_with_all_imgs(ind_img, list_ind_imgs)
+			closest_img = None
+			score_max = 0
+			for key, score_sim in dict_sim.items() :
+				if score_sim > score_max :
+					closest_img = key
+					score_max = score_sim
+			return (closest_img, score_max)
 
 		if len(self.list_ind_imgs) < self.k :
 			#on est sur qu'il n'y a pas de sous cluster
@@ -63,7 +76,12 @@ class Decision_Tree() :
 					break
 
 		center, score = find_closest_img_in_cluster(node, ind_img, node.list_ind_imgs)
-		return center, score
+		return center, score, node
+
+	def predict_and_add_img(self, ind_img) :
+		closest_img, score_sim, dt = self.predict_closest_img(ind_img)
+
+
 
 		
 	# ------------------------ Apprentissage -----------------------------
@@ -71,7 +89,7 @@ class Decision_Tree() :
 	def create_tree(self) :
 		centers, families = self.split_in_k_sons(self.list_ind_imgs)
 		for i,fam in enumerate(families) :
-			dt = Decision_Tree(centers[i], fam, self.tab_similarity, self.profondeur + 1, self.k)
+			dt = Decision_Tree(centers[i], fam, self.tab_similarity, self.imgs, self.profondeur + 1, self.k)
 			self.sons.append(dt)
 		for son in self.sons :
 			son.create_tree()
@@ -87,12 +105,13 @@ class Decision_Tree() :
 			list_ind_imgs = list(list_ind_imgs)
 			families = [[] for _ in range(dec_tree.k)]
 			for i in range(dec_tree.k) :
-				ind = list_ind_imgs[i]
+				ind = random.choice(list_ind_imgs)
+				list_ind_imgs.remove(ind)
 				families[i] += [ind]
 
 			# On créer des familles aléatoires
 			indice_families = list(range(dec_tree.k))
-			for ind_img in list_ind_imgs[dec_tree.k:] :
+			for ind_img in list_ind_imgs :
 				ind_fam = random.choice(indice_families)
 				families[ind_fam] += [ind_img]
 			return families
@@ -213,14 +232,22 @@ if __name__ == "__main__" :
 		imgs.remove(img)
 		test.append(img)
 
-	dt = Decision_Tree(None, imgs, dw.tab_similarity)
+	dt = Decision_Tree(None, imgs, dw.tab_similarity, dw.learn_imgs)
 	dt.create_tree()
 	print(dt)
 
-	for img in test : 
-		predict, score_pred = dt.predict_closest_img(img)
+	cpt_predict = 0
+	cpt_research = 0
 
-		scores = [(dt.get_score_similarity(img, learn_img), learn_img) for learn_img in imgs]
+	for img in test : 
+		t1 = time.time()
+		predict, score_pred, node = dt.predict_closest_img(img)
+		tfp = time.time() - t1
+		cpt_predict += tfp
+		print("Temps predict : " + str(tfp))
+
+		t2 = time.time()
+		scores = [(simy.similarity_between_two_imgs(dw.learn_imgs[img], dw.learn_imgs[l_img]), l_img) for l_img in imgs]
 		max_score = 0
 		best = None
 		for s in scores :
@@ -228,8 +255,13 @@ if __name__ == "__main__" :
 				max_score = s[0]
 				best = s[1]
 		research = best
+		tfr = time.time() - t2
+		cpt_research += tfr
+		print("Temps recherche : " + str(tfr))
+
 
 		print(predict, research, score_pred, max_score, float(score_pred)/max_score*100)
+		print("\n")
 		fig = plt.figure()
 		fig.add_subplot(4, 1, 1)
 		plt.imshow(dw.learn_imgs[img])
@@ -244,3 +276,6 @@ if __name__ == "__main__" :
 			ms[p[1]][p[0]] = 0
 		plt.imshow(ms)
 		plt.show()
+
+	print("Temps prediction totale: " + str(cpt_predict))
+	print("Temps recherche totale: " + str(cpt_research))

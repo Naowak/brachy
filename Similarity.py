@@ -4,6 +4,51 @@
 import Img_Density as imd
 import copy
 
+class Dict_Sim :
+
+	def __init__(self, size = None) :
+		self.tab = None
+		if size != None :
+			self.tab = [[None for i in range(size)] for j in range(size)]
+
+	def set_similarity(self, ind_img1, ind_img2, sim) :
+		self.tab[ind_img1][ind_img2] = sim
+		self.tab[ind_img2][ind_img1] = sim
+
+	def get_similarity(self, ind_img1, ind_img2) :
+		return self.tab[ind_img1][ind_img2]
+
+	def save_similarity(self, directory) :
+			file_name = directory + "similarity.don"
+			with open(file_name, "w+") as f :
+				f.write(str(self.tab))
+
+	def load_similarity(self, file_name) :
+		def is_sim(value) :
+			if value[:5] == " None" or value[:4] == "None" :
+				return True
+			return is_int(value)
+
+		def is_int(value) :
+			try :
+				int(value)
+				return True
+			except :
+				return False
+
+		def string_to_sim(value) :
+			if value[:5] == " None" or value[:4] == "None":
+				return None
+			return int(value)
+
+		with open(file_name, 'r') as f :
+			res = f.read()
+			sim = [[string_to_sim(c) for c in b.split(',') if is_sim(c)] for b in res.replace(']', '').split("[") if len(b) > 0]
+			self.tab = sim
+
+	def __str__(self) :
+		return str(self.tab)
+
 def calcul_matrix_similarity(img1, img2) :
 	"""Calcul la matrice de similarité entre deux matrices
 
