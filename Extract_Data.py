@@ -7,6 +7,7 @@ import Decision_Tree as dt
 from ProgressBar import ProgressBar
 import os
 import sys
+import time
 from matplotlib import pyplot as plt
 
 
@@ -134,9 +135,77 @@ class Extract_Data :
 	# --------------------------------- Prédiction ---------------------------------------------
 
 	def predict_for_all_test_imgs(self) :
+
+		def find_iterative(self, ind_test) :
+			score = [simy.similarity_between_two_imgs(self.test_imgs[ind_test], self.learn_imgs[i]) for i in range(self.nb_learn_imgs)]
+			closest = None
+			max_sim = 0
+			for i,s in enumerate(score) :
+				if s > max_sim :
+					max_sim = s
+					closest = i
+			return i, max_sim
+
+		def plot_result(self, ind_test, ind_img, ind_iterative) :
+
+			def create_water_img() :
+				"""Créer une image composée d'eau
+				Retour : 
+					double list : représente une image composée seulement d'eau
+				"""
+				size_img = imd.Img_Density.RAYON_SUB_IMG*2
+				return [[0 for i in range(size_img)] for j in range(size_img)]
+
+			fig = plt.figure()
+			fig.add_subplot(4, 2, 1)
+			plt.imshow(self.test_imgs[ind_test])
+
+			fig.add_subplot(4, 2, 3)
+			plt.imshow(self.learn_imgs[ind_img])
+
+			fig.add_subplot(4, 2, 4)
+			mat = simy.calcul_matrix_similarity(self.test_imgs[ind_test], self.learn_imgs[ind_img])
+			list_points_hidden = simy.activate_field_of_view(mat)
+			for p in list_points_hidden :
+				mat[p[1]][p[0]] = 0
+			plt.imshow(mat)
+
+			fig.add_subplot(4, 2, 5)
+			plt.imshow(self.learn_imgs[ind_iterative])
+
+			fig.add_subplot(4, 2, 6)
+			mat = simy.calcul_matrix_similarity(self.test_imgs[ind_test], self.learn_imgs[ind_iterative])
+			list_points_hidden = simy.activate_field_of_view(mat)
+			for p in list_points_hidden :
+				mat[p[1]][p[0]] = 0
+			plt.imshow(mat)
+
+			fig.add_subplot(4, 2, 7)
+			water = create_water_img()
+			plt.imshow(water)
+
+			fig.add_subplot(4, 2, 8)
+			mat_water = simy.calcul_matrix_similarity(self.test_imgs[ind_test], water)
+			list_points_hidden = simy.activate_field_of_view(mat_water)
+			for p in list_points_hidden :
+				mat_water[p[1]][p[0]] = 0
+			plt.imshow(mat_water)
+			score_sim_water = simy.calcul_similarity(mat_water)
+			print("Score water : " + str(score_sim_water))
+
+			plt.show()
+
 		for i in range(self.nb_test_imgs) :
+			t1 = time.time()
 			closest_img, score_sim, dt = self.decision_tree.predict_closest_img(i)
-			self.plot_result(i, closest_img)
+			t2 = time.time()
+			iterative_closest, max_sim = find_iterative(self, i)
+			t3 = time.time()
+			print("Score iterative : " + str(max_sim))
+			print("Score predict : " + str(score_sim))
+			print("Temps iterative : " + str(t3-t2))
+			print("Temps predict : " + str(t2 - t1) + "\n\n")
+			plot_result(self, i, closest_img, iterative_closest)
 
 
 
@@ -209,9 +278,9 @@ class Extract_Data :
 		path_similarity = save_directory + "similarity.don"
 
 		print("Chargement des images d'apprentissage...")
-		self.learn_imgs = load_all_imgs_in_directory(path_learn)
+		self.learn_imgs = load_all_imgs_in_directory(path_learn)[:NB_LEARN_IMGS]
 		print("Chargement des images de tests...")
-		self.test_imgs = load_all_imgs_in_directory(path_test)
+		self.test_imgs = load_all_imgs_in_directory(path_test)[:NB_TEST_IMGS]
 		print("Chargement des similarités...")
 		self.dict_sim.load_similarity(path_similarity)
 
@@ -219,16 +288,6 @@ class Extract_Data :
 		self.nb_test_imgs = len(self.test_imgs)
 		self.nb_imgs = self.nb_test_imgs + self.nb_learn_imgs
 
-
-	# ------------------------------------- Plot & Display ----------------------------------
-
-	def plot_result(self, ind_test, ind_img) :
-		fig = plt.figure()
-		fig.add_subplot(2, 1, 1)
-		plt.imshow(self.test_imgs[ind_test])
-		fig.add_subplot(2, 1, 2)
-		plt.imshow(self.learn_imgs[ind_img])
-		plt.show()
 
 
 
@@ -251,8 +310,18 @@ if __name__ == "__main__" :
 				path_save = arg[10:]
 		return load, path_load, path_save
 
+	# def test_sim(ed) :
+	# 	for i in range(ed.nb_learn_imgs) :
+	# 		for j in range(i + 1, ed.nb_learn_imgs) :
+	# 			sim = simy.similarity_between_two_imgs(ed.learn_imgs[i], ed.learn_imgs[j])
+	# 			if sim != ed.dict_sim.get_similarity(i, j) :
+	# 				print(i, j)
+	# 				print(sim, ed.dict_sim.get_similarity(i,j))
+	# 				return False
+	# 	return True
 
 	load, path_load, path_save = parse_arg(sys.argv)
 	ed = Extract_Data(path_load, load = load, path_save = path_save)
+	# test_sim(ed)
 	# print(ed.decision_tree)
 	ed.predict_for_all_test_imgs()

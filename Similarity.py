@@ -3,6 +3,7 @@
 
 import Img_Density as imd
 import copy
+from matplotlib import pyplot as plt
 
 class Dict_Sim :
 
@@ -60,7 +61,7 @@ def calcul_matrix_similarity(img1, img2) :
 	size = 2*imd.Img_Density.RAYON_SUB_IMG
 	return [[1 if img1[i][j]==img2[i][j] else 0 for j in range(size)] for i in range(size)]
 
-def calcul_similarity(matrix_similarity, filtre=None) :
+def calcul_similarity(matrix_similarity, filtre=None, plot=False) :
 	""" Calcul le score de similarité entre deux matrices.
 
 	Param :
@@ -72,6 +73,7 @@ def calcul_similarity(matrix_similarity, filtre=None) :
 		- int : score de similarité
 	"""
 	size = 2*imd.Img_Density.RAYON_SUB_IMG
+	warm_img = [[0 for i in range(size)] for j in range(size)]
 	res = 0
 	for j in range(size) :
 		for i in range(size) :
@@ -82,28 +84,34 @@ def calcul_similarity(matrix_similarity, filtre=None) :
 					if j-1 >= 0 and matrix_similarity[j-1][i] == 1 :
 						tmp += 1
 				except IndexError :
-					pass
+					tmp += 1
 				try :
 					if i-1 >= 0 and matrix_similarity[j][i-1] == 1 :
 						tmp += 1
 				except IndexError :
-					pass
+					tmp += 1
 				try :
 					if matrix_similarity[j+1][i] == 1 :
 						tmp += 1
 				except IndexError :
-					pass
+					tmp += 1
 				try :
 					if matrix_similarity[j][i+1] == 1 :
 						tmp += 1
 				except IndexError :
-					pass
+					tmp += 1
+				warm_img[j][i] = tmp
 				if filtre == None :
 					res += tmp
 				elif filtre == "gaussien" :
 					res += tmp*gaussienne(i, j, 20)
 				elif filtre == "proportionnel" :
 					res += tmp*proportionnelle(i,j)
+
+	if plot :
+		plt.imshow(warm_img)
+		plt.show()
+
 	return res
 
 def similarity_between_two_imgs(img1, img2, filtre = None, plot = False) :
