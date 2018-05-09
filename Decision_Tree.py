@@ -11,7 +11,7 @@ import time
 
 class Decision_Tree() :
 	
-	def __init__(self, representant, list_ind_imgs, similarity, imgs, profondeur = 0, k = 7) :
+	def __init__(self, representant, list_ind_imgs, similarity, imgs, tests, profondeur = 0, k = 7) :
 		self.list_ind_imgs = list_ind_imgs
 		self.k = k
 		self.tab_similarity = similarity
@@ -19,6 +19,7 @@ class Decision_Tree() :
 		self.representant = representant
 		self.profondeur = profondeur
 		self.imgs = imgs
+		self.tests = tests
 
 
 	# ------------------------ Getter & Setter ---------------------------
@@ -46,7 +47,7 @@ class Decision_Tree() :
 		def calcul_similarity_with_all_imgs(ind_test, ind_imgs) :
 			dict_sim = {}
 			for ind_img in ind_imgs :
-				dict_sim[ind_img] = simy.similarity_between_two_imgs(self.imgs[ind_test], self.imgs[ind_img])
+				dict_sim[ind_img] = simy.similarity_between_two_imgs(self.tests[ind_test], self.imgs[ind_img])
 			return dict_sim
 
 		def find_closest_img_in_cluster(dec_tree, ind_img, list_ind_imgs) :
@@ -88,9 +89,9 @@ class Decision_Tree() :
 
 	def create_tree(self) :
 		centers, families = self.split_in_k_sons(self.list_ind_imgs)
-		print(str([len(f) for f in families]))
+		# print(str([len(f) for f in families]))
 		for i,fam in enumerate(families) :
-			dt = Decision_Tree(centers[i], fam, self.tab_similarity, self.imgs, self.profondeur + 1, self.k)
+			dt = Decision_Tree(centers[i], fam, self.tab_similarity, self.imgs, self.tests, self.profondeur + 1, self.k)
 			self.sons.append(dt)
 		for son in self.sons :
 			son.create_tree()
@@ -217,6 +218,17 @@ class Decision_Tree() :
 		for son in self.sons :
 			string += str(son)
 		return string
+
+	def display_stats(self) :
+
+		def get_profondeur_max(self) :
+			if len(self.sons) == 0 :
+				return self.profondeur
+			else :
+				return max([get_profondeur_max(son) for son in self.sons])
+
+		print("Profondeur max de l'arbre : " + str(get_profondeur_max(self)))
+
 
 		
 

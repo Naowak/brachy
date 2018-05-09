@@ -7,10 +7,11 @@ import Decision_Tree as dt
 from ProgressBar import ProgressBar
 import os
 import sys
+from matplotlib import pyplot as plt
 
 
 NB_LEARN_IMGS = 1500
-NB_TEST_IMGS = 0
+NB_TEST_IMGS = 23
 
 
 class Extract_Data :
@@ -37,7 +38,7 @@ class Extract_Data :
 			self.dict_sim = simy.Dict_Sim()
 			self.load(path)
 
-		self.decision_tree = dt.Decision_Tree(None, list(range(self.nb_learn_imgs)), self.dict_sim, self.learn_imgs)
+		self.decision_tree = dt.Decision_Tree(None, list(range(self.nb_learn_imgs)), self.dict_sim, self.learn_imgs, self.test_imgs)
 		self.compute_decision_tree()
 
 		# if path_save != None :
@@ -64,6 +65,7 @@ class Extract_Data :
 				nb_imgs = len(img_density.sub_imgs)
 			self.learn_imgs = img_density.sub_imgs[:nb_imgs]
 			#on met à jour la variable contenant le nombre d'image d'apprentissage
+			self.learn_imgs = remove_duplicates(self.learn_imgs)
 			self.nb_learn_imgs = len(self.learn_imgs)
 
 		def extract_test_imgs_from_lefted_img_density(self, list_img_density, nb_imgs) :
@@ -74,7 +76,6 @@ class Extract_Data :
 				else :
 					self.test_imgs += img_d.sub_imgs
 			#on met à jour la variable contenant le nombre d'image de test
-			self.learn_imgs = remove_duplicates(self.learn_imgs)
 			self.nb_test_imgs = len(self.test_imgs)
 
 		def remove_duplicates(imgs) :
@@ -87,17 +88,27 @@ class Extract_Data :
 							return False
 				return True
 
+			print("Suppression des duplicatas...")
 			duplicates = []
-			for i in range(len(imgs)) :
-				for j in range(i + 1, len(imgs)) :
+			nb = len(imgs)
+			avancement = 0
+			fin = nb*(nb-1)/2
+			progress_bar = ProgressBar(avancement, fin)
+			for i in range(nb) :
+				for j in range(i + 1, nb) :
 					if are_imgs_equal(imgs[i], imgs[j]) :
 						duplicates += [j]
+					avancement += 1
+				progress_bar.updateProgress(avancement, "")
 
-			return [imgs[i] for i in range(len(imgs)) if i not in duplicates]
+			return [imgs[i] for i in range(nb) if i not in duplicates]
 
+		print("Chargement des images à partir de " + self.path)
 		get_list_img_density(self)
-		extract_learn_imgs_from_first_img_density(self, self.list_img_density[0], nb_learn_imgs)
-		extract_test_imgs_from_lefted_img_density(self, self.list_img_density[1:], nb_test_imgs)
+		learn_img_density = self.list_img_density[9]
+		test_img_density = self.list_img_density[:9] + self.list_img_density[10:]
+		extract_learn_imgs_from_first_img_density(self, learn_img_density, nb_learn_imgs)
+		extract_test_imgs_from_lefted_img_density(self, test_img_density, nb_test_imgs)
 		self.nb_imgs = self.nb_test_imgs + self.nb_learn_imgs
 
 	# ---------------------------------- Pré-Calcul sur les données ------------------------------
@@ -118,6 +129,15 @@ class Extract_Data :
 	def compute_decision_tree(self) :
 		print("Calcul de l'arbre de décision...")
 		self.decision_tree.create_tree()
+		self.decision_tree.display_stats()
+
+	# --------------------------------- Prédiction ---------------------------------------------
+
+	def predict_for_all_test_imgs(self) :
+		for i in range(self.nb_test_imgs) :
+			closest_img, score_sim, dt = self.decision_tree.predict_closest_img(i)
+			self.plot_result(i, closest_img)
+
 
 
 	# ------------------------------------ Save & Load --------------------------------------------
@@ -192,6 +212,7 @@ class Extract_Data :
 		self.learn_imgs = load_all_imgs_in_directory(path_learn)
 		print("Chargement des images de tests...")
 		self.test_imgs = load_all_imgs_in_directory(path_test)
+		print("Chargement des similarités...")
 		self.dict_sim.load_similarity(path_similarity)
 
 		self.nb_learn_imgs = len(self.learn_imgs)
@@ -199,6 +220,15 @@ class Extract_Data :
 		self.nb_imgs = self.nb_test_imgs + self.nb_learn_imgs
 
 
+	# ------------------------------------- Plot & Display ----------------------------------
+
+	def plot_result(self, ind_test, ind_img) :
+		fig = plt.figure()
+		fig.add_subplot(2, 1, 1)
+		plt.imshow(self.test_imgs[ind_test])
+		fig.add_subplot(2, 1, 2)
+		plt.imshow(self.learn_imgs[ind_img])
+		plt.show()
 
 
 
@@ -225,3 +255,4 @@ if __name__ == "__main__" :
 	load, path_load, path_save = parse_arg(sys.argv)
 	ed = Extract_Data(path_load, load = load, path_save = path_save)
 	# print(ed.decision_tree)
+	ed.predict_for_all_test_imgs()
