@@ -25,6 +25,7 @@ class Extract_Data :
 		self.nb_imgs = 0
 		self.nb_learn_imgs = 0
 		self.nb_test_imgs = 0
+		self.max_similarity = 0
 		self.dict_sim = None
 
 		if load == False :

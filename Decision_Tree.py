@@ -4,6 +4,7 @@
 import random
 import Data_Work
 import Similarity as simy
+import Img_Density as imd
 from matplotlib import pyplot as plt
 import time
 
@@ -20,6 +21,7 @@ class Decision_Tree() :
 		self.profondeur = profondeur
 		self.imgs = imgs
 		self.tests = tests
+		self.max_similarity = simy.max_score_similarity(imd.Img_Density.RAYON_SUB_IMG * 2)
 
 
 	# ------------------------ Getter & Setter ---------------------------
@@ -83,6 +85,11 @@ class Decision_Tree() :
 				if son.representant == max_center :
 					node = son
 					break
+
+			#Si le score actuel égale le score max, on a retrouvé exactement la 
+			#même image, donc on la retourne
+			if score_actual_representant == self.max_similarity :
+				return node.representant, score_actual_representant, node
 
 		center, score = find_closest_img_in_cluster(ind_img, node.list_ind_imgs)
 		return center, score, node
