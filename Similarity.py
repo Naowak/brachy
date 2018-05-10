@@ -81,12 +81,12 @@ def calcul_similarity(matrix_similarity, filtre=None, plot=False) :
 				#Dans le cas où les deux pixels sont égaux
 				tmp = 1
 				try :
-					if j-1 >= 0 and matrix_similarity[j-1][i] == 1 :
+					if matrix_similarity[j-1][i] == 1 :
 						tmp += 1
 				except IndexError :
 					tmp += 1
 				try :
-					if i-1 >= 0 and matrix_similarity[j][i-1] == 1 :
+					if matrix_similarity[j][i-1] == 1 :
 						tmp += 1
 				except IndexError :
 					tmp += 1

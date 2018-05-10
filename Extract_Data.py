@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 
 
 NB_LEARN_IMGS = 1500
-NB_TEST_IMGS = 23
+NB_TEST_IMGS = 20
 
 
 class Extract_Data :
@@ -34,16 +34,17 @@ class Extract_Data :
 			self.extract_img_density(nb_learn_imgs, nb_test_imgs)
 			self.dict_sim = simy.Dict_Sim(self.nb_imgs)
 			self.compute_similarity_between_all_learn_imgs()
-			self.save()
+			# self.save(path_save)
 		else :
 			self.dict_sim = simy.Dict_Sim()
 			self.load(path)
 
+		if path_save != None :
+			self.save(path_save)
+
 		self.decision_tree = dt.Decision_Tree(None, list(range(self.nb_learn_imgs)), self.dict_sim, self.learn_imgs, self.test_imgs)
 		self.compute_decision_tree()
 
-		# if path_save != None :
-		# 	self.save(path_save)
 
 	# ----------------------------------- Extraction des donnée ------------------------------------
 
@@ -102,7 +103,8 @@ class Extract_Data :
 					avancement += 1
 				progress_bar.updateProgress(avancement, "")
 
-			return [imgs[i] for i in range(nb) if i not in duplicates]
+			imgs_without_duplicates = [imgs[i] for i in range(nb) if i not in duplicates]
+			return imgs_without_duplicates
 
 		print("Chargement des images à partir de " + self.path)
 		get_list_img_density(self)
@@ -136,77 +138,79 @@ class Extract_Data :
 
 	def predict_for_all_test_imgs(self) :
 
-		def find_iterative(self, ind_test) :
-			score = [simy.similarity_between_two_imgs(self.test_imgs[ind_test], self.learn_imgs[i]) for i in range(self.nb_learn_imgs)]
-			closest = None
-			max_sim = 0
-			for i,s in enumerate(score) :
-				if s > max_sim :
-					max_sim = s
-					closest = i
-			return i, max_sim
+		def predict_and_compare_to_iterative_result(self, plot=True) :
+			def find_iterative(self, ind_test) :
+				score = [simy.similarity_between_two_imgs(self.test_imgs[ind_test], self.learn_imgs[i]) for i in range(self.nb_learn_imgs)]
+				closest = None
+				max_sim = 0
+				for i,s in enumerate(score) :
+					if s > max_sim :
+						max_sim = s
+						closest = i
+				return i, max_sim
 
-		def plot_result(self, ind_test, ind_img, ind_iterative) :
+			def plot_result(self, ind_test, ind_img, ind_iterative) :
+				fig = plt.figure()
+				fig.add_subplot(3, 2, 1)
+				plt.imshow(self.test_imgs[ind_test])
 
-			def create_water_img() :
-				"""Créer une image composée d'eau
-				Retour : 
-					double list : représente une image composée seulement d'eau
-				"""
-				size_img = imd.Img_Density.RAYON_SUB_IMG*2
-				return [[0 for i in range(size_img)] for j in range(size_img)]
+				fig.add_subplot(3, 2, 3)
+				plt.imshow(self.learn_imgs[ind_img])
 
-			fig = plt.figure()
-			fig.add_subplot(4, 2, 1)
-			plt.imshow(self.test_imgs[ind_test])
+				fig.add_subplot(3, 2, 4)
+				mat = simy.calcul_matrix_similarity(self.test_imgs[ind_test], self.learn_imgs[ind_img])
+				list_points_hidden = simy.activate_field_of_view(mat)
+				for p in list_points_hidden :
+					mat[p[1]][p[0]] = 0
+				plt.imshow(mat)
 
-			fig.add_subplot(4, 2, 3)
-			plt.imshow(self.learn_imgs[ind_img])
+				fig.add_subplot(3, 2, 5)
+				plt.imshow(self.learn_imgs[ind_iterative])
 
-			fig.add_subplot(4, 2, 4)
-			mat = simy.calcul_matrix_similarity(self.test_imgs[ind_test], self.learn_imgs[ind_img])
-			list_points_hidden = simy.activate_field_of_view(mat)
-			for p in list_points_hidden :
-				mat[p[1]][p[0]] = 0
-			plt.imshow(mat)
+				fig.add_subplot(3, 2, 6)
+				mat = simy.calcul_matrix_similarity(self.test_imgs[ind_test], self.learn_imgs[ind_iterative])
+				list_points_hidden = simy.activate_field_of_view(mat)
+				for p in list_points_hidden :
+					mat[p[1]][p[0]] = 0
+				plt.imshow(mat)
 
-			fig.add_subplot(4, 2, 5)
-			plt.imshow(self.learn_imgs[ind_iterative])
+				plt.show()
 
-			fig.add_subplot(4, 2, 6)
-			mat = simy.calcul_matrix_similarity(self.test_imgs[ind_test], self.learn_imgs[ind_iterative])
-			list_points_hidden = simy.activate_field_of_view(mat)
-			for p in list_points_hidden :
-				mat[p[1]][p[0]] = 0
-			plt.imshow(mat)
+			for i in range(self.nb_test_imgs) :
+				t1 = time.time()
+				closest_img, score_sim, dt = self.decision_tree.predict_closest_img(i)
+				t2 = time.time()
+				iterative_closest, max_sim = find_iterative(self, i)
+				t3 = time.time()
+				print("Score predict : " + str(score_sim))
+				print("Score iterative : " + str(max_sim))
+				print("Temps predict : " + str(t2 - t1) + "\n\n")
+				print("Temps iterative : " + str(t3-t2))
+				
+				if plot :
+					plot_result(self, i, closest_img, iterative_closest)
 
-			fig.add_subplot(4, 2, 7)
-			water = create_water_img()
-			plt.imshow(water)
+		def predict_only(self, plot = True) :
 
-			fig.add_subplot(4, 2, 8)
-			mat_water = simy.calcul_matrix_similarity(self.test_imgs[ind_test], water)
-			list_points_hidden = simy.activate_field_of_view(mat_water)
-			for p in list_points_hidden :
-				mat_water[p[1]][p[0]] = 0
-			plt.imshow(mat_water)
-			score_sim_water = simy.calcul_similarity(mat_water)
-			print("Score water : " + str(score_sim_water))
+			def plot_result(self, ind_prediction, ind_test) :
+				fig = plt.figure()
+				fig.add_subplot(2, 1, 1)
+				plt.imshow(self.test_imgs[ind_test])
+				fig.add_subplot(2, 1, 2)
+				plt.imshow(self.learn_imgs[ind_prediction])
+				plt.show()
 
-			plt.show()
+			for i in range(self.nb_test_imgs) :
+				t1 = time.time()
+				prediction, score, dt = self.decision_tree.predict_closest_img(i)
+				t2 = time.time()
+				print("Score Prédiction : " + str(score))
+				print("Temps pour la prédiction : " + str(t2 - t1))
 
-		for i in range(self.nb_test_imgs) :
-			t1 = time.time()
-			closest_img, score_sim, dt = self.decision_tree.predict_closest_img(i)
-			t2 = time.time()
-			iterative_closest, max_sim = find_iterative(self, i)
-			t3 = time.time()
-			print("Score iterative : " + str(max_sim))
-			print("Score predict : " + str(score_sim))
-			print("Temps iterative : " + str(t3-t2))
-			print("Temps predict : " + str(t2 - t1) + "\n\n")
-			plot_result(self, i, closest_img, iterative_closest)
+				if plot :
+					plot_result(self, prediction, i)
 
+		predict_only(self, plot=False)
 
 
 	# ------------------------------------ Save & Load --------------------------------------------

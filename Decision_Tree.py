@@ -50,7 +50,7 @@ class Decision_Tree() :
 				dict_sim[ind_img] = simy.similarity_between_two_imgs(self.tests[ind_test], self.imgs[ind_img])
 			return dict_sim
 
-		def find_closest_img_in_cluster(dec_tree, ind_img, list_ind_imgs) :
+		def find_closest_img_in_cluster(ind_img, list_ind_imgs) :
 			dict_sim = calcul_similarity_with_all_imgs(ind_img, list_ind_imgs)
 			closest_img = None
 			score_max = 0
@@ -65,18 +65,26 @@ class Decision_Tree() :
 			return find_closest_img_in_cluster(self, ind_img, self.list_ind_imgs)
 
 		node = self
+		score_actual_representant = 0
 		#Tant que l'on est pas dans un noeud trop petit
 		while len(node.list_ind_imgs) >= self.k :
 			#On cherche le centre le plus proche
 			centers = [son.representant for son in node.sons]
-			max_center, score_sim = self.find_closest_cluster_for_an_img(ind_img, centers)
+			max_center, score_sim = find_closest_img_in_cluster(ind_img, centers)
+
+			#Si le centre le plus proche n'est pas plus proche que le représentant actuel, 
+			#on retourne le représentant actuel
+			if score_actual_representant > score_sim :
+				return node.representant, score_actual_representant, node
+			score_actual_representant = score_sim
+
 			#On attribut à node le bon fils
 			for son in node.sons :
 				if son.representant == max_center :
 					node = son
 					break
 
-		center, score = find_closest_img_in_cluster(node, ind_img, node.list_ind_imgs)
+		center, score = find_closest_img_in_cluster(ind_img, node.list_ind_imgs)
 		return center, score, node
 
 	def predict_and_add_img(self, ind_img) :
