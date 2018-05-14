@@ -19,24 +19,12 @@ class Decision_Tree() :
 		self.profondeur = profondeur
 		self.imgs = imgs
 		self.tests = tests
-		self.max_similarity = simy.max_score_similarity(imd.Img_Density.RAYON_SUB_IMG * 2)
+		self.max_similarity = simy.max_score_similarity(imd.Img_Density.RAYON_SUB_IMG)
 
 
 	# ------------------------ Getter & Setter ---------------------------
 
 	def get_score_similarity(self, ind_img1, ind_img2) :
-		# ind_img2 += 1
-		# ind_img1 += 1
-		# if ind_img1 < ind_img2 :
-		# 	ind_img2 -= ind_img1
-		# 	ind_img1 -= 1
-		# 	ind_img2 -= 1
-		# 	return self.tab_similarity[ind_img1][ind_img2]
-		# elif ind_img1 > ind_img2 :
-		# 	ind_img1 -= ind_img2
-		# 	ind_img1 -= 1
-		# 	ind_img2 -= 1
-		# 	return self.tab_similarity[ind_img2][ind_img1]
 		return self.tab_similarity.get_similarity(ind_img1, ind_img2)
 
 	# ------------------------- Prediction -------------------------------
@@ -95,9 +83,6 @@ class Decision_Tree() :
 		center, score, nb_visit = find_closest_img_in_cluster(ind_img, node.list_ind_imgs, nb_visit)
 		return center, score, node, nb_visit
 
-	def predict_and_add_img(self, ind_img) :
-		closest_img, score_sim, dt = self.predict_closest_img(ind_img)
-		
 	# ------------------------ Apprentissage -----------------------------
 
 	def create_tree(self) :

@@ -108,7 +108,8 @@ class Img_Density :
 			""" Effectue nb rotation à 90 degrees sur l'images"""
 
 			def rotate_90_degrees(img) :
-				return list(zip(*reversed(img)))
+				tmp = list(zip(*reversed(img)))
+				return [list(line) for line in tmp]
 
 			for _ in range(nb) :
 				img = rotate_90_degrees(img)
