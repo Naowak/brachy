@@ -192,6 +192,3 @@ if __name__ == "__main__" :
 	img = Img_Density(density_file, config_file)
 	img.show_imgs()
 	img.show_sub_imgs()
-	for img in img.sub_imgs :
-		plt.imshow(img)
-		plt.show()

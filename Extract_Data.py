@@ -190,6 +190,7 @@ class Extract_Data :
 			def plot_result(self, ind_prediction, ind_test) :
 				fig = plt.figure()
 				fig.add_subplot(2, 1, 1)
+				print(self.test_imgs[ind_test])
 				plt.imshow(self.test_imgs[ind_test])
 				fig.add_subplot(2, 1, 2)
 				plt.imshow(self.learn_imgs[ind_prediction])
@@ -259,7 +260,18 @@ class Extract_Data :
 		def load_img(file_name) :
 			with open(file_name, "r") as f :
 				res = f.read()
-				return [[int(i) for i in a if is_int(i)] for a in res.split("]") if len(a) > 0]
+				lines = res.split("[")
+				img = []
+				for line in lines :
+					my_line = []
+					line = line.replace(']', '')
+					line = line.replace(",", '')
+					for elem in line.split(" ") :
+						if is_int(elem) :
+							my_line += [int(elem)]
+					if len(my_line) > 0 :
+			 			img += [my_line]
+			 	return img
 
 		def load_all_imgs_in_directory(directory) :
 			list_files = os.listdir(directory)
