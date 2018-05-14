@@ -4,7 +4,6 @@
 import random
 import Data_Work
 import Similarity as simy
-import Img_Density as imd
 from matplotlib import pyplot as plt
 import time
 
@@ -19,7 +18,7 @@ class Decision_Tree() :
 		self.profondeur = profondeur
 		self.imgs = imgs
 		self.tests = tests
-		self.max_similarity = simy.max_score_similarity(imd.Img_Density.RAYON_SUB_IMG)
+		self.max_similarity = simy.max_score_similarity()
 
 
 	# ------------------------ Getter & Setter ---------------------------
@@ -283,9 +282,6 @@ if __name__ == "__main__" :
 		plt.imshow(dw.learn_imgs[research])
 		fig.add_subplot(4, 1, 4)
 		ms = simy.calcul_matrix_similarity(dw.learn_imgs[img], dw.learn_imgs[predict])
-		hidden_points = simy.activate_field_of_view(ms)
-		for p in hidden_points :
-			ms[p[1]][p[0]] = 0
 		plt.imshow(ms)
 		plt.show()
 

@@ -139,7 +139,7 @@ class Extract_Data :
 
 	def predict_for_all_test_imgs(self) :
 
-		def predict_and_compare_to_iterative_result(self, plot=True) :
+		def predict_and_compare_to_iterative_result(self, plot=False) :
 			def find_iterative(self, ind_test) :
 				score = [simy.similarity_between_two_imgs(self.test_imgs[ind_test], self.learn_imgs[i]) for i in range(self.nb_learn_imgs)]
 				closest = None
@@ -160,9 +160,6 @@ class Extract_Data :
 
 				fig.add_subplot(3, 2, 4)
 				mat = simy.calcul_matrix_similarity(self.test_imgs[ind_test], self.learn_imgs[ind_img])
-				list_points_hidden = simy.activate_field_of_view(mat)
-				for p in list_points_hidden :
-					mat[p[1]][p[0]] = 0
 				plt.imshow(mat)
 
 				fig.add_subplot(3, 2, 5)
@@ -170,9 +167,6 @@ class Extract_Data :
 
 				fig.add_subplot(3, 2, 6)
 				mat = simy.calcul_matrix_similarity(self.test_imgs[ind_test], self.learn_imgs[ind_iterative])
-				list_points_hidden = simy.activate_field_of_view(mat)
-				for p in list_points_hidden :
-					mat[p[1]][p[0]] = 0
 				plt.imshow(mat)
 
 				plt.show()
@@ -316,7 +310,7 @@ if __name__ == "__main__" :
 			print("    path_load=my_path - Chargement des données à partir de my_path")
 			exit()
 		load = False	
-		path_load = "../../../working_dir/"
+		path_load = "./working_dir/"
 		path_save = None
 		for arg in argv :
 			if arg[:10] == "path_load=" :

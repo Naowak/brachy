@@ -31,11 +31,11 @@ class Dict_Sim :
 		def is_sim(value) :
 			if value[:5] == " None" or value[:4] == "None" :
 				return True
-			return is_int(value)
+			return is_float(value)
 
-		def is_int(value) :
+		def is_float(value) :
 			try :
-				int(value)
+				float(value)
 				return True
 			except :
 				return False
@@ -43,7 +43,7 @@ class Dict_Sim :
 		def string_to_sim(value) :
 			if value[:5] == " None" or value[:4] == "None":
 				return None
-			return int(value)
+			return float(value)
 
 		with open(file_name, 'r') as f :
 			res = f.read()
@@ -133,6 +133,9 @@ def similarity_between_two_imgs(img1, img2, plot = False) :
 
 
 	return m.pi/2 - get_intervale_length(inter)
+
+def max_score_similarity() :
+	return m.pi / 2
 
 
 
