@@ -14,6 +14,7 @@ class Img_Density :
 
 	RAYON_SUB_IMG = 25
 	CENTER_IMG = RAYON_SUB_IMG - 0.5
+	CIRCLE_SHAPE = [[1 if math.sqrt(pow(i-CENTER_IMG, 2) + pow(j-CENTER_IMG, 2)) <= RAYON_SUB_IMG else 0 for i in range(2*RAYON_SUB_IMG)] for j in range(2*RAYON_SUB_IMG)]
 
 	 # ------------------------ Init -----------------------------
 
@@ -102,6 +103,35 @@ class Img_Density :
 		""" Extrait de self.img_material la sous image associé à chacune
 		des sources de self.sources. Enregistre le résultats dans self.sub_imgs"""
 		#rayon = min([source[0] for source in self.sources])
+
+		def rotation(img, nb) :
+			""" Effectue nb rotation à 90 degrees sur l'images"""
+
+			def rotate_90_degrees(img) :
+				return list(zip(*reversed(img)))
+
+			for _ in range(nb) :
+				img = rotate_90_degrees(img)
+			return img
+
+		def extract_quartil(img, rayon) :
+			up_left = img[:rayon]
+			up_left = [line[:rayon] for line in up_left]
+			up_left = rotation(up_left, 2)
+
+			up_right = img[:rayon]
+			up_right = [line[rayon:] for line in up_right]
+			up_right = rotation(up_right, 1)
+
+			down_left = img[rayon:]
+			down_left = [line[:rayon] for line in down_left]
+			down_left = rotation(down_left, 3)
+
+			down_right = img[rayon:]
+			down_right = [line[rayon:] for line in down_right]
+
+			return [up_left, up_right, down_left, down_right]
+
 		rayon = self.RAYON_SUB_IMG
 		
 		self.sub_imgs = list()
@@ -110,7 +140,9 @@ class Img_Density :
 			s_abs = source[0]
 			sub_ord = self.img_material[s_ord - rayon: s_ord + rayon]
 			sub_img = [tmp[s_abs - rayon : s_abs + rayon] for tmp in sub_ord]
-			self.sub_imgs += [sub_img]
+			if len(sub_img) == 2*rayon and len(sub_img[0]) == 2*rayon :
+				sub_img = [[sub_img[i][j] if self.CIRCLE_SHAPE[i][j] == 1 else -1 for i in range(2*rayon)] for j in range(2*rayon)]
+				self.sub_imgs += extract_quartil(sub_img, rayon)
 
 
 	#------------------------- Plot --------------------------
@@ -153,8 +185,8 @@ class Img_Density :
 # ----------------------- Main -----------------------
 
 if __name__ == "__main__" :
-	density_file = "../../../working_dir/slice_090/densite_lu/densite_hu.don"
-	config_file = "../../../working_dir/slice_090/densite_lu/config_KIDS.don"
+	density_file = "./working_dir/slice_090/densite_lu/densite_hu.don"
+	config_file = "./working_dir/slice_090/densite_lu/config_KIDS.don"
 
 	img = Img_Density(density_file, config_file)
 	img.show_imgs()
