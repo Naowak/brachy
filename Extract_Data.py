@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 
 
 NB_LEARN_IMGS = 1500
-NB_TEST_IMGS = 20
+NB_TEST_IMGS = 2000
 
 
 class Extract_Data :
@@ -201,18 +201,29 @@ class Extract_Data :
 				plt.imshow(self.learn_imgs[ind_prediction])
 				plt.show()
 
+			nb_visite = 0
+
 			for i in range(self.nb_test_imgs) :
 				t1 = time.time()
-				prediction, score, dt = self.decision_tree.predict_closest_img(i)
+				prediction, score, dt, visites = self.decision_tree.predict_closest_img(i)
+				nb_visite += visites
 				t2 = time.time()
+				print("Prédiction image test " + str(i))
 				print("Score Prédiction : " + str(score))
-				print("Temps pour la prédiction : " + str(t2 - t1))
+				print("Temps pour la prédiction : " + str(t2 - t1) + "\n")
+				print("Nombre de calcul de similarité : " + str(visites))
 
 				if plot :
 					plot_result(self, prediction, i)
 
-		predict_only(self, plot=False)
+			print("Nombre moyen de calcul de similarité par image : " + str(float(nb_visite)/self.nb_test_imgs))
 
+		begin_predictions = time.time()
+		predict_only(self, plot=False)
+		end_predictions = time.time()
+		temps_predictions = end_predictions - begin_predictions
+		print("Temps de l'ensemble des prédictions : " + str(temps_predictions))
+		print("Temps moyen par prédiciton : " + str(temps_predictions / self.nb_test_imgs))
 
 	# ------------------------------------ Save & Load --------------------------------------------
 

@@ -8,11 +8,9 @@ import Img_Density as imd
 from matplotlib import pyplot as plt
 import time
 
-
-
 class Decision_Tree() :
 	
-	def __init__(self, representant, list_ind_imgs, similarity, imgs, tests, profondeur = 0, k = 7) :
+	def __init__(self, representant, list_ind_imgs, similarity, imgs, tests, profondeur = 0, k = 3) :
 		self.list_ind_imgs = list_ind_imgs
 		self.k = k
 		self.tab_similarity = similarity
@@ -41,30 +39,33 @@ class Decision_Tree() :
 		# 	return self.tab_similarity[ind_img2][ind_img1]
 		return self.tab_similarity.get_similarity(ind_img1, ind_img2)
 
-
 	# ------------------------- Prediction -------------------------------
 
 	def predict_closest_img(self, ind_img) :
 
-		def calcul_similarity_with_all_imgs(ind_test, ind_imgs) :
+		nb_visit = 0
+
+		def calcul_similarity_with_all_imgs(ind_test, ind_imgs, nb_visit) :
 			dict_sim = {}
 			for ind_img in ind_imgs :
+				nb_visit += 1
 				dict_sim[ind_img] = simy.similarity_between_two_imgs(self.tests[ind_test], self.imgs[ind_img])
-			return dict_sim
+			return dict_sim, nb_visit
 
-		def find_closest_img_in_cluster(ind_img, list_ind_imgs) :
-			dict_sim = calcul_similarity_with_all_imgs(ind_img, list_ind_imgs)
+		def find_closest_img_in_cluster(ind_img, list_ind_imgs, nb_visit) :
+			dict_sim, nb_visit = calcul_similarity_with_all_imgs(ind_img, list_ind_imgs, nb_visit)
 			closest_img = None
 			score_max = 0
 			for key, score_sim in dict_sim.items() :
 				if score_sim > score_max :
 					closest_img = key
 					score_max = score_sim
-			return (closest_img, score_max)
+			return closest_img, score_max, nb_visit
 
 		if len(self.list_ind_imgs) < self.k :
 			#on est sur qu'il n'y a pas de sous cluster
-			return find_closest_img_in_cluster(self, ind_img, self.list_ind_imgs)
+			closest, score, nb_visit = find_closest_img_in_cluster(self, ind_img, self.list_ind_imgs, nb_visit)
+			return closest, score, self, nb_visit
 
 		node = self
 		score_actual_representant = 0
@@ -72,12 +73,12 @@ class Decision_Tree() :
 		while len(node.list_ind_imgs) >= self.k :
 			#On cherche le centre le plus proche
 			centers = [son.representant for son in node.sons]
-			max_center, score_sim = find_closest_img_in_cluster(ind_img, centers)
+			max_center, score_sim, nb_visit = find_closest_img_in_cluster(ind_img, centers, nb_visit)
 
 			#Si le centre le plus proche n'est pas plus proche que le représentant actuel, 
 			#on retourne le représentant actuel
 			if score_actual_representant > score_sim :
-				return node.representant, score_actual_representant, node
+				return node.representant, score_actual_representant, node, nb_visit
 			score_actual_representant = score_sim
 
 			#On attribut à node le bon fils
@@ -89,16 +90,13 @@ class Decision_Tree() :
 			#Si le score actuel égale le score max, on a retrouvé exactement la 
 			#même image, donc on la retourne
 			if score_actual_representant == self.max_similarity :
-				return node.representant, score_actual_representant, node
+				return node.representant, score_actual_representant, node, nb_visit
 
-		center, score = find_closest_img_in_cluster(ind_img, node.list_ind_imgs)
-		return center, score, node
+		center, score, nb_visit = find_closest_img_in_cluster(ind_img, node.list_ind_imgs, nb_visit)
+		return center, score, node, nb_visit
 
 	def predict_and_add_img(self, ind_img) :
 		closest_img, score_sim, dt = self.predict_closest_img(ind_img)
-
-
-
 		
 	# ------------------------ Apprentissage -----------------------------
 
@@ -134,14 +132,57 @@ class Decision_Tree() :
 			return families
 
 		def calcul_centers_for_families(dec_tree, families) :
+			
+			def find_new_representant(self, cluster) :
+				"""Trouve parmi le cluster quel est le meilleur représentant de la classe.
+
+				Param :
+					- cluster : list indice : liste des indices des images dans le cluster
+
+				retour : int : indice de l'image représentant au mieux le cluster
+				"""
+				#On cherche l'image qui a la plus grande similarité avec toutes les autres
+				# solution : ->>> somme des similarités pour chaque image.
+				vector = [0 for _ in range(len(cluster))] 
+				for i,ind1 in enumerate(cluster) :
+					s = 0
+					for ind2 in cluster :
+						if ind1 != ind2 :
+							s += self.get_score_similarity(ind1, ind2)
+					vector[i] = s
+
+				return cluster[vector.index(max(vector))]
+
 			# On calcule le centre associé à chacune de nos classes
 			centers = []
 			for fam in families :
-				c = dec_tree.find_new_representant(fam)
+				c = find_new_representant(dec_tree, fam)
 				centers += [c]
 			return centers
 
 		def calcul_new_families_for_centers(dec_tree, centers, list_ind_imgs) :
+			
+			def find_closest_cluster_for_an_img(self, ind_img, centers_clusters) :
+				""" Trouve le cluster ayant le centre le plus proche de ind_img.
+
+				Param :
+					- ind_img : int : indice de l'image
+					- centers_clusters : indice des images étant les centres de nos clusters
+
+				Retour :
+					- tuple : (c, sim_min)
+						- c : int : indice du centre le plus proche
+						- sim_min : int : score de similarité du centre le plus proches
+				""" 
+				sim_max = 0
+				c = None
+				for i,center in enumerate(centers_clusters) :
+					score_sim = self.get_score_similarity(ind_img, center)
+					if score_sim > sim_max :
+						c = center
+						sim_max = score_sim
+				return (c, sim_max)
+
 			families = [[] for _ in range(dec_tree.k)]
 			for ind_img in list_ind_imgs :
 				is_a_center = False
@@ -153,7 +194,7 @@ class Decision_Tree() :
 						break
 				#sinon, on cherche son center le plus proche
 				if not is_a_center :
-					center, sim_value = dec_tree.find_closest_cluster_for_an_img(ind_img, centers)
+					center, sim_value = find_closest_cluster_for_an_img(dec_tree, ind_img, centers)
 					indice_fam = [i for i,c in enumerate(centers) if c == center][0]
 					families[indice_fam] += [ind_img]
 			return families
@@ -180,48 +221,6 @@ class Decision_Tree() :
 			centers = calcul_centers_for_families(self, families)
 
 		return (centers, families)
-
-	def find_closest_cluster_for_an_img(self, ind_img, centers_clusters) :
-		""" Trouve le cluster ayant le centre le plus proche de ind_img.
-
-		Param :
-			- ind_img : int : indice de l'image
-			- centers_clusters : indice des images étant les centres de nos clusters
-
-		Retour :
-			- tuple : (c, sim_min)
-				- c : int : indice du centre le plus proche
-				- sim_min : int : score de similarité du centre le plus proches
-		""" 
-		sim_max = 0
-		c = None
-		for i,center in enumerate(centers_clusters) :
-			score_sim = self.get_score_similarity(ind_img, center)
-			if score_sim > sim_max :
-				c = center
-				sim_max = score_sim
-		return (c, sim_max)
-
-	def find_new_representant(self, cluster) :
-		"""Trouve parmi le cluster quel est le meilleur représentant de la classe.
-
-		Param :
-			- cluster : list indice : liste des indices des images dans le cluster
-
-		retour : int : indice de l'image représentant au mieux le cluster
-		"""
-
-		#On cherche l'image qui a la plus grande similarité avec toutes les autres
-		# solution : ->>> somme des similarités pour chaque image.
-		vector = [0 for _ in range(len(cluster))] 
-		for i,ind1 in enumerate(cluster) :
-			s = 0
-			for ind2 in cluster :
-				if ind1 != ind2 :
-					s += self.get_score_similarity(ind1, ind2)
-			vector[i] = s
-
-		return cluster[vector.index(max(vector))]
 
 	# ------------------------ Display & Plot ----------------------------
 
