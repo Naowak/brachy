@@ -79,6 +79,7 @@ class Extract_Data :
 				else :
 					self.test_imgs += img_d.sub_imgs
 			#on met à jour la variable contenant le nombre d'image de test
+			self.test_imgs = remove_duplicates(self.test_imgs)
 			self.nb_test_imgs = len(self.test_imgs)
 
 		def remove_duplicates(imgs) :
@@ -143,12 +144,12 @@ class Extract_Data :
 			def find_iterative(self, ind_test) :
 				score = [simy.similarity_between_two_imgs(self.test_imgs[ind_test], self.learn_imgs[i]) for i in range(self.nb_learn_imgs)]
 				closest = None
-				max_sim = 0
+				max_sim = -10000
 				for i,s in enumerate(score) :
 					if s > max_sim :
 						max_sim = s
 						closest = i
-				return i, max_sim
+				return closest, max_sim
 
 			def plot_result(self, ind_test, ind_img, ind_iterative) :
 				fig = plt.figure()
@@ -173,14 +174,15 @@ class Extract_Data :
 
 			for i in range(self.nb_test_imgs) :
 				t1 = time.time()
-				closest_img, score_sim, dt = self.decision_tree.predict_closest_img(i)
+				closest_img, score_sim, dt, nb_visite = self.decision_tree.predict_closest_img(i)
 				t2 = time.time()
 				iterative_closest, max_sim = find_iterative(self, i)
 				t3 = time.time()
 				print("Score predict : " + str(score_sim))
 				print("Score iterative : " + str(max_sim))
-				print("Temps predict : " + str(t2 - t1) + "\n\n")
+				print("Temps predict : " + str(t2 - t1))
 				print("Temps iterative : " + str(t3-t2))
+				print("Nombre de visite : " + str(nb_visite) + "\n")
 				
 				if plot :
 					plot_result(self, i, closest_img, iterative_closest)
@@ -205,8 +207,8 @@ class Extract_Data :
 				t2 = time.time()
 				print("Prédiction image test " + str(i))
 				print("Score Prédiction : " + str(score))
-				print("Temps pour la prédiction : " + str(t2 - t1) + "\n")
-				print("Nombre de calcul de similarité : " + str(visites))
+				print("Temps pour la prédiction : " + str(t2 - t1))
+				print("Nombre de calcul de similarité : " + str(visites) + "\n")
 
 				if plot :
 					plot_result(self, prediction, i)
@@ -214,7 +216,8 @@ class Extract_Data :
 			print("Nombre moyen de calcul de similarité par image : " + str(float(nb_visite)/self.nb_test_imgs))
 
 		begin_predictions = time.time()
-		predict_only(self, plot=False)
+		# predict_only(self, plot=False)
+		predict_and_compare_to_iterative_result(self, plot=True)
 		end_predictions = time.time()
 		temps_predictions = end_predictions - begin_predictions
 		print("Temps de l'ensemble des prédictions : " + str(temps_predictions))
@@ -322,7 +325,7 @@ if __name__ == "__main__" :
 			print("    path_load=my_path - Chargement des données à partir de my_path")
 			exit()
 		load = False	
-		path_load = "./working_dir/"
+		path_load = "../../../working_dir/"
 		path_save = None
 		for arg in argv :
 			if arg[:10] == "path_load=" :

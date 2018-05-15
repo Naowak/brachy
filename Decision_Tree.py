@@ -145,6 +145,7 @@ class Decision_Tree() :
 			return centers
 
 		def calcul_new_families_for_centers(dec_tree, centers, list_ind_imgs) :
+
 			
 			def find_closest_cluster_for_an_img(self, ind_img, centers_clusters) :
 				""" Trouve le cluster ayant le centre le plus proche de ind_img.
@@ -158,9 +159,9 @@ class Decision_Tree() :
 						- c : int : indice du centre le plus proche
 						- sim_min : int : score de similarité du centre le plus proches
 				""" 
-				sim_max = 0
+				sim_max = -10000
 				c = None
-				for i,center in enumerate(centers_clusters) :
+				for center in centers_clusters :
 					score_sim = self.get_score_similarity(ind_img, center)
 					if score_sim > sim_max :
 						c = center
@@ -225,7 +226,11 @@ class Decision_Tree() :
 			else :
 				return max([get_profondeur_max(son) for son in self.sons])
 
+		print("\nStatistiques : ")
 		print("Profondeur max de l'arbre : " + str(get_profondeur_max(self)))
+		print("Nombre d'image d'entrainement : " + str(len(self.list_ind_imgs)))
+		print("K = " + str(self.k))
+		print("\n")
 
 
 		
