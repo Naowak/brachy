@@ -36,7 +36,7 @@ class Decision_Tree() :
 			dict_sim = {}
 			for ind_img in ind_imgs :
 				nb_visit += 1
-				dict_sim[ind_img] = simy.similarity_between_two_imgs(self.tests[ind_test], self.imgs[ind_img])
+				dict_sim[ind_img] = simy.similarity_between_two_imgs(self.tests[ind_test], self.imgs[ind_img])[0]
 			return dict_sim, nb_visit
 
 		def find_closest_img_in_cluster(ind_img, list_ind_imgs, nb_visit) :
@@ -263,7 +263,7 @@ if __name__ == "__main__" :
 		print("Temps predict : " + str(tfp))
 
 		t2 = time.time()
-		scores = [(simy.similarity_between_two_imgs(dw.learn_imgs[img], dw.learn_imgs[l_img]), l_img) for l_img in imgs]
+		scores = [(simy.similarity_between_two_imgs(dw.learn_imgs[img], dw.learn_imgs[l_img])[0], l_img) for l_img in imgs]
 		max_score = 0
 		best = None
 		for s in scores :

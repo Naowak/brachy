@@ -126,7 +126,7 @@ class Extract_Data :
 		progress_bar = ProgressBar(avancement, fin)
 		for ind_first in range(self.nb_learn_imgs) :
 			for ind_second in range(ind_first + 1, self.nb_learn_imgs) :
-				score_sim = simy.similarity_between_two_imgs(self.learn_imgs[ind_first], self.learn_imgs[ind_second])
+				score_sim, inter = simy.similarity_between_two_imgs(self.learn_imgs[ind_first], self.learn_imgs[ind_second])
 				self.dict_sim.set_similarity(ind_first, ind_second, score_sim)
 				avancement += 1
 				progress_bar.updateProgress(avancement, "")
@@ -142,7 +142,7 @@ class Extract_Data :
 
 		def predict_and_compare_to_iterative_result(self, plot=False) :
 			def find_iterative(self, ind_test) :
-				score = [simy.similarity_between_two_imgs(self.test_imgs[ind_test], self.learn_imgs[i]) for i in range(self.nb_learn_imgs)]
+				score = [simy.similarity_between_two_imgs(self.test_imgs[ind_test], self.learn_imgs[i])[0] for i in range(self.nb_learn_imgs)]
 				closest = None
 				max_sim = -10000
 				for i,s in enumerate(score) :
@@ -153,46 +153,90 @@ class Extract_Data :
 
 			def plot_result(self, ind_test, ind_img, ind_iterative) :
 				fig = plt.figure()
-				fig.add_subplot(3, 2, 1)
+				fig.add_subplot(3, 3, 1)
 				plt.imshow(self.test_imgs[ind_test])
+				plt.title("Test", fontsize=8)
 
-				fig.add_subplot(3, 2, 3)
+				fig.add_subplot(3, 3, 4)
 				plt.imshow(self.learn_imgs[ind_img])
+				plt.title("Prediction", fontsize=8)
 
-				fig.add_subplot(3, 2, 4)
+				fig.add_subplot(3, 3, 5)
 				mat = simy.calcul_matrix_similarity(self.test_imgs[ind_test], self.learn_imgs[ind_img])
+				score, inter = simy.similarity_between_two_imgs(self.test_imgs[ind_test], self.learn_imgs[ind_img])
 				plt.imshow(mat)
+				plt.title("Sim prediction", fontsize=8)
 
-				fig.add_subplot(3, 2, 5)
+				fig.add_subplot(3, 3, 6)
+				seg = simy.get_disque_segment(mat, inter)
+				plt.imshow(seg)
+				plt.title("Res prediciton", fontsize=8)
+
+				fig.add_subplot(3, 3, 7)
 				plt.imshow(self.learn_imgs[ind_iterative])
+				plt.title("Recherche naive", fontsize=8)
 
-				fig.add_subplot(3, 2, 6)
+				fig.add_subplot(3, 3, 8)
 				mat = simy.calcul_matrix_similarity(self.test_imgs[ind_test], self.learn_imgs[ind_iterative])
+				score, inter = simy.similarity_between_two_imgs(self.test_imgs[ind_test], self.learn_imgs[ind_iterative])
 				plt.imshow(mat)
+				plt.title("Sim naive", fontsize=8)
+
+				fig.add_subplot(3, 3, 9)
+				seg = simy.get_disque_segment(mat, inter)
+				plt.imshow(seg)
+				plt.title("Res naive", fontsize=8)
 
 				plt.show()
 
+
+
+
+			def display_statistiques(self, pred_score_sim_cum, iter_score_sim_cum, nb_visite) :
+				print("Comparaisons des résultats sur " + str(self.nb_test_imgs) + " images de tests.")
+				pred_score_moyen = float(pred_score_sim_cum) / self.nb_test_imgs
+				iter_score_moyen = float(iter_score_sim_cum) / self.nb_test_imgs
+				print("Score moyen de prédiction (SP) : " + str(pred_score_moyen))
+				print("Score moyen de recherche naïve (SN) : " + str(iter_score_moyen))
+				percent_success = pred_score_moyen / iter_score_moyen
+				print("Pourcentage de réussite (SP / SN) : " + str(percent_success))
+				print("Nombre moyen de calcul de similarité par image : " + str(float(nb_visite)/self.nb_test_imgs))
+
+
+			pred_score_sim_cum = 0
+			iter_score_sim_cum = 0
+			nb_visite = 0
+
+			print("Test sur " + str(self.nb_test_imgs) + " images d'entrainements : \n")
+
 			for i in range(self.nb_test_imgs) :
 				t1 = time.time()
-				closest_img, score_sim, dt, nb_visite = self.decision_tree.predict_closest_img(i)
+				closest_img, score_sim, dt, visite = self.decision_tree.predict_closest_img(i)
+				nb_visite += visite
+				pred_score_sim_cum += score_sim
 				t2 = time.time()
 				iterative_closest, max_sim = find_iterative(self, i)
+				iter_score_sim_cum += max_sim
 				t3 = time.time()
+				print("Image n°" + str(i) + " : ")
 				print("Score predict : " + str(score_sim))
 				print("Score iterative : " + str(max_sim))
 				print("Temps predict : " + str(t2 - t1))
 				print("Temps iterative : " + str(t3-t2))
-				print("Nombre de visite : " + str(nb_visite) + "\n")
+				print("Nombre de visite : " + str(visite) + "\n")
 				
 				if plot :
 					plot_result(self, i, closest_img, iterative_closest)
+
+			display_statistiques(self, pred_score_sim_cum, iter_score_sim_cum, nb_visite)
+
+
 
 		def predict_only(self, plot = True) :
 
 			def plot_result(self, ind_prediction, ind_test) :
 				fig = plt.figure()
 				fig.add_subplot(2, 1, 1)
-				print(self.test_imgs[ind_test])
 				plt.imshow(self.test_imgs[ind_test])
 				fig.add_subplot(2, 1, 2)
 				plt.imshow(self.learn_imgs[ind_prediction])
@@ -205,6 +249,7 @@ class Extract_Data :
 				prediction, score, dt, visites = self.decision_tree.predict_closest_img(i)
 				nb_visite += visites
 				t2 = time.time()
+				print("Image n°" + str(i) + " : ")
 				print("Prédiction image test " + str(i))
 				print("Score Prédiction : " + str(score))
 				print("Temps pour la prédiction : " + str(t2 - t1))

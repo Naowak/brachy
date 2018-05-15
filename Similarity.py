@@ -132,22 +132,66 @@ def similarity_between_two_imgs(img1, img2, plot = False) :
 		plt.show()
 
 
-	return m.pi/2 - get_intervale_length(inter)
+	return m.pi/2 - get_intervale_length(inter), inter
 
 def max_score_similarity() :
 	return m.pi / 2
 
+def get_disque_segment(img, intervale) :
+	def projection(point, rayon_max) :
+		longueur = m.sqrt(pow(point[0], 2) + pow(point[1], 2))
+		rapport = float(rayon_max) / longueur
+		point_on_circle = [point[0]*rapport, point[1]*rapport]
+		return point_on_circle
+
+	def is_in_circle(i, j, rayon) :
+		return m.sqrt(pow(i, 2) + pow(j, 2)) <= rayon 
+
+	size = imd.Img_Density.RAYON_SUB_IMG
+	res = [[1 for i in range(size)] for j in range(size)]
+
+	for i in range(size) :
+		for j in range(size) :
+			# A AMELIORER, ON PEUT PARCOURIR QUE LES PIXELS DU DISQUE
+			if i != 0 or j != 0 :
+				if is_in_circle(i, j, size) :
+					p = [i, j]
+					proj = projection(p, size)
+					proj_norm = float(proj[0])/size
+					if proj_norm > 1 :
+						proj_norm = 1.0
+					value_on_circle = m.acos(proj_norm)
+					if value_on_circle in intervale :
+						res[i][j] = 0
+				else :
+					res[i][j] = -1
+	return res
+
 
 
 if __name__ == "__main__" :
-	density_file = "./working_dir/slice_090/densite_lu/densite_hu.don"
-	config_file = "./working_dir/slice_090/densite_lu/config_KIDS.don"
+	density_file = "../../../working_dir/slice_090/densite_lu/densite_hu.don"
+	config_file = "../../../working_dir/slice_090/densite_lu/config_KIDS.don"
 
 	img = imd.Img_Density(density_file, config_file)
 
 	quartil_1 = img.sub_imgs[49]
-	quartil_2 = img.sub_imgs[50]
-	similarity_between_two_imgs(quartil_1, quartil_2, True)
+	quartil_2 = img.sub_imgs[233]
+	score, inter = similarity_between_two_imgs(quartil_1, quartil_2, False)
+	print(inter)
+	mat = calcul_matrix_similarity(quartil_1, quartil_2)
+	res = get_disque_segment(mat, inter)
+
+	figure = plt.figure()
+	figure.add_subplot(2, 2, 1)
+	plt.imshow(quartil_1)
+	figure.add_subplot(2, 2, 2)
+	plt.imshow(quartil_2)
+	figure.add_subplot(2, 2, 3)
+	plt.imshow(mat)
+	figure.add_subplot(2, 2, 4)
+	plt.imshow(res)
+	plt.show()
 
 
 
