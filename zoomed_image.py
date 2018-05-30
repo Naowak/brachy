@@ -92,14 +92,19 @@ class Zoomed_Image() :
 		for i in range(1, len(self.zoomed_imgs)) :
 			self.zoomed_imgs[i] = zoom_and_add(self, self.zoomed_imgs[i-1])
 
+	def extract_zoomed_img(self, zoom) :
+		indice = int(m.log(zoom, 2))
+		z_img = self.zoomed_imgs[indice]
+		size_img = len(z_img)
+		img = [[z_img[i][j].value for i in range(size_img)] for j in range(size_img)]
+		return img
+
 	def show(self) :
 		nb_zoomed_imgs = len(self.zoomed_imgs)
 		fig = plt.figure()
 		for i in range(nb_zoomed_imgs) :
 			fig.add_subplot(1, nb_zoomed_imgs, i+1)
-			z_img = self.zoomed_imgs[i]
-			size_img = len(z_img)
-			img = [[z_img[i][j].value for i in range(size_img)] for j in range(size_img)]
+			img = self.extract_zoomed_img(pow(2, i))
 			plt.imshow(img)
 		plt.show()
 
