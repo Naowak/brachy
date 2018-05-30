@@ -11,13 +11,14 @@ import time
 from matplotlib import pyplot as plt
 
 
-NB_LEARN_IMGS = 1500
-NB_TEST_IMGS = 2000
+#MINIMUM 1 !!!!!
+NB_LEARN_IMGS = 2000
+NB_TEST_IMGS = 2500
 
 
 class Extract_Data :
 
-	def __init__(self, path, load = False, path_save = None, nb_learn_imgs = NB_LEARN_IMGS, nb_test_imgs = NB_TEST_IMGS) :
+	def __init__(self, path, load = False, path_save = None, path_imgs = None, nb_learn_imgs = NB_LEARN_IMGS, nb_test_imgs = NB_TEST_IMGS) :
 		self.path = path
 		self.list_img_density = list()
 		self.learn_imgs = list()
@@ -37,8 +38,16 @@ class Extract_Data :
 			self.compute_similarity_between_all_learn_imgs()
 			# self.save(path_save)
 		else :
-			self.dict_sim = simy.Dict_Sim()
-			self.load(path)
+			# Load == True
+			if path != None :
+				self.dict_sim = simy.Dict_Sim()
+				self.load(path)
+			elif path_imgs != None :
+				# A revoir
+				self.load(path_imgs, similarity = False)
+				self.dict_sim = simy.Dict_Sim(self.nb_imgs)
+				self.compute_similarity_between_all_learn_imgs()
+				self.dict_sim.save_similarity(path_imgs)
 
 		if path_save != None :
 			self.save(path_save)
@@ -81,6 +90,7 @@ class Extract_Data :
 			#on met à jour la variable contenant le nombre d'image de test
 			self.test_imgs = remove_duplicates(self.test_imgs)
 			self.nb_test_imgs = len(self.test_imgs)
+
 
 		def remove_duplicates(imgs) :
 			def are_imgs_equal(img1, img2) :
@@ -152,83 +162,108 @@ class Extract_Data :
 				return closest, max_sim
 
 			def plot_result(self, ind_test, ind_img, ind_iterative) :
+				def remove_axes() :
+					cur_axes = plt.gca()
+					cur_axes.axes.get_xaxis().set_visible(False)
+					cur_axes.axes.get_yaxis().set_visible(False)
+					
 				fig = plt.figure()
 				fig.add_subplot(3, 3, 1)
 				plt.imshow(self.test_imgs[ind_test])
-				plt.title("Test", fontsize=8)
+				plt.title("Image de test", fontsize=8)
+				remove_axes()
 
 				fig.add_subplot(3, 3, 4)
 				plt.imshow(self.learn_imgs[ind_img])
 				plt.title("Prediction", fontsize=8)
+				remove_axes()
 
 				fig.add_subplot(3, 3, 5)
 				mat = simy.calcul_matrix_similarity(self.test_imgs[ind_test], self.learn_imgs[ind_img])
 				score, inter = simy.similarity_between_two_imgs(self.test_imgs[ind_test], self.learn_imgs[ind_img])
 				plt.imshow(mat)
-				plt.title("Sim prediction", fontsize=8)
+				plt.title("Similarite prediction", fontsize=8)
+				remove_axes()
 
 				fig.add_subplot(3, 3, 6)
 				seg = simy.get_disque_segment(mat, inter)
 				plt.imshow(seg)
-				plt.title("Res prediciton", fontsize=8)
+				plt.title("Resultat prediciton", fontsize=8)
+				remove_axes()
 
 				fig.add_subplot(3, 3, 7)
 				plt.imshow(self.learn_imgs[ind_iterative])
 				plt.title("Recherche naive", fontsize=8)
+				remove_axes()
 
 				fig.add_subplot(3, 3, 8)
 				mat = simy.calcul_matrix_similarity(self.test_imgs[ind_test], self.learn_imgs[ind_iterative])
 				score, inter = simy.similarity_between_two_imgs(self.test_imgs[ind_test], self.learn_imgs[ind_iterative])
 				plt.imshow(mat)
-				plt.title("Sim naive", fontsize=8)
+				plt.title("Similarite naive", fontsize=8)
+				remove_axes()
 
 				fig.add_subplot(3, 3, 9)
 				seg = simy.get_disque_segment(mat, inter)
 				plt.imshow(seg)
-				plt.title("Res naive", fontsize=8)
+				plt.title("Resultat naive", fontsize=8)
+				remove_axes()
 
 				plt.show()
 
-
-
-
-			def display_statistiques(self, pred_score_sim_cum, iter_score_sim_cum, nb_visite) :
-				print("Comparaisons des résultats sur " + str(self.nb_test_imgs) + " images de tests.")
-				pred_score_moyen = float(pred_score_sim_cum) / self.nb_test_imgs
-				iter_score_moyen = float(iter_score_sim_cum) / self.nb_test_imgs
+			def display_statistiques(self, pred_score_sim_cum, iter_score_sim_cum, nb_visite, nb_test_done) :
+				print("Comparaisons des résultats sur " + str(nb_test_done) + " images de tests.")
+				print("Nombre moyen de calcul de similarité par image : " + str(float(nb_visite)/nb_test_done))
+				pred_score_moyen = float(pred_score_sim_cum) / nb_test_done
+				iter_score_moyen = float(iter_score_sim_cum) / nb_test_done
 				print("Score moyen de prédiction (SP) : " + str(pred_score_moyen))
 				print("Score moyen de recherche naïve (SN) : " + str(iter_score_moyen))
-				percent_success = pred_score_moyen / iter_score_moyen
-				print("Pourcentage de réussite (SP / SN) : " + str(percent_success))
-				print("Nombre moyen de calcul de similarité par image : " + str(float(nb_visite)/self.nb_test_imgs))
+				percent_success = 100*pred_score_moyen / iter_score_moyen
+				print("(SP / SN) : " + str(percent_success))
+				print("Pourcentage de zone à recalculer : ")
+				score_max = simy.max_score_similarity()
+				percent_predict_error = (score_max - pred_score_moyen)/score_max * 100
+				percent_predict_error -= percent_predict_error % 0.01
+				percent_naive_error = (score_max - iter_score_moyen)/score_max * 100
+				percent_naive_error -= percent_naive_error % 0.01
+				print(" ----- Prédiction : " + str(percent_predict_error) + "%")
+				print(" ----- Naive : " + str(percent_naive_error) + "%")
 
 
 			pred_score_sim_cum = 0
 			iter_score_sim_cum = 0
 			nb_visite = 0
+			nb_test_done = 0
 
-			print("Test sur " + str(self.nb_test_imgs) + " images d'entrainements : \n")
+			try :
+				print("Test sur " + str(self.nb_test_imgs) + " images d'entrainements : \n")
 
-			for i in range(self.nb_test_imgs) :
-				t1 = time.time()
-				closest_img, score_sim, dt, visite = self.decision_tree.predict_closest_img(i)
-				nb_visite += visite
-				pred_score_sim_cum += score_sim
-				t2 = time.time()
-				iterative_closest, max_sim = find_iterative(self, i)
-				iter_score_sim_cum += max_sim
-				t3 = time.time()
-				print("Image n°" + str(i) + " : ")
-				print("Score predict : " + str(score_sim))
-				print("Score iterative : " + str(max_sim))
-				print("Temps predict : " + str(t2 - t1))
-				print("Temps iterative : " + str(t3-t2))
-				print("Nombre de visite : " + str(visite) + "\n")
-				
-				if plot :
-					plot_result(self, i, closest_img, iterative_closest)
+				for i in range(self.nb_test_imgs) :
+					t1 = time.time()
+					closest_img, score_sim, dt, visite = self.decision_tree.predict_closest_img(i)
+					nb_visite += visite
+					pred_score_sim_cum += score_sim
+					t2 = time.time()
+					iterative_closest, max_sim = find_iterative(self, i)
+					iter_score_sim_cum += max_sim
+					t3 = time.time()
+					print("Image n°" + str(i) + " : ")
+					print("Score predict : " + str(score_sim))
+					print("Score iterative : " + str(max_sim))
+					print("Temps predict : " + str(t2 - t1))
+					print("Temps iterative : " + str(t3-t2))
+					print("Nombre de visite : " + str(visite) + "\n")
+					nb_test_done += 1
+					
+					if plot :
+						plot_result(self, i, closest_img, iterative_closest)
 
-			display_statistiques(self, pred_score_sim_cum, iter_score_sim_cum, nb_visite)
+			except KeyboardInterrupt as e:
+				print(e)
+				print("\nProgramme arreté manuellement.")
+
+			display_statistiques(self, pred_score_sim_cum, iter_score_sim_cum, nb_visite, nb_test_done)
+
 
 
 
@@ -242,31 +277,49 @@ class Extract_Data :
 				plt.imshow(self.learn_imgs[ind_prediction])
 				plt.show()
 
+			def display_statistiques(self, nb_visite, score_cum, temps, nb_test_done) :
+				print("Statistiques finales sur " + str(nb_test_done) + " images de tests.")
+				self.decision_tree.display_stats()
+
+				moy_visite = float(nb_visite)/nb_test_done
+				moy_score = float(score_cum)/nb_test_done
+				moy_temps = temps / nb_test_done
+				score_max = simy.max_score_similarity()
+				moy_percent_calcul = (score_max - moy_score) / score_max * 100
+				moy_percent_calcul -= moy_percent_calcul % 0.01
+
+				print("Nombre de sommets parcouru en moyenne : " + str(moy_visite))
+				print("Temps moyen par prédiction : " + str(moy_temps))
+				print("Score moyen par image : " + str(moy_score))
+				print("Pourcentage moyen à recalculer : " + str(moy_percent_calcul) + "%")
+
 			nb_visite = 0
+			score_cum = 0
+			nb_test_done = 0
+			temps_total = 0
 
 			for i in range(self.nb_test_imgs) :
-				t1 = time.time()
+				t0 = time.time()
 				prediction, score, dt, visites = self.decision_tree.predict_closest_img(i)
-				nb_visite += visites
-				t2 = time.time()
+				temps = time.time() - t0
+
 				print("Image n°" + str(i) + " : ")
-				print("Prédiction image test " + str(i))
 				print("Score Prédiction : " + str(score))
-				print("Temps pour la prédiction : " + str(t2 - t1))
+				print("Temps pour la prédiction : " + str(temps))
 				print("Nombre de calcul de similarité : " + str(visites) + "\n")
+
+				nb_visite += visites
+				score_cum += score
+				nb_test_done += 1
+				temps_total += temps
 
 				if plot :
 					plot_result(self, prediction, i)
 
-			print("Nombre moyen de calcul de similarité par image : " + str(float(nb_visite)/self.nb_test_imgs))
+			display_statistiques(self, nb_visite, score_cum, temps_total, nb_test_done)
 
-		begin_predictions = time.time()
 		# predict_only(self, plot=False)
 		predict_and_compare_to_iterative_result(self, plot=True)
-		end_predictions = time.time()
-		temps_predictions = end_predictions - begin_predictions
-		print("Temps de l'ensemble des prédictions : " + str(temps_predictions))
-		print("Temps moyen par prédiciton : " + str(temps_predictions / self.nb_test_imgs))
 
 	# ------------------------------------ Save & Load --------------------------------------------
 
@@ -295,7 +348,7 @@ class Extract_Data :
 		save_imgs(self.test_imgs, path_test)
 		self.dict_sim.save_similarity(save_directory)
 
-	def load(self, save_directory = "./data/") :
+	def load(self, save_directory = "./data/", similarity = True) :
 		print("Chargement des images à partir de " + save_directory + "...")
 
 		def is_int(value) :
@@ -319,7 +372,7 @@ class Extract_Data :
 							my_line += [int(elem)]
 					if len(my_line) > 0 :
 			 			img += [my_line]
-			 	return img
+				return img
 
 		def load_all_imgs_in_directory(directory) :
 			list_files = os.listdir(directory)
@@ -351,8 +404,9 @@ class Extract_Data :
 		self.learn_imgs = load_all_imgs_in_directory(path_learn)[:NB_LEARN_IMGS]
 		print("Chargement des images de tests...")
 		self.test_imgs = load_all_imgs_in_directory(path_test)[:NB_TEST_IMGS]
-		print("Chargement des similarités...")
-		self.dict_sim.load_similarity(path_similarity)
+		if similarity :
+			print("Chargement des similarités...")
+			self.dict_sim.load_similarity(path_similarity)
 
 		self.nb_learn_imgs = len(self.learn_imgs)
 		self.nb_test_imgs = len(self.test_imgs)
@@ -368,17 +422,23 @@ if __name__ == "__main__" :
 			print("Arguments optionnels:")
 			print("    path_save=my_path - Sauvegarde dans my_path, même si my_path n'existe pas")
 			print("    path_load=my_path - Chargement des données à partir de my_path")
+			print("    path_imgs=my_path - Chargement des images dans my_path, calcule la similarité et l'enregistre dans my_path.")
 			exit()
 		load = False	
 		path_load = "../../../working_dir/"
 		path_save = None
+		path_imgs = None
 		for arg in argv :
 			if arg[:10] == "path_load=" :
 				path_load = arg[10:]
 				load = True
 			elif arg[:10] == "path_save=" :
 				path_save = arg[10:]
-		return load, path_load, path_save
+			elif arg[:10] == "path_imgs=" :
+				path_imgs = arg[10:]
+				load = True
+				path_load = None
+		return load, path_load, path_save, path_imgs
 
 	# def test_sim(ed) :
 	# 	for i in range(ed.nb_learn_imgs) :
@@ -390,8 +450,8 @@ if __name__ == "__main__" :
 	# 				return False
 	# 	return True
 
-	load, path_load, path_save = parse_arg(sys.argv)
-	ed = Extract_Data(path_load, load = load, path_save = path_save)
+	load, path_load, path_save, path_imgs = parse_arg(sys.argv)
+	ed = Extract_Data(path_load, load = load, path_save = path_save, path_imgs = path_imgs)
 	# test_sim(ed)
 	# print(ed.decision_tree)
 	ed.predict_for_all_test_imgs()

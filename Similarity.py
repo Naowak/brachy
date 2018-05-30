@@ -145,7 +145,7 @@ def get_disque_segment(img, intervale) :
 		return point_on_circle
 
 	def is_in_circle(i, j, rayon) :
-		return m.sqrt(pow(i, 2) + pow(j, 2)) <= rayon 
+		return m.sqrt(pow(i + 0.5, 2) + pow(j + 0.5, 2)) <= rayon 
 
 	size = imd.Img_Density.RAYON_SUB_IMG
 	res = [[1 for i in range(size)] for j in range(size)]

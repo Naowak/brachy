@@ -1,3 +1,7 @@
+#!/usr/lib/env python2.7
+#-*- coding: utf-8 -*-
+
+
 class Quartil :
 	"""Classe utilisée pour représenter un quart d'image classique dans
 	notre base de donnée"""

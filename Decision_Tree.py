@@ -2,14 +2,13 @@
 #-*- coding: utf-8 -*-
 
 import random
-import Data_Work
 import Similarity as simy
 from matplotlib import pyplot as plt
 import time
 
 class Decision_Tree() :
 	
-	def __init__(self, representant, list_ind_imgs, similarity, imgs, tests, profondeur = 0, k = 3) :
+	def __init__(self, representant, list_ind_imgs, similarity, imgs, tests, profondeur = 0, k = 5) :
 		self.list_ind_imgs = list_ind_imgs
 		self.k = k
 		self.tab_similarity = similarity
@@ -226,7 +225,6 @@ class Decision_Tree() :
 			else :
 				return max([get_profondeur_max(son) for son in self.sons])
 
-		print("\nStatistiques : ")
 		print("Profondeur max de l'arbre : " + str(get_profondeur_max(self)))
 		print("Nombre d'image d'entrainement : " + str(len(self.list_ind_imgs)))
 		print("K = " + str(self.k))

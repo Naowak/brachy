@@ -1,5 +1,6 @@
 #!/usr/lib/env python2.7
 #-*- coding: utf-8 -*-
+import Quartil as qt
 from matplotlib import pyplot as plt
 import math
 import random
@@ -44,7 +45,7 @@ class Img_Density :
 			- density_file : String : Chemin du fichier densite_hu.don"""
 
 		self.img_density = list()
-	 	with open(density_file) as f :
+		with open(density_file) as f :
 			for line in f :
 				vector_density_column = [int(d) for d in line.split(" ")]
 				self.img_density += [vector_density_column]
@@ -116,6 +117,19 @@ class Img_Density :
 			return img
 
 		def extract_quartil(img, rayon) :
+			flag = False
+			for line in img :
+				for elem in line :
+					if elem == 1 :
+						plt.imshow(img)
+						plt.show()
+						flag = True
+						break
+				if flag :
+					break
+
+						
+
 			up_left = img[:rayon]
 			up_left = [line[:rayon] for line in up_left]
 			up_left = rotation(up_left, 2)
