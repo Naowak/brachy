@@ -66,6 +66,9 @@ class Zoomed_Image() :
 
 		self.zoomed_imgs = [None] * (self.zoom_max+1)
 		#contient les images zoomées, elles sont zoomées 2^indice fois
+		#Pour accèder à l'image zoom x1 : self.zoomed_imgs[0]
+		# x2 : self.zoomed_imgs[1]
+		# x4 : self.zoomed_imgs[2] , etc en puissance de 2...
 		self.create_zoomed_imgs()
 	
 	def create_zoomed_imgs(self) :
@@ -93,6 +96,7 @@ class Zoomed_Image() :
 			self.zoomed_imgs[i] = zoom_and_add(self, self.zoomed_imgs[i-1])
 
 	def extract_zoomed_img(self, zoom) :
+		# x1, x2, x4, x8, x16, x32 ...
 		indice = int(m.log(zoom, 2))
 		z_img = self.zoomed_imgs[indice]
 		size_img = len(z_img)
@@ -116,5 +120,12 @@ if __name__ == "__main__" :
 				line[i] = 1
 	a = Zoomed_Image(img)
 	a.show()
+
+
+
+
+
+
+
 
 
