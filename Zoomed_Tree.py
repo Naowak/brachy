@@ -3,13 +3,14 @@
 
 import zoomed_image as zi
 import matplotlib.pyplot as plt
+import random
 
 
 def show_img(img) :
 	plt.imshow(img)
 	plt.show()
 
-ZOOM_ROOT = 4
+ZOOM_ROOT = 8
 
 class Zoomed_Tree() :
 	""" Défini l'arbre qui zoom dans les images"""
@@ -49,6 +50,11 @@ class Zoomed_Tree() :
 				return new_node
 
 			def add_leaf_to_node(node, leaf) :
+				for existing_leaf in node.sons :
+					if are_imgs_equal(existing_leaf.img, leaf.img) :
+						#image déjà existante
+						print("Image déjà présente dans la base de donnée.")
+						return
 				node.sons.append(leaf)
 
 			def are_imgs_equal(img1, img2) : 
@@ -70,7 +76,7 @@ class Zoomed_Tree() :
 				zoom = ZOOM_ROOT / pow(2, node.profondeur + 1)
 				return zoom
 
-			def recursive_find(node, leaf, profondeur) :
+			def recursive_find_and_add(node, leaf, profondeur) :
 				if len(node.sons) == 0 :
 					#cas racine initiale
 					node = add_node_to_node(node, leaf, profondeur+1)
@@ -92,6 +98,7 @@ class Zoomed_Tree() :
 							#on trouve un noeud avec un représentant égale
 							node = son
 							node_found = True
+							break
 					if not node_found :
 						#Aucun noeud ne lui correspond, on créer le sien
 						#on peut le renvoyer car on est sur que c'est ce noeud
@@ -111,7 +118,9 @@ class Zoomed_Tree() :
 					add_leaf_to_node(new_node_left, leaf_present)
 
 					img_leaf = leaf.z_img.extract_zoomed_img(zoom)
+
 					if not are_imgs_equal(new_node_left.representant, img_leaf) :
+						## Situation impossible en théorie : notre dernier zoom = l'image
 						#alors on peut créer un noeud en plus
 						new_node_right = add_node_to_node(node, leaf, profondeur+1)
 						add_leaf_to_node(new_node_right, leaf)
@@ -129,10 +138,101 @@ class Zoomed_Tree() :
 
 			node = self.root
 			profondeur = -1
-			node = recursive_find(node, leaf, profondeur)
+			node = recursive_find_and_add(node, leaf, profondeur)
 
 		leaf = Zoomed_Tree.Leaf(img)
 		find_node_and_add_leaf(self, leaf)
+
+	def find_closest_img(self, img) :
+
+		def are_imgs_equal(img1, img2) : 
+			size1 = len(img1)
+			size2 = len(img2)
+			if size1 != size2 : 
+				print("Image de taille différentes donc non égales.")
+				print("Taille img1 : " + str(size1))
+				print("Taille img2 : " + str(size2))
+				raise ValueError
+			for i in range(size1) :
+				for j in range(size2) :
+					if img1[i][j] != img2[i][j] :
+						return False
+			return True
+
+		def get_zoom_node(node) :
+				zoom = ZOOM_ROOT / pow(2, node.profondeur)
+				return zoom
+		
+		def find_closest_node(self, z_img) :
+			node = self.root
+			while node.sons[0].type != "leaf" :
+				node_found = False
+				for son in node.sons :
+					zoom = get_zoom_node(son)
+					if are_imgs_equal(son.representant, z_img.extract_zoomed_img(zoom)) :
+						node = son
+						node_found = True
+						break
+				if not node_found :
+					#il n'existe pas de noeud lui étant égale zoomé, 
+					#on prends le noeud le plus proche connu
+					#on va étudier toutes ses feuilles
+					return node
+			return node
+
+		def find_best_brothers(node, z_img) :
+
+			def get_max_brothers_from_score(score) :
+				score = sorted(score,key=lambda l:l[0], reverse=True)
+				max_score = score[0][0]
+				brothers = []
+				for s in score :
+					if s[0] == max_score :
+						brothers += [s[1]]
+					else :
+						break
+				return brothers
+
+			def compute_score(node, z_img) :
+				def nb_pixel_egal(img1, img2) :
+					cpt = 0
+					for i in range(len(img1)) :
+						for j in range(len(img1[0])) :
+							if img1[i][j] == img2[i][j] :
+								cpt += 1
+					return cpt
+
+				score = []
+				zoom = get_zoom_node(node.sons[0])
+				img = z_img.extract_zoomed_img(zoom)
+				for son in node.sons :
+					score += [nb_pixel_egal(img, son.representant), son]
+				return score
+
+			score = compute_score(node, z_img)
+			return get_max_brothers_from_score(score)
+
+		def get_all_imgs_from_node(node) :
+
+			def recursive_research(node) :
+				if node.type == "leaf" :
+					return node.img
+				return [recursive_research(son) for son in node.sons]
+
+			return recursive_research(node)
+
+		z_img = zi.Zoomed_Image(img)
+		node = find_closest_node(self, z_img)
+		if node.sons[0].type == "leaf" :
+			#cas où on atteint les feuilles
+			#on a trouvé l'image
+			leaf = node.sons[0]
+			return leaf.img
+		else :
+			#pas d'image égale, on obtient le noeud père le plus bas
+			imgs = get_all_imgs_from_node(node)
+			return imgs
+
 
 	def __str__(self) :
 
@@ -159,33 +259,15 @@ class Zoomed_Tree() :
 
 
 
+def create_random_img(size_x, size_y) :
+	return [[random.choice([0, 1]) for i in range(size_x)] for j in range(size_y)]
+
+
+
 if __name__ == '__main__':
 	zt = Zoomed_Tree()
-	img1 = [[0, 0, 0, 1],
-			[0, 0, 0, 1],
-			[0, 0, 1, 1],
-			[0, 1, 0, 0]]
-	img2 = [[0, 1, 0, 1],
-			[0, 0, 1, 1],
-			[0, 0, 1, 1],
-			[0, 1, 0, 0]]
-	img3 = [[0, 0, 0, 1],
-			[0, 1, 1, 1],
-			[0, 0, 1, 0],
-			[0, 1, 0, 1]]
-	img4 = [[0, 0, 0, 1],
-			[0, 0, 0, 1],
-			[0, 0, 1, 1],
-			[0, 1, 0, 1]]
-	img5 = [[0, 0, 0, 1],
-			[0, 0, 1, 0],
-			[0, 0, 0, 1],
-			[0, 1, 0, 0]]
-	img6 = [[1, 1, 1, 1],
-			[0, 0, 0, 1],
-			[0, 0, 1, 1],
-			[0, 1, 1, 1]]
-	imgs = [img1, img2, img3, img4, img5, img6]
+	NB_IMG = 50
+	imgs = [create_random_img(8, 8) for _ in range(NB_IMG)]
 	for img in imgs :
 		zt.add_img(img)
 	print(zt)
