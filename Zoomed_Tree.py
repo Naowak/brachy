@@ -3,14 +3,17 @@
 
 import zoomed_image as zi
 import matplotlib.pyplot as plt
+import Decision_Tree as dt
+import Similarity as simy
 import random
+import time
 
 
 def show_img(img) :
 	plt.imshow(img)
 	plt.show()
 
-ZOOM_ROOT = 8
+ZOOM_ROOT = 32
 
 class Zoomed_Tree() :
 	""" Défini l'arbre qui zoom dans les images"""
@@ -27,6 +30,13 @@ class Zoomed_Tree() :
 			self.type = "node"
 			self.representant = representant
 			self.profondeur = profondeur
+			self.imgs = list()
+			self.nb_imgs = 0
+			self.dict_sim = None
+			self.decision_tree = None
+
+		def __str__(self) :
+			return str(self.representant)
 
 	class Leaf() :
 		def __init__(self, img) :
@@ -37,6 +47,63 @@ class Zoomed_Tree() :
 
 	def __init__(self) :
 		self.root = Zoomed_Tree.Root()
+
+	def compute_all_decision_tree(self) :
+
+		def create_decision_tree_on_node(node) :
+
+			def extract_img_from_node(node) :
+
+				def get_all_imgs_from_node(node) :
+
+					def recursive_research(node) :
+						if node.type == "leaf" :
+							return [node.img]
+						res = []
+						for son in node.sons :
+							res += recursive_research(son)
+						return res
+
+					return recursive_research(node)
+
+				if node.sons[0].type == "leaf" :
+					#cas où on atteint les feuilles
+					#on a trouvé l'image
+					leaf = node.sons[0]
+					return [leaf.img]
+				else :
+					#pas d'image égale, on obtient le noeud père le plus bas
+					imgs = get_all_imgs_from_node(node)
+					return imgs
+
+			def compute_similarity(node) :
+				for i in range(node.nb_imgs) :
+					for j in range(i+1, node.nb_imgs) :
+						img1 = node.imgs[i]
+						img2 = node.imgs[j]
+						score_sim, inter_sim = simy.similarity_between_two_imgs(img1, img2)
+						node.dict_sim.set_similarity(i, j, score_sim)
+
+			node.imgs = extract_img_from_node(node)
+			node.nb_imgs = len(node.imgs)
+			node.dict_sim = simy.Dict_Sim(len(node.imgs))
+			compute_similarity(node)
+
+			indices = [i for i in range(node.nb_imgs)]
+			node.decision_tree = dt.Decision_Tree(None, indices, node.dict_sim, node.imgs, None)
+			node.decision_tree.create_tree()
+
+		def recursive_compute_decision_tree(node) :
+			if node.sons[0].type == "leaf" :
+				create_decision_tree_on_node(node)
+			else :
+				create_decision_tree_on_node(node)
+				for son in node.sons :
+					recursive_compute_decision_tree(son)
+
+		node = self.root
+		for son in node.sons :
+			recursive_compute_decision_tree(son)
 
 	def add_img(self, img) :
 
@@ -145,25 +212,25 @@ class Zoomed_Tree() :
 
 	def find_closest_img(self, img) :
 
-		def are_imgs_equal(img1, img2) : 
-			size1 = len(img1)
-			size2 = len(img2)
-			if size1 != size2 : 
-				print("Image de taille différentes donc non égales.")
-				print("Taille img1 : " + str(size1))
-				print("Taille img2 : " + str(size2))
-				raise ValueError
-			for i in range(size1) :
-				for j in range(size2) :
-					if img1[i][j] != img2[i][j] :
-						return False
-			return True
-
-		def get_zoom_node(node) :
-				zoom = ZOOM_ROOT / pow(2, node.profondeur)
-				return zoom
-		
 		def find_closest_node(self, z_img) :
+			def are_imgs_equal(img1, img2) : 
+				size1 = len(img1)
+				size2 = len(img2)
+				if size1 != size2 : 
+					print("Image de taille différentes donc non égales.")
+					print("Taille img1 : " + str(size1))
+					print("Taille img2 : " + str(size2))
+					raise ValueError
+				for i in range(size1) :
+					for j in range(size2) :
+						if img1[i][j] != img2[i][j] :
+							return False
+				return True
+
+			def get_zoom_node(node) :
+					zoom = ZOOM_ROOT / pow(2, node.profondeur)
+					return zoom
+
 			node = self.root
 			while node.sons[0].type != "leaf" :
 				node_found = False
@@ -180,59 +247,40 @@ class Zoomed_Tree() :
 					return node
 			return node
 
-		def find_best_brothers(node, z_img) :
 
-			def get_max_brothers_from_score(score) :
-				score = sorted(score,key=lambda l:l[0], reverse=True)
-				max_score = score[0][0]
-				brothers = []
-				for s in score :
-					if s[0] == max_score :
-						brothers += [s[1]]
-					else :
-						break
-				return brothers
+		def extract_img_from_node(node) :
 
-			def compute_score(node, z_img) :
-				def nb_pixel_egal(img1, img2) :
-					cpt = 0
-					for i in range(len(img1)) :
-						for j in range(len(img1[0])) :
-							if img1[i][j] == img2[i][j] :
-								cpt += 1
-					return cpt
+			def get_all_imgs_from_node(node) :
 
-				score = []
-				zoom = get_zoom_node(node.sons[0])
-				img = z_img.extract_zoomed_img(zoom)
-				for son in node.sons :
-					score += [nb_pixel_egal(img, son.representant), son]
-				return score
+				def recursive_research(node) :
+					if node.type == "leaf" :
+						return node.img
+					return [recursive_research(son) for son in node.sons]
 
-			score = compute_score(node, z_img)
-			return get_max_brothers_from_score(score)
+				return recursive_research(node)
 
-		def get_all_imgs_from_node(node) :
+			if node.sons[0].type == "leaf" :
+				#cas où on atteint les feuilles
+				#on a trouvé l'image
+				leaf = node.sons[0]
+				return leaf.img
+			else :
+				#pas d'image égale, on obtient le noeud père le plus bas
+				imgs = get_all_imgs_from_node(node)
+				return imgs
 
-			def recursive_research(node) :
-				if node.type == "leaf" :
-					return node.img
-				return [recursive_research(son) for son in node.sons]
-
-			return recursive_research(node)
+		def get_zoom_node(node) :
+			zoom = ZOOM_ROOT / pow(2, node.profondeur)
+			return zoom
 
 		z_img = zi.Zoomed_Image(img)
 		node = find_closest_node(self, z_img)
-		if node.sons[0].type == "leaf" :
-			#cas où on atteint les feuilles
-			#on a trouvé l'image
-			leaf = node.sons[0]
-			return leaf.img
-		else :
-			#pas d'image égale, on obtient le noeud père le plus bas
-			imgs = get_all_imgs_from_node(node)
-			return imgs
-
+		zoom = get_zoom_node(node)
+		print("node : " + str(node))
+		print("image : " + str(z_img.extract_zoomed_img(zoom)))
+		imgs = extract_img_from_node(node)
+		print(str(len(imgs)) + " images à départager.")
+		return imgs
 
 	def __str__(self) :
 
@@ -250,7 +298,9 @@ class Zoomed_Tree() :
 						string += img_str(son.img, cpt) + "\n"
 					else :
 						string += img_str(son.representant, cpt) +"\n"
+						string += str(son.decision_tree)
 						string += recursive_str(son, cpt+1)
+
 				return string
 			return ""
 
@@ -260,17 +310,31 @@ class Zoomed_Tree() :
 
 
 def create_random_img(size_x, size_y) :
-	return [[random.choice([0, 1]) for i in range(size_x)] for j in range(size_y)]
+	return [[random.choice([0, 0, 0, 0, 1]) for i in range(size_x)] for j in range(size_y)]
 
 
 
 if __name__ == '__main__':
 	zt = Zoomed_Tree()
 	NB_IMG = 50
-	imgs = [create_random_img(8, 8) for _ in range(NB_IMG)]
+	NB_TEST = 100
+	size_img = 32
+	#train
+	imgs = [create_random_img(size_img, size_img) for _ in range(NB_IMG)]
 	for img in imgs :
 		zt.add_img(img)
+	zt.compute_all_decision_tree()
 	print(zt)
 
-
-
+	#test
+	# test = [create_random_img(size_img,size_img) for _ in range(NB_TEST)]
+	# nb = 0
+	# total_temps = 0
+	# for img in test :
+	# 	t = time.time()
+	# 	ci = zt.find_closest_img(img)
+	# 	temps_operation = time.time()-t
+	# 	total_temps += temps_operation
+	# 	nb += len(ci)
+	# print("Nombre d'image moyenne à départager : " + str(float(nb/NB_TEST)))
+	# print("Temps moyen de l'opération : " + str(float(total_temps/NB_TEST)))

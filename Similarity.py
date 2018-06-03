@@ -62,8 +62,16 @@ def calcul_matrix_similarity(img1, img2) :
 
 	Retour :
 		- Retourne la matrice de similarité entre les deux images"""
-	size = imd.Img_Density.RAYON_SUB_IMG
-	return [[1 if img1[i][j]==img2[i][j] else 0 for j in range(size)] for i in range(size)]
+	size_x1 = len(img1)
+	size_y1 = len(img1[0])
+	size_x2 = len(img2)
+	size_y2 = len(img2[0])
+	if size_x1 != size_x2 or size_y1 != size_y2 :
+		print(img1, img2)
+		print(size_x1, size_x2)
+		print(size_y1, size_y2)
+		raise ValueError
+	return [[1 if img1[i][j]==img2[i][j] else 0 for j in range(size_x1)] for i in range(size_y1)]
 
 def similarity_between_two_imgs(img1, img2, plot = False) :
 
