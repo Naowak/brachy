@@ -13,7 +13,7 @@ class Img_Density :
 	 la zone d'influence à calculer.
 	 Nous récupérons aussi la position des sources dans config_KIDS.don"""
 
-	RAYON_SUB_IMG = 25
+	RAYON_SUB_IMG = 32
 	CENTER_IMG = RAYON_SUB_IMG - 0.5
 	CIRCLE_SHAPE = [[1 if math.sqrt(pow(i-CENTER_IMG, 2) + pow(j-CENTER_IMG, 2)) <= RAYON_SUB_IMG else 0 for i in range(2*RAYON_SUB_IMG)] for j in range(2*RAYON_SUB_IMG)]
 
@@ -99,7 +99,6 @@ class Img_Density :
 					self.img_material[j][i] = len(limits_density_to_material)
 					material_found = True
 
-
 	def extract_sub_imgs(self) :
 		""" Extrait de self.img_material la sous image associé à chacune
 		des sources de self.sources. Enregistre le résultats dans self.sub_imgs"""
@@ -121,8 +120,6 @@ class Img_Density :
 			for line in img :
 				for elem in line :
 					if elem == 1 :
-						plt.imshow(img)
-						plt.show()
 						flag = True
 						break
 				if flag :

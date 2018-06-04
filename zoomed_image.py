@@ -36,14 +36,18 @@ class Zoomed_Image() :
 			def find_new_value(bps) :
 				tab_vote = [0] * NB_MATERIAUX
 				for bp in bps :
-					tab_vote[bp.value] += 1
+					if bp.value != -1 :
+						#on ne considère pas les -1
+						tab_vote[bp.value] += 1
 
 				nb_vote_max = 0
 				new_value = -1
 				for materiaux, nb in enumerate(tab_vote) :
-					if nb >= nb_vote_max :
+					if nb >= 1 and nb >= nb_vote_max :
 						#Le égal permet de faire passer les autres éléments que 
 						#l'eau en priorité en cas d'égalité des votes
+						#dans le cas où personne n'a de vote la valeur est -1
+						#s'il n'y a qu'une seul autre matériaux valeur du matériaux
 						nb_vote_max = nb
 						new_value = materiaux
 				return new_value

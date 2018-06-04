@@ -48,9 +48,13 @@ class Zoomed_Tree() :
 			self.img = img
 			self.z_img = zi.Zoomed_Image(img)
 
-
-	def __init__(self) :
+	def __init__(self, list_img = None) :
 		self.root = Zoomed_Tree.Root()
+
+		if list_img != None :
+			for img in list_img :
+				self.add_img(img)
+			self.compute_all_decision_tree()
 
 	def compute_all_decision_tree(self) :
 
@@ -276,15 +280,20 @@ class Zoomed_Tree() :
 			return zoom
 
 		def plot_result(img, prediction) :
-			if plot :
-				fig = plt.figure()
-				fig.add_subplot(1, 2, 1)
-				plt.imshow(img)
+			score, inter = simy.similarity_between_two_imgs(img, prediction)
+			segment_result = simy.get_disque_segment(img, intervale)
+		
+			fig = plt.figure()
+			fig.add_subplot(1, 3, 1)
+			plt.imshow(img)
 
-				fig.add_subplot(1, 2, 2)
-				plt.imshow(prediction)
+			fig.add_subplot(1, 3, 2)
+			plt.imshow(prediction)
 
-				plt.show()
+			fig.add_subplot(1, 3, 3)
+			plt.imshow(segment_result)
+
+			plt.show()
 
 		z_img = zi.Zoomed_Image(img)
 		node = find_closest_node(self, z_img)
@@ -293,7 +302,29 @@ class Zoomed_Tree() :
 		if plot :
 			plot_result(img, prediction)
 
-		return prediction
+		return prediction, score
+
+	def predict_all_imgs(self, imgs, plot=False) :
+		total_temps = 0
+		score_total = 0
+		nb_imgs = len(imgs)
+		for i, img in enumerate(imgs) :
+			t = time.time()
+			prediction, score = self.find_closest_img(img, plot)
+			t_predict = time.time() - t
+			print("Prédiction " + str(i))
+			print("Temps : " + str(t_predict) + " secondes.")
+			print("Score : " + str(score))
+			total_temps += t_predict
+			score_total += score
+		temps_moyen = float(total_temps) / nb_imgs
+		score_moyen = float(score_total) / nb_imgs
+		nb_learn_imgs = len(self.root.imgs)
+		nb_test_imgs = len(imgs)
+		print("\nApprentissage sur " + str(nb_learn_imgs) + " images.")
+		print("Test sur " + str(nb_test_imgs) + " images.")
+		print("Temps moyen : " + str(temps_moyen))
+		print("Score moyen : " + str(score_moyen))
 
 	def __str__(self) :
 
