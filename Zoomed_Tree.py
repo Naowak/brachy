@@ -275,18 +275,23 @@ class Zoomed_Tree() :
 			zoom = ZOOM_ROOT / pow(2, node.profondeur)
 			return zoom
 
+		def plot_result(img, prediction) :
+			if plot :
+				fig = plt.figure()
+				fig.add_subplot(1, 2, 1)
+				plt.imshow(img)
+
+				fig.add_subplot(1, 2, 2)
+				plt.imshow(prediction)
+
+				plt.show()
+
 		z_img = zi.Zoomed_Image(img)
 		node = find_closest_node(self, z_img)
-		indice = node.decision_tree.predict(img)
+		indice, score, dt_node, nb_visit = node.decision_tree.predict(img)
 		prediction = node.decision_tree.imgs[indice]
-
 		if plot :
-			fig = plt.figure()
-			fig.add_subplot(1, 2, 1)
-			plt.imshow(img)
-
-			fig.add_subplot(1, 2, 2)
-			plt.imshow(prediction)
+			plot_result(img, prediction)
 
 		return prediction
 

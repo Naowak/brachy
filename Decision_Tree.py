@@ -41,7 +41,7 @@ class Decision_Tree() :
 		def find_closest_img_in_cluster(img_to_predict, list_ind_imgs, nb_visit) :
 			dict_sim, nb_visit = calcul_similarity_with_all_imgs(img_to_predict, list_ind_imgs, nb_visit)
 			closest_img = None
-			score_max = 0
+			score_max = -10000
 			for key, score_sim in dict_sim.items() :
 				if score_sim > score_max :
 					closest_img = key
@@ -54,7 +54,7 @@ class Decision_Tree() :
 			return closest, score, self, nb_visit
 
 		node = self
-		score_actual_representant = 0
+		score_actual_representant = -10000
 		#Tant que l'on est pas dans un noeud trop petit
 		while len(node.list_ind_imgs) >= self.k :
 			#On cherche le centre le plus proche
