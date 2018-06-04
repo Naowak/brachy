@@ -23,6 +23,10 @@ class Zoomed_Tree() :
 			self.sons = list()
 			self.type = "root"
 			self.profondeur = -1
+			self.imgs = list()
+			self.nb_imgs = 0
+			self.dict_sim = None
+			self.decision_tree = None
 
 	class Node() :
 		def __init__(self, representant, profondeur) :
@@ -102,8 +106,7 @@ class Zoomed_Tree() :
 					recursive_compute_decision_tree(son)
 
 		node = self.root
-		for son in node.sons :
-			recursive_compute_decision_tree(son)
+		recursive_compute_decision_tree(node)
 
 	def add_img(self, img) :
 
@@ -210,7 +213,7 @@ class Zoomed_Tree() :
 		leaf = Zoomed_Tree.Leaf(img)
 		find_node_and_add_leaf(self, leaf)
 
-	def find_closest_img(self, img) :
+	def find_closest_img(self, img, plot=False) :
 
 		def find_closest_node(self, z_img) :
 			def are_imgs_equal(img1, img2) : 
@@ -247,7 +250,6 @@ class Zoomed_Tree() :
 					return node
 			return node
 
-
 		def extract_img_from_node(node) :
 
 			def get_all_imgs_from_node(node) :
@@ -275,12 +277,18 @@ class Zoomed_Tree() :
 
 		z_img = zi.Zoomed_Image(img)
 		node = find_closest_node(self, z_img)
-		zoom = get_zoom_node(node)
-		print("node : " + str(node))
-		print("image : " + str(z_img.extract_zoomed_img(zoom)))
-		imgs = extract_img_from_node(node)
-		print(str(len(imgs)) + " images à départager.")
-		return imgs
+		indice = node.decision_tree.predict(img)
+		prediction = node.decision_tree.imgs[indice]
+
+		if plot :
+			fig = plt.figure()
+			fig.add_subplot(1, 2, 1)
+			plt.imshow(img)
+
+			fig.add_subplot(1, 2, 2)
+			plt.imshow(prediction)
+
+		return prediction
 
 	def __str__(self) :
 
@@ -317,24 +325,24 @@ def create_random_img(size_x, size_y) :
 if __name__ == '__main__':
 	zt = Zoomed_Tree()
 	NB_IMG = 50
-	NB_TEST = 100
+	NB_TEST = 10
 	size_img = 32
 	#train
 	imgs = [create_random_img(size_img, size_img) for _ in range(NB_IMG)]
 	for img in imgs :
 		zt.add_img(img)
 	zt.compute_all_decision_tree()
-	print(zt)
+
 
 	#test
-	# test = [create_random_img(size_img,size_img) for _ in range(NB_TEST)]
-	# nb = 0
-	# total_temps = 0
-	# for img in test :
-	# 	t = time.time()
-	# 	ci = zt.find_closest_img(img)
-	# 	temps_operation = time.time()-t
-	# 	total_temps += temps_operation
-	# 	nb += len(ci)
-	# print("Nombre d'image moyenne à départager : " + str(float(nb/NB_TEST)))
-	# print("Temps moyen de l'opération : " + str(float(total_temps/NB_TEST)))
+	test = [create_random_img(size_img,size_img) for _ in range(NB_TEST)]
+	nb = 0
+	total_temps = 0
+	for img in test :
+		t = time.time()
+		ci = zt.find_closest_img(img, plot=True)
+		temps_operation = time.time()-t
+		total_temps += temps_operation
+		nb += len(ci)
+	print("Nombre d'image moyenne à départager : " + str(float(nb/NB_TEST)))
+	print("Temps moyen de l'opération : " + str(float(total_temps/NB_TEST)))

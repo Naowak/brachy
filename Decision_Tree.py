@@ -27,6 +27,60 @@ class Decision_Tree() :
 
 	# ------------------------- Prediction -------------------------------
 
+	def predict(self, img_to_predict) :
+
+		nb_visit = 0
+
+		def calcul_similarity_with_all_imgs(img_to_predict, ind_imgs, nb_visit) :
+			dict_sim = {}
+			for ind_img in ind_imgs :
+				nb_visit += 1
+				dict_sim[ind_img] = simy.similarity_between_two_imgs(img_to_predict, self.imgs[ind_img])[0]
+			return dict_sim, nb_visit
+
+		def find_closest_img_in_cluster(img_to_predict, list_ind_imgs, nb_visit) :
+			dict_sim, nb_visit = calcul_similarity_with_all_imgs(img_to_predict, list_ind_imgs, nb_visit)
+			closest_img = None
+			score_max = 0
+			for key, score_sim in dict_sim.items() :
+				if score_sim > score_max :
+					closest_img = key
+					score_max = score_sim
+			return closest_img, score_max, nb_visit
+
+		if len(self.list_ind_imgs) < self.k :
+			#on est sur qu'il n'y a pas de sous cluster
+			closest, score, nb_visit = find_closest_img_in_cluster(img_to_predict, self.list_ind_imgs, nb_visit)
+			return closest, score, self, nb_visit
+
+		node = self
+		score_actual_representant = 0
+		#Tant que l'on est pas dans un noeud trop petit
+		while len(node.list_ind_imgs) >= self.k :
+			#On cherche le centre le plus proche
+			centers = [son.representant for son in node.sons]
+			max_center, score_sim, nb_visit = find_closest_img_in_cluster(img_to_predict, centers, nb_visit)
+
+			#Si le centre le plus proche n'est pas plus proche que le représentant actuel, 
+			#on retourne le représentant actuel
+			if score_actual_representant > score_sim :
+				return node.representant, score_actual_representant, node, nb_visit
+			score_actual_representant = score_sim
+
+			#On attribut à node le bon fils
+			for son in node.sons :
+				if son.representant == max_center :
+					node = son
+					break
+
+			#Si le score actuel égale le score max, on a retrouvé exactement la 
+			#même image, donc on la retourne
+			if score_actual_representant == self.max_similarity :
+				return node.representant, score_actual_representant, node, nb_visit
+
+		center, score, nb_visit = find_closest_img_in_cluster(img_to_predict, node.list_ind_imgs, nb_visit)
+		return center, score, node, nb_visit
+
 	def predict_closest_img(self, ind_img) :
 
 		nb_visit = 0
@@ -80,6 +134,7 @@ class Decision_Tree() :
 
 		center, score, nb_visit = find_closest_img_in_cluster(ind_img, node.list_ind_imgs, nb_visit)
 		return center, score, node, nb_visit
+
 
 	# ------------------------ Apprentissage -----------------------------
 
