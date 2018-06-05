@@ -86,10 +86,24 @@ class Zoomed_Tree() :
 					return imgs
 
 			def compute_similarity(node) :
+
+				def symmetric_similarity_between_two_imgs(img1, img2) :
+
+					def symmetric_img(img) :
+						len_first = len(img)
+						len_second = len(img[0])
+						return [[img[j][i] for j in range(len_second)] for i in range(len_first)]
+
+					symmetric_img2 = symmetric_img(img2)
+					score_first = simy.similarity_between_two_imgs(img1, img2)
+					score_second = simy.similarity_between_two_imgs(img1, symmetric_img2)
+					return max(score_first, score_second)
+
 				for i in range(node.nb_imgs) :
 					for j in range(i+1, node.nb_imgs) :
 						img1 = node.imgs[i]
 						img2 = node.imgs[j]
+						# score_sim, inter_sim = symmetric_similarity_between_two_imgs(img1, img2)
 						score_sim, inter_sim = simy.similarity_between_two_imgs(img1, img2)
 						node.dict_sim.set_similarity(i, j, score_sim)
 
@@ -221,6 +235,7 @@ class Zoomed_Tree() :
 	def find_closest_img(self, img, plot=False) :
 
 		def find_closest_node(self, z_img) :
+
 			def are_imgs_equal(img1, img2) : 
 				size1 = len(img1)
 				size2 = len(img2)
@@ -355,7 +370,7 @@ class Zoomed_Tree() :
 
 
 def create_random_img(size_x, size_y) :
-	return [[random.choice([0, 0, 0, 0, 1]) for i in range(size_x)] for j in range(size_y)]
+	return [[random.choice([0, 0, 0, 0, 1, 1, 2]) for i in range(size_x)] for j in range(size_y)]
 
 
 
