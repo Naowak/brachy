@@ -53,7 +53,7 @@ class Decision_Tree() :
 			len_second = len(img[0])
 			return [[img[j][i] for j in range(len_second)] for i in range(len_first)]
 
-		def img_to_return(img_to_predict, img_found) :
+		def img_to_return(img_to_predict, img_found, score) :
 			if simy.similarity_between_two_imgs(img_to_predict, img_found)[0] < score :
 				return symetric_img(img_found)
 			return img_found
@@ -61,7 +61,7 @@ class Decision_Tree() :
 		if len(self.list_ind_imgs) < self.k :
 			#on est sur qu'il n'y a pas de sous cluster
 			closest, score, nb_visit = find_closest_img_in_cluster(img_to_predict, self.list_ind_imgs, nb_visit)
-			prediction = img_to_return(img_to_predict, self.imgs[closest])
+			prediction = img_to_return(img_to_predict, self.imgs[closest], score)
 			return prediction, score, self, nb_visit
 
 		node = self
@@ -75,7 +75,7 @@ class Decision_Tree() :
 			#Si le centre le plus proche n'est pas plus proche que le représentant actuel, 
 			#on retourne le représentant actuel
 			if score_actual_representant > score_sim :
-				prediction = img_to_return(img_to_predict, self.imgs[node.representant])
+				prediction = img_to_return(img_to_predict, self.imgs[node.representant], score_actual_representant)
 				return prediction, score_actual_representant, node, nb_visit
 			score_actual_representant = score_sim
 
@@ -88,11 +88,11 @@ class Decision_Tree() :
 			#Si le score actuel égale le score max, on a retrouvé exactement la 
 			#même image, donc on la retourne
 			if score_actual_representant == self.max_similarity :
-				prediction = img_to_return(img_to_predict, self.imgs[node.representant])
+				prediction = img_to_return(img_to_predict, self.imgs[node.representant], score_actual_representant)
 				return prediction, score_actual_representant, node, nb_visit
 
 		indice_prediction, score, nb_visit = find_closest_img_in_cluster(img_to_predict, node.list_ind_imgs, nb_visit)
-		prediction = img_to_return(img_to_predict, self.imgs[indice_prediction])
+		prediction = img_to_return(img_to_predict, self.imgs[indice_prediction], score)
 		return prediction, score, node, nb_visit
 
 	def predict_closest_img(self, ind_img) :

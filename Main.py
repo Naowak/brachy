@@ -8,8 +8,8 @@ import Img_Density as imd
 import Zoomed_Tree as zt
 import Quartil as qt
 
-NB_LEARN_IMG = 50
-NB_TEST_IMG = 10
+NB_LEARN_IMG = 2000
+NB_TEST_IMG = 2000
 
 class Main :
 	def __init__(self, path, method) :
