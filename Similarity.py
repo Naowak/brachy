@@ -53,6 +53,17 @@ class Dict_Sim :
 	def __str__(self) :
 		return str(self.tab)
 
+def symmetric_similarity_between_two_imgs(img1, img2) :
+
+	def symmetric_img(img) :
+		len_first = len(img)
+		len_second = len(img[0])
+		return [[img[j][i] for j in range(len_second)] for i in range(len_first)]
+
+	symmetric_img2 = symmetric_img(img2)
+	score_first = similarity_between_two_imgs(img1, img2)
+	score_second = similarity_between_two_imgs(img1, symmetric_img2)
+	return max(score_first, score_second)
 
 def calcul_matrix_similarity(img1, img2) :
 	"""Calcul la matrice de similarité entre deux matrices
