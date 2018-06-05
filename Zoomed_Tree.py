@@ -48,10 +48,11 @@ class Zoomed_Tree() :
 			self.img = img
 			self.z_img = zi.Zoomed_Image(img)
 
-	def __init__(self, list_img = None) :
+	def __init__(self, list_img = list()) :
 		self.root = Zoomed_Tree.Root()
+		self.imgs = list_img
 
-		if list_img != None :
+		if len(self.imgs) != 0 :
 			for img in list_img :
 				self.add_img(img)
 			self.compute_all_decision_tree()
@@ -280,7 +281,7 @@ class Zoomed_Tree() :
 			return zoom
 
 		def plot_result(img, prediction) :
-			score, inter = simy.similarity_between_two_imgs(img, prediction)
+			score, intervale = simy.similarity_between_two_imgs(img, prediction)
 			segment_result = simy.get_disque_segment(img, intervale)
 		
 			fig = plt.figure()
