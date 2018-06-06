@@ -7,9 +7,10 @@ from ProgressBar import ProgressBar
 import Img_Density as imd
 import Zoomed_Tree as zt
 import Quartil as qt
+import matplotlib.pyplot as plt
 
-NB_LEARN_IMG = 500
-NB_TEST_IMG = 500
+NB_LEARN_IMG = 3000
+NB_TEST_IMG = 2000
 
 class Main :
 	def __init__(self, path, method) :
@@ -28,12 +29,6 @@ class Main :
 
 	def extract_img_density(self, nb_learn_imgs, nb_test_imgs) :
 
-		def transform_into_quartil(imgs) :
-			list_quartil = list()
-			for i, img in enumerate(imgs) :
-				list_quartil += [qt.Quartil(img, i)]
-			return list_quartil
-
 		def get_list_img_density(self) :
 			directories = os.listdir(self.path)
 			list_img_density = list()
@@ -46,28 +41,6 @@ class Main :
 					config_file = dir_path + "config_KIDS.don"
 					list_img_density += [imd.Img_Density(density_file, config_file)]
 			return list_img_density
-
-		def extract_learn_imgs_from_first_img_density(self, img_density, nb_imgs) :
-			if len(img_density.sub_imgs) < nb_imgs :
-				#S'il on demande trop d'image qu'il n'y en as
-				nb_imgs = len(img_density.sub_imgs)
-			self.learn_imgs = img_density.sub_imgs[:nb_imgs]
-			#on met à jour la variable contenant le nombre d'image d'apprentissage
-			# self.learn_imgs = transform_into_quartil(self.learn_imgs)
-			self.learn_imgs = remove_duplicates(self.learn_imgs)
-			self.nb_learn_imgs = len(self.learn_imgs)
-
-		def extract_test_imgs_from_lefted_img_density(self, list_img_density, nb_imgs) :
-			for img_d in list_img_density :
-				if len(img_d.sub_imgs) + len(self.test_imgs) > nb_imgs :
-					#On dépasse le nombre d'image de test
-					self.test_imgs += img_d.sub_imgs[:nb_imgs - len(self.test_imgs)]
-				else :
-					self.test_imgs += img_d.sub_imgs
-			#on met à jour la variable contenant le nombre d'image de test
-			# self.test_imgs = transform_into_quartil(self.test_imgs)
-			self.test_imgs = remove_duplicates(self.test_imgs)
-			self.nb_test_imgs = len(self.test_imgs)
 
 		def remove_duplicates(imgs) :
 			print("Suppression des duplicatas...")
@@ -86,12 +59,42 @@ class Main :
 			imgs_without_duplicates = [imgs[i] for i in range(nb) if i not in duplicates]
 			return imgs_without_duplicates
 
+		def extract_and_seperate_img(list_img_density, nb_slice_learn, nb_slice_test) :
+
+			def get_indice_slice_learn(size_list_img_density, nb_slice_learn) :
+				parcour = list(range(-nb_slice_learn//2+1, nb_slice_learn//2+1, 1))
+				indices = [size_list_img_density//2 + elem for elem in parcour]
+				return indices
+
+			def extract_img_learn(list_img_density, indice_learn) :
+				images = list()
+				for i in indice_learn :
+					images += list_img_density[i].extract_quart_images()
+				return images
+
+			def extract_img_test(list_img_density, indice_test) :
+				images = list()
+				for i in indice_learn :
+					images += list_img_density[i].extract_images()
+				return images
+
+			nb_slice = len(list_img_density)
+			if nb_slice_learn + nb_slice_test > nb_slice :
+				print("NB_SLICE = " + str(nb_slice))
+				print("Error : pas asser de slice pour ce qui est demandé.")
+				raise Exception
+
+			indice_learn = get_indice_slice_learn(nb_slice, nb_slice_learn)
+			indice_test = [i for i in list(range(nb_slice)) if i not in indice_learn]
+			indice_test = indice_test[:nb_slice_test]
+
+			quart_img_learn = extract_img_learn(list_img_density, indice_learn)
+			img_test = extract_img_test(list_img_density, indice_test)
+			return quart_img_learn, img_test
+
 		print("Chargement des images à partir de " + self.path)
 		list_img_density = get_list_img_density(self)
-		learn_img_density = list_img_density[9]
-		test_img_density = list_img_density[:9] + list_img_density[10:]
-		extract_learn_imgs_from_first_img_density(self, learn_img_density, nb_learn_imgs)
-		extract_test_imgs_from_lefted_img_density(self, test_img_density, nb_test_imgs)
+		self.learn_imgs, self.test_imgs = extract_and_seperate_img(list_img_density, 1, 3)
 
 
 if __name__ == '__main__':

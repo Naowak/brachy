@@ -102,7 +102,25 @@ class Img_Density :
 	def extract_sub_imgs(self) :
 		""" Extrait de self.img_material la sous image associé à chacune
 		des sources de self.sources. Enregistre le résultats dans self.sub_imgs"""
-		#rayon = min([source[0] for source in self.sources])
+
+
+		rayon = self.RAYON_SUB_IMG
+		
+		self.sub_imgs = list()
+		for source in self.sources :
+			s_ord = source[1]
+			s_abs = source[0]
+			sub_ord = self.img_material[s_ord - rayon: s_ord + rayon]
+			sub_img = [tmp[s_abs - rayon : s_abs + rayon] for tmp in sub_ord]
+			if len(sub_img) == 2*rayon and len(sub_img[0]) == 2*rayon :
+				sub_img = [[sub_img[i][j] if self.CIRCLE_SHAPE[i][j] == 1 else -1 for i in range(2*rayon)] for j in range(2*rayon)]
+				self.sub_imgs += [sub_img]
+
+
+	def extract_images(self) :
+		return self.sub_imgs
+
+	def extract_quart_images(self) :
 
 		def rotation(img, nb) :
 			""" Effectue nb rotation à 90 degrees sur l'images"""
@@ -115,18 +133,7 @@ class Img_Density :
 				img = rotate_90_degrees(img)
 			return img
 
-		def extract_quartil(img, rayon) :
-			flag = False
-			for line in img :
-				for elem in line :
-					if elem == 1 :
-						flag = True
-						break
-				if flag :
-					break
-
-						
-
+		def extract_quartil(img, rayon) :				
 			up_left = img[:rayon]
 			up_left = [line[:rayon] for line in up_left]
 			up_left = rotation(up_left, 2)
@@ -145,16 +152,11 @@ class Img_Density :
 			return [up_left, up_right, down_left, down_right]
 
 		rayon = self.RAYON_SUB_IMG
-		
-		self.sub_imgs = list()
-		for source in self.sources :
-			s_ord = source[1]
-			s_abs = source[0]
-			sub_ord = self.img_material[s_ord - rayon: s_ord + rayon]
-			sub_img = [tmp[s_abs - rayon : s_abs + rayon] for tmp in sub_ord]
-			if len(sub_img) == 2*rayon and len(sub_img[0]) == 2*rayon :
-				sub_img = [[sub_img[i][j] if self.CIRCLE_SHAPE[i][j] == 1 else -1 for i in range(2*rayon)] for j in range(2*rayon)]
-				self.sub_imgs += extract_quartil(sub_img, rayon)
+		quart_images = list()
+		for img in self.sub_imgs :
+			quart_images += extract_quartil(img, rayon)
+		return quart_images
+
 
 
 	#------------------------- Plot --------------------------
