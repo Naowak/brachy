@@ -7,6 +7,7 @@ import Decision_Tree as dt
 import Similarity as simy
 import random
 import time
+from ProgressBar import ProgressBar
 
 
 def show_img(img) :
@@ -87,14 +88,6 @@ class Zoomed_Tree() :
 					id_imgs = get_all_imgs_from_node(node)
 					return id_imgs
 
-			# def extract_similarity_for_node(self, node) :
-			# 	dict_sim = simy.Dict_Sim(node.nb_imgs)
-			# 	for i, identifiant_i in enumerate(node.id_imgs) :
-			# 		for j, identifiant_j in list(enumerate(node.id_imgs))[1:] :
-			# 			score_sim = self.dict_sim.get_similarity(identifiant_i, identifiant_j)
-			# 			dict_sim.set_similarity(i, j, score_sim)
-			# 	return dict_sim
-
 			node.id_imgs = extract_id_img_from_node(node)
 			node.decision_tree = dt.Decision_Tree(None, node.id_imgs, self.dict_sim, self.imgs, None)
 			node.decision_tree.create_tree()
@@ -123,6 +116,9 @@ class Zoomed_Tree() :
 
 			nb_imgs = len(self.imgs)
 			self.dict_sim = simy.Dict_Sim(nb_imgs)
+			avancement = 0
+			fin = (nb_imgs * (nb_imgs - 1)) / 2
+			progress_bar = ProgressBar(avancement, fin)
 			for i in range(nb_imgs) :
 				for j in range(i+1, nb_imgs) :
 					img1 = self.imgs[i]
@@ -130,9 +126,13 @@ class Zoomed_Tree() :
 					# score_sim, inter_sim = symmetric_similarity_between_two_imgs(img1, img2)
 					score_sim, inter_sim = simy.similarity_between_two_imgs(img1, img2)
 					self.dict_sim.set_similarity(i, j, score_sim)
+					avancement += 1
+					progress_bar.updateProgress(avancement, "")
 
 		node = self.root
+		print("Calcul des similarités...")
 		compute_similarity(self)
+		print("Calcul des Arbre Métriques...")
 		recursive_compute_decision_tree(self, node)
 
 	def add_img(self, img) :
