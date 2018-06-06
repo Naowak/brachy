@@ -7,6 +7,7 @@ import Decision_Tree as dt
 import Similarity as simy
 import random
 import time
+from ProgressBar import ProgressBar
 
 
 def show_img(img) :
@@ -23,7 +24,7 @@ class Zoomed_Tree() :
 			self.sons = list()
 			self.type = "root"
 			self.profondeur = -1
-			self.imgs = list()
+			self.id_imgs = list()
 			self.nb_imgs = 0
 			self.dict_sim = None
 			self.decision_tree = None
@@ -34,7 +35,7 @@ class Zoomed_Tree() :
 			self.type = "node"
 			self.representant = representant
 			self.profondeur = profondeur
-			self.imgs = list()
+			self.id_imgs = list()
 			self.nb_imgs = 0
 			self.dict_sim = None
 			self.decision_tree = None
@@ -43,31 +44,33 @@ class Zoomed_Tree() :
 			return str(self.representant)
 
 	class Leaf() :
-		def __init__(self, img) :
+		def __init__(self, img, identifiant) :
 			self.type = "leaf"
 			self.img = img
+			self.identifiant = identifiant
 			self.z_img = zi.Zoomed_Image(img)
 
 	def __init__(self, list_img = list()) :
 		self.root = Zoomed_Tree.Root()
-		self.imgs = list_img
+		self.imgs = list()
+		self.dict_sim = None
 
-		if len(self.imgs) != 0 :
+		if len(list_img) != 0 :
 			for img in list_img :
 				self.add_img(img)
 			self.compute_all_decision_tree()
 
 	def compute_all_decision_tree(self) :
 
-		def create_decision_tree_on_node(node) :
+		def create_decision_tree_on_node(self, node) :
 
-			def extract_img_from_node(node) :
+			def extract_id_img_from_node(node) :
 
 				def get_all_imgs_from_node(node) :
 
 					def recursive_research(node) :
 						if node.type == "leaf" :
-							return [node.img]
+							return [node.identifiant]
 						res = []
 						for son in node.sons :
 							res += recursive_research(son)
@@ -79,40 +82,57 @@ class Zoomed_Tree() :
 					#cas où on atteint les feuilles
 					#on a trouvé l'image
 					leaf = node.sons[0]
-					return [leaf.img]
+					return [leaf.identifiant]
 				else :
 					#pas d'image égale, on obtient le noeud père le plus bas
-					imgs = get_all_imgs_from_node(node)
-					return imgs
+					id_imgs = get_all_imgs_from_node(node)
+					return id_imgs
 
-			def compute_similarity(node) :
-				for i in range(node.nb_imgs) :
-					for j in range(i+1, node.nb_imgs) :
-						img1 = node.imgs[i]
-						img2 = node.imgs[j]
-						score_sim, inter_sim = simy.symmetric_similarity_between_two_imgs(img1, img2)
-						# score_sim, inter_sim = simy.similarity_between_two_imgs(img1, img2)
-						node.dict_sim.set_similarity(i, j, score_sim)
-
-			node.imgs = extract_img_from_node(node)
-			node.nb_imgs = len(node.imgs)
-			node.dict_sim = simy.Dict_Sim(len(node.imgs))
-			compute_similarity(node)
-
-			indices = [i for i in range(node.nb_imgs)]
-			node.decision_tree = dt.Decision_Tree(None, indices, node.dict_sim, node.imgs, None)
+			node.id_imgs = extract_id_img_from_node(node)
+			node.decision_tree = dt.Decision_Tree(None, node.id_imgs, self.dict_sim, self.imgs, None)
 			node.decision_tree.create_tree()
 
-		def recursive_compute_decision_tree(node) :
+		def recursive_compute_decision_tree(self, node) :
 			if node.sons[0].type == "leaf" :
-				create_decision_tree_on_node(node)
+				create_decision_tree_on_node(self, node)
 			else :
-				create_decision_tree_on_node(node)
+				create_decision_tree_on_node(self, node)
 				for son in node.sons :
-					recursive_compute_decision_tree(son)
+					recursive_compute_decision_tree(self, son)
+
+		def compute_similarity(self) :
+
+			def symmetric_similarity_between_two_imgs(img1, img2) :
+
+				def symmetric_img(img) :
+					len_first = len(img)
+					len_second = len(img[0])
+					return [[img[j][i] for j in range(len_second)] for i in range(len_first)]
+
+				symmetric_img2 = symmetric_img(img2)
+				score_first = simy.similarity_between_two_imgs(img1, img2)
+				score_second = simy.similarity_between_two_imgs(img1, symmetric_img2)
+				return max(score_first, score_second)
+
+			nb_imgs = len(self.imgs)
+			self.dict_sim = simy.Dict_Sim(nb_imgs)
+			avancement = 0
+			fin = (nb_imgs * (nb_imgs - 1)) / 2
+			progress_bar = ProgressBar(avancement, fin)
+			for i in range(nb_imgs) :
+				for j in range(i+1, nb_imgs) :
+					img1 = self.imgs[i]
+					img2 = self.imgs[j]
+					score_sim, inter_sim = simy.similarity_between_two_imgs(img1, img2)
+					self.dict_sim.set_similarity(i, j, score_sim)
+					avancement += 1
+					progress_bar.updateProgress(avancement, "")
 
 		node = self.root
-		recursive_compute_decision_tree(node)
+		print("Calcul des similarités...")
+		compute_similarity(self)
+		print("Calcul des Arbre Métriques...")
+		recursive_compute_decision_tree(self, node)
 
 	def add_img(self, img) :
 
@@ -191,6 +211,7 @@ class Zoomed_Tree() :
 						add_leaf_to_node(node, leaf)
 						return node
 					profondeur += 1
+
 				#On trouve un noeud avec au moins une feuille
 				zoom = get_zoom_child(node)
 				#on prends le zoom accordé au fils de node. 
@@ -225,7 +246,9 @@ class Zoomed_Tree() :
 			profondeur = -1
 			node = recursive_find_and_add(node, leaf, profondeur)
 
-		leaf = Zoomed_Tree.Leaf(img)
+		self.imgs += [img]
+		identifiant = len(self.imgs) - 1
+		leaf = Zoomed_Tree.Leaf(img, identifiant)
 		find_node_and_add_leaf(self, leaf)
 
 	def find_closest_img(self, img, plot=False) :
@@ -316,7 +339,7 @@ class Zoomed_Tree() :
 			score_total += score
 		temps_moyen = float(total_temps) / nb_imgs
 		score_moyen = float(score_total) / nb_imgs
-		nb_learn_imgs = len(self.root.imgs)
+		nb_learn_imgs = len(self.imgs)
 		nb_test_imgs = len(imgs)
 		print("\nApprentissage sur " + str(nb_learn_imgs) + " images.")
 		print("Test sur " + str(nb_test_imgs) + " images.")
