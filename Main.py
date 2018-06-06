@@ -89,12 +89,12 @@ class Main :
 			indice_test = indice_test[:nb_slice_test]
 
 			quart_img_learn = extract_img_learn(list_img_density, indice_learn)[:100]
-			img_test = extract_img_test(list_img_density, indice_test)[:2000]
+			img_test = extract_img_test(list_img_density, indice_test)[:100]
 			return quart_img_learn, img_test
 
 		print("Chargement des images à partir de " + self.path)
 		list_img_density = get_list_img_density(self)
-		self.learn_imgs, self.test_imgs = extract_and_seperate_img(list_img_density, 1, 3)
+		self.learn_imgs, self.test_imgs = extract_and_seperate_img(list_img_density, 1, 1)
 
 
 if __name__ == '__main__':

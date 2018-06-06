@@ -339,6 +339,18 @@ class Zoomed_Tree() :
 			prediction = imd.recompose_into_img(quart_pred)
 			return prediction, score
 
+		def plot_result(img, prediction, difference) :
+			fig = plt.figure()
+			fig.add_subplot(3, 1, 1)
+			plt.imshow(img)
+			
+			fig.add_subplot(3, 1, 2)
+			plt.imshow(prediction)
+
+			fig.add_subplot(3, 1, 3)
+			plt.imshow(difference)
+			plt.show()
+
 		total_temps = 0
 		score_total = 0
 		nb_imgs = len(imgs)
@@ -351,6 +363,9 @@ class Zoomed_Tree() :
 			print("Score : " + str(score))
 			total_temps += t_predict
 			score_total += score
+			if plot :
+				difference = simy.calcul_matrix_similarity(img, prediction)
+				plot_result(img, prediction, difference)
 		temps_moyen = float(total_temps) / nb_imgs
 		score_moyen = float(score_total) / nb_imgs
 		score_pourcentage_moyen = (score_moyen / (2*math.pi)) * 100
