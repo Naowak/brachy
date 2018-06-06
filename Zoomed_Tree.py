@@ -27,7 +27,6 @@ class Zoomed_Tree() :
 			self.type = "root"
 			self.profondeur = -1
 			self.id_imgs = list()
-			self.nb_imgs = 0
 			self.dict_sim = None
 			self.decision_tree = None
 
@@ -38,7 +37,6 @@ class Zoomed_Tree() :
 			self.representant = representant
 			self.profondeur = profondeur
 			self.id_imgs = list()
-			self.nb_imgs = 0
 			self.dict_sim = None
 			self.decision_tree = None
 
@@ -148,12 +146,14 @@ class Zoomed_Tree() :
 				return new_node
 
 			def add_leaf_to_node(node, leaf) :
+				"""Return False s'il y avait déjà l'image dans la database"""
 				for existing_leaf in node.sons :
 					if are_imgs_symmetric_equal(existing_leaf.img, leaf.img) :
 						#image déjà existante
 						print("Image déjà présente dans la base de donnée.")
-						return
+						return False
 				node.sons.append(leaf)
+				return True
 
 			def are_imgs_symmetric_equal(img1, img2) :
 
@@ -183,11 +183,13 @@ class Zoomed_Tree() :
 				zoom = ZOOM_ROOT / pow(2, node.profondeur + 1)
 				return zoom
 
-			def recursive_find_and_add(node, leaf, profondeur) :
+			def recursive_find_and_add(self, node, leaf, profondeur) :
 				if len(node.sons) == 0 :
 					#cas racine initiale
 					node = add_node_to_node(node, leaf, profondeur+1)
-					add_leaf_to_node(node, leaf)
+					is_new_image = add_leaf_to_node(node, leaf)
+					if is_new_image :
+						self.imgs += [leaf.img]
 					return node
 
 				while node.sons[0].type != "leaf" :
@@ -210,7 +212,9 @@ class Zoomed_Tree() :
 						#Aucun noeud ne lui correspond, on créer le sien
 						#on peut le renvoyer car on est sur que c'est ce noeud
 						node = add_node_to_node(node, leaf, profondeur+1)
-						add_leaf_to_node(node, leaf)
+						is_new_image = add_leaf_to_node(node, leaf)
+						if is_new_image :
+							self.imgs += [leaf.img]
 						return node
 					profondeur += 1
 
@@ -231,7 +235,9 @@ class Zoomed_Tree() :
 						## Situation impossible en théorie : notre dernier zoom = l'image
 						#alors on peut créer un noeud en plus
 						new_node_right = add_node_to_node(node, leaf, profondeur+1)
-						add_leaf_to_node(new_node_right, leaf)
+						is_new_image = add_leaf_to_node(new_node_right, leaf)
+						if is_new_image :
+							self.imgs += [leaf.img]
 						return new_node_right
 
 					#Les images sont égales, donc un niveau de plus
@@ -241,15 +247,16 @@ class Zoomed_Tree() :
 
 				if zoom <= 1 :
 					#il n'y a pas plus bas que un, donc on amasse les feuilles
-					add_leaf_to_node(node, leaf)
+					is_new_image = add_leaf_to_node(node, leaf)
+					if is_new_image :
+						self.imgs += [leaf.img]
 					return node
 
 			node = self.root
 			profondeur = -1
-			node = recursive_find_and_add(node, leaf, profondeur)
+			node = recursive_find_and_add(self, node, leaf, profondeur)
 
-		self.imgs += [img]
-		identifiant = len(self.imgs) - 1
+		identifiant = len(self.imgs)
 		leaf = Zoomed_Tree.Leaf(img, identifiant)
 		find_node_and_add_leaf(self, leaf)
 

@@ -42,23 +42,6 @@ class Main :
 					list_img_density += [imd.Img_Density(density_file, config_file)]
 			return list_img_density
 
-		def remove_duplicates(imgs) :
-			print("Suppression des duplicatas...")
-			duplicates = []
-			nb = len(imgs)
-			avancement = 0
-			fin = nb*(nb-1)/2
-			progress_bar = ProgressBar(avancement, fin)
-			for i in range(nb) :
-				for j in range(i + 1, nb) :
-					if imgs[i] == imgs[j] :
-						duplicates += [j]
-					avancement += 1
-				progress_bar.updateProgress(avancement, "")
-
-			imgs_without_duplicates = [imgs[i] for i in range(nb) if i not in duplicates]
-			return imgs_without_duplicates
-
 		def extract_and_seperate_img(list_img_density, nb_slice_learn, nb_slice_test) :
 
 			def get_indice_slice_learn(size_list_img_density, nb_slice_learn) :
