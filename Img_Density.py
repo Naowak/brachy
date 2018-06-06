@@ -121,42 +121,54 @@ class Img_Density :
 		return self.sub_imgs
 
 	def extract_quart_images(self) :
-
-		def rotation(img, nb) :
-			""" Effectue nb rotation à 90 degrees sur l'images"""
-
-			def rotate_90_degrees(img) :
-				tmp = list(zip(*reversed(img)))
-				return [list(line) for line in tmp]
-
-			for _ in range(nb) :
-				img = rotate_90_degrees(img)
-			return img
-
-		def extract_quartil(img, rayon) :				
-			up_left = img[:rayon]
-			up_left = [line[:rayon] for line in up_left]
-			up_left = rotation(up_left, 2)
-
-			up_right = img[:rayon]
-			up_right = [line[rayon:] for line in up_right]
-			up_right = rotation(up_right, 1)
-
-			down_left = img[rayon:]
-			down_left = [line[:rayon] for line in down_left]
-			down_left = rotation(down_left, 3)
-
-			down_right = img[rayon:]
-			down_right = [line[rayon:] for line in down_right]
-
-			return [up_left, up_right, down_left, down_right]
-
 		rayon = self.RAYON_SUB_IMG
 		quart_images = list()
 		for img in self.sub_imgs :
 			quart_images += extract_quartil(img, rayon)
 		return quart_images
 
+def rotation(img, nb) :
+	""" Effectue nb rotation à 90 degrees sur l'images"""
+
+	def rotate_90_degrees(img) :
+		tmp = list(zip(*reversed(img)))
+		return [list(line) for line in tmp]
+
+	for _ in range(nb) :
+		img = rotate_90_degrees(img)
+	return img
+
+def extract_quartil(img, rayon = Img_Density.RAYON_SUB_IMG) :				
+	up_left = img[:rayon]
+	up_left = [line[:rayon] for line in up_left]
+	up_left = rotation(up_left, 2)
+
+	up_right = img[:rayon]
+	up_right = [line[rayon:] for line in up_right]
+	up_right = rotation(up_right, 1)
+
+	down_left = img[rayon:]
+	down_left = [line[:rayon] for line in down_left]
+	down_left = rotation(down_left, 3)
+
+	down_right = img[rayon:]
+	down_right = [line[rayon:] for line in down_right]
+
+	return [up_left, up_right, down_left, down_right]
+
+def recompose_into_img(quartils, rayon = Img_Density.RAYON_SUB_IMG) :
+	# FAUDRAIT AUSSI PRENDRE EN COMPTE LES INTERVALLES
+	[up_left, up_right, down_left, down_right] = quartils
+	up_left = rotation(up_left, 2)
+	up_right = rotation(up_right, 3)
+	down_left = rotation(down_left, 1)
+
+	img = []
+	for i in range(len(up_left)) :
+		img += [up_left[i] + up_right[i]]
+	for i in range(len(down_left)) :
+		img += [down_left[i] + down_right[i]]
+	return img
 
 
 	#------------------------- Plot --------------------------

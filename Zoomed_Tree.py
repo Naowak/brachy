@@ -4,9 +4,11 @@
 import zoomed_image as zi
 import matplotlib.pyplot as plt
 import Decision_Tree as dt
+import Img_Density as imd
 import Similarity as simy
 import random
 import time
+import math
 from ProgressBar import ProgressBar
 
 
@@ -325,12 +327,24 @@ class Zoomed_Tree() :
 		return prediction, score
 
 	def predict_all_imgs(self, imgs, plot=False) :
+
+		def predict_one_img(self, img) :
+			quart_imgs = imd.extract_quartil(img)
+			quart_pred = []
+			score = 0
+			for q_img in quart_imgs :
+				q_pred, q_score = self.find_closest_img(q_img)
+				score += q_score
+				quart_pred += [q_pred]
+			prediction = imd.recompose_into_img(quart_pred)
+			return prediction, score
+
 		total_temps = 0
 		score_total = 0
 		nb_imgs = len(imgs)
 		for i, img in enumerate(imgs) :
 			t = time.time()
-			prediction, score = self.find_closest_img(img, plot)
+			prediction, score = predict_one_img(self, img)
 			t_predict = time.time() - t
 			print("Prédiction " + str(i))
 			print("Temps : " + str(t_predict) + " secondes.")
@@ -339,12 +353,15 @@ class Zoomed_Tree() :
 			score_total += score
 		temps_moyen = float(total_temps) / nb_imgs
 		score_moyen = float(score_total) / nb_imgs
+		score_pourcentage_moyen = (score_moyen / (2*math.pi)) * 100
+		score_pourcentage_moyen -= score_pourcentage_moyen%0.01
 		nb_learn_imgs = len(self.imgs)
 		nb_test_imgs = len(imgs)
 		print("\nApprentissage sur " + str(nb_learn_imgs) + " images.")
 		print("Test sur " + str(nb_test_imgs) + " images.")
 		print("Temps moyen : " + str(temps_moyen))
 		print("Score moyen : " + str(score_moyen))
+		print("Pourcentage_moyen : " + str(score_pourcentage_moyen) + "%")
 
 	def __str__(self) :
 

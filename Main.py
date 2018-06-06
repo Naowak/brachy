@@ -88,8 +88,8 @@ class Main :
 			indice_test = [i for i in list(range(nb_slice)) if i not in indice_learn]
 			indice_test = indice_test[:nb_slice_test]
 
-			quart_img_learn = extract_img_learn(list_img_density, indice_learn)
-			img_test = extract_img_test(list_img_density, indice_test)
+			quart_img_learn = extract_img_learn(list_img_density, indice_learn)[:100]
+			img_test = extract_img_test(list_img_density, indice_test)[:2000]
 			return quart_img_learn, img_test
 
 		print("Chargement des images à partir de " + self.path)
