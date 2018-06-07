@@ -54,7 +54,7 @@ class Dict_Sim :
 		return str(self.tab)
 
 def symmetric_similarity_between_two_imgs(img1, img2) :
-
+	""" Retour : tuple : (max_score, intervale) """
 	def symmetric_img(img) :
 		len_first = len(img)
 		len_second = len(img[0])
@@ -157,6 +157,7 @@ def max_score_similarity() :
 	return m.pi / 2
 
 def get_disque_segment(img, intervale) :
+
 	def projection(point, rayon_max) :
 		longueur = m.sqrt(pow(point[0], 2) + pow(point[1], 2))
 		rapport = float(rayon_max) / longueur
@@ -186,31 +187,114 @@ def get_disque_segment(img, intervale) :
 					res[i][j] = -1
 	return res
 
+def get_full_disque(q_intervals) :
+
+	def projection(point, p_center, rayon = imd.Img_Density.RAYON_SUB_IMG) :
+		relative_point = (point[0] - p_center[0], point[1] - p_center[1])
+		longueur = m.sqrt(pow(relative_point[0], 2) + pow(relative_point[1], 2))
+		rapport = float(rayon) / longueur
+		point_proj = [relative_point[0] * rapport + p_center[0], relative_point[1] * rapport + p_center[0]]
+		return point_proj
+
+	def is_in_circle(point, center,  rayon = imd.Img_Density.RAYON_SUB_IMG) :
+		return m.sqrt(pow(point[0] - center[0], 2) + pow(point[1] - center[1], 2)) <= rayon
+
+	def get_value_on_circle(point_proj, p_center, rayon = imd.Img_Density.RAYON_SUB_IMG) :
+		point_relative = (point_proj[0] - p_center[0], point_proj[1] - p_center[1])
+		point_norm = [point_relative[0] / rayon, point_relative[1] / rayon]
+
+		value = m.acos(point_norm[0])
+		if point_norm[1] < 0 :
+			value = 2*m.pi - value
+		return value
+
+	def recompose_intervale_from_q_intervals(q_intervals) :
+
+		def inter_in_2pi(intervale) :
+			limite = interval([0, m.pi*2])
+			res = interval()
+			for elem in intervale :
+				inter = interval(elem)
+				tmp = inter & limite
+				if tmp == inter :
+					#interval ne dépasse pas
+					res = res | inter
+				else :
+					#interval qui dépasse
+					res = res | tmp
+					#on tente au dessus de 2 pi
+					tmp_inter = inter - 2*m.pi
+					tmp = tmp_inter & limite
+					res = res | tmp
+					#on tente en dessous de 2 pi
+					tmp_inter = inter + 2*m.pi
+					tmp = tmp_inter & limite
+					res = res | tmp
+			return res
+
+		[up_left, up_right, down_left, down_right] = q_intervals
+		up_left += m.pi
+		up_right += m.pi / 2
+		down_left += 1.5 * m.pi
+		fusion_inter = up_left | up_right | down_left | down_right
+		result_inter = inter_in_2pi(fusion_inter)
+		return result_inter
+
+	rayon = imd.Img_Density.RAYON_SUB_IMG
+	p_center = (rayon - 0.5, rayon - 0.5)
+	img_result = [[1 for i in range(2*rayon)] for j in range(2*rayon)]
+	intervale = recompose_intervale_from_q_intervals(q_intervals)
+
+	for i in range(2*rayon) :
+		for j in range(2*rayon) :
+			point = (i, j)
+			if is_in_circle(point, p_center) :
+				point_proj = projection(point, p_center)
+				value_on_circle = get_value_on_circle(point_proj, p_center)
+				if value_on_circle in intervale :
+					img_result[i][j] = 0
+			else :
+				pass
+				img_result[i][j] = -1
+
+	return img_result
+
+
 
 
 if __name__ == "__main__" :
 	density_file = "../../../working_dir/slice_090/densite_lu/densite_hu.don"
 	config_file = "../../../working_dir/slice_090/densite_lu/config_KIDS.don"
 
-	img = imd.Img_Density(density_file, config_file)
+	inter1 = interval([0.3, 1.2])
+	inter2 = interval([1.4, 1.6])
+	inter3 = interval([0.1, 0.2], [0.5, 0.6])
+	inter4 = interval()
+	q_intervals = (inter1, inter2, inter3, inter4)
 
-	quartil_1 = img.sub_imgs[49]
-	quartil_2 = img.sub_imgs[233]
-	score, inter = similarity_between_two_imgs(quartil_1, quartil_2, False)
-	print(inter)
-	mat = calcul_matrix_similarity(quartil_1, quartil_2)
-	res = get_disque_segment(mat, inter)
-
-	figure = plt.figure()
-	figure.add_subplot(2, 2, 1)
-	plt.imshow(quartil_1)
-	figure.add_subplot(2, 2, 2)
-	plt.imshow(quartil_2)
-	figure.add_subplot(2, 2, 3)
-	plt.imshow(mat)
-	figure.add_subplot(2, 2, 4)
-	plt.imshow(res)
+	img = get_full_disque(q_intervals)
+	plt.imshow(img)
 	plt.show()
+
+	# img = imd.Img_Density(density_file, config_file)
+
+	# quartil_1 = img.sub_imgs[49]
+	# quartil_2 = img.sub_imgs[233]
+	# score, inter = similarity_between_two_imgs(quartil_1, quartil_2, False)
+	# print(inter)
+	# mat = calcul_matrix_similarity(quartil_1, quartil_2)
+	# res = get_disque_segment(mat, inter)
+
+	# figure = plt.figure()
+	# figure.add_subplot(2, 2, 1)
+	# plt.imshow(quartil_1)
+	# figure.add_subplot(2, 2, 2)
+	# plt.imshow(quartil_2)
+	# figure.add_subplot(2, 2, 3)
+	# plt.imshow(mat)
+	# figure.add_subplot(2, 2, 4)
+	# plt.imshow(res)
+	# plt.show()
 
 
 

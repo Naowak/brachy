@@ -56,6 +56,7 @@ class Zoomed_Tree() :
 		self.dict_sim = None
 
 		if len(list_img) != 0 :
+			print("Ajout des images d'apprentissage dans l'arbre zoomé.")
 			for img in list_img :
 				self.add_img(img)
 			self.compute_all_decision_tree()
@@ -129,7 +130,7 @@ class Zoomed_Tree() :
 					progress_bar.updateProgress(avancement, "")
 
 		node = self.root
-		print("Calcul des similarités...")
+		print("Calcul des similarités entre " + str(len(self.imgs)) +" images...")
 		compute_similarity(self)
 		print("Calcul des Arbre Métriques...")
 		recursive_compute_decision_tree(self, node)
@@ -150,7 +151,6 @@ class Zoomed_Tree() :
 				for existing_leaf in node.sons :
 					if are_imgs_symmetric_equal(existing_leaf.img, leaf.img) :
 						#image déjà existante
-						print("Image déjà présente dans la base de donnée.")
 						return False
 				node.sons.append(leaf)
 				return True
@@ -327,24 +327,27 @@ class Zoomed_Tree() :
 
 		z_img = zi.Zoomed_Image(img)
 		node = find_closest_node(self, z_img)
-		prediction, score, dt_node, nb_visit = node.decision_tree.predict(img)
+		prediction, score, dt_node, nb_visit, intervale = node.decision_tree.predict(img)
 		if plot :
 			plot_result(img, prediction)
 
-		return prediction, score
+		return prediction, score, intervale
 
 	def predict_all_imgs(self, imgs, plot=False) :
 
 		def predict_one_img(self, img) :
 			quart_imgs = imd.extract_quartil(img)
 			quart_pred = []
+			quart_interval = []
 			score = 0
 			for q_img in quart_imgs :
-				q_pred, q_score = self.find_closest_img(q_img)
+				q_pred, q_score, q_intervale = self.find_closest_img(q_img)
 				score += q_score
 				quart_pred += [q_pred]
+				quart_interval += [q_intervale]
 			prediction = imd.recompose_into_img(quart_pred)
-			return prediction, score
+			result_img = simy.get_full_disque(quart_interval)
+			return prediction, score, result_img
 
 		def plot_result(img, prediction, difference) :
 			fig = plt.figure()
@@ -363,7 +366,7 @@ class Zoomed_Tree() :
 		nb_imgs = len(imgs)
 		for i, img in enumerate(imgs) :
 			t = time.time()
-			prediction, score = predict_one_img(self, img)
+			prediction, score, difference = predict_one_img(self, img)
 			t_predict = time.time() - t
 			print("Prédiction " + str(i))
 			print("Temps : " + str(t_predict) + " secondes.")
@@ -371,7 +374,6 @@ class Zoomed_Tree() :
 			total_temps += t_predict
 			score_total += score
 			if plot :
-				difference = simy.calcul_matrix_similarity(img, prediction)
 				plot_result(img, prediction, difference)
 		temps_moyen = float(total_temps) / nb_imgs
 		score_moyen = float(score_total) / nb_imgs

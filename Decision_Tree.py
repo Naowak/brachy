@@ -35,18 +35,20 @@ class Decision_Tree() :
 			dict_sim = {}
 			for ind_img in ind_imgs :
 				nb_visit += 1
-				dict_sim[ind_img] = simy.symmetric_similarity_between_two_imgs(img_to_predict, self.imgs[ind_img])[0]
+				dict_sim[ind_img] = simy.symmetric_similarity_between_two_imgs(img_to_predict, self.imgs[ind_img])
 			return dict_sim, nb_visit
 
 		def find_closest_img_in_cluster(img_to_predict, list_ind_imgs, nb_visit) :
 			dict_sim, nb_visit = calcul_similarity_with_all_imgs(img_to_predict, list_ind_imgs, nb_visit)
 			closest_img = None
 			score_max = -10000
-			for key, score_sim in dict_sim.items() :
+			best_intervale = None
+			for key, (score_sim, intervale) in dict_sim.items() :
 				if score_sim > score_max :
 					closest_img = key
 					score_max = score_sim
-			return closest_img, score_max, nb_visit
+					best_intervale = intervale
+			return closest_img, score_max, nb_visit, best_intervale
 
 		def symetric_img(img) :
 			len_first = len(img)
@@ -60,25 +62,28 @@ class Decision_Tree() :
 
 		if len(self.list_ind_imgs) < self.k :
 			#on est sur qu'il n'y a pas de sous cluster
-			closest, score, nb_visit = find_closest_img_in_cluster(img_to_predict, self.list_ind_imgs, nb_visit)
+			closest, score, nb_visit, best_intervale = find_closest_img_in_cluster(img_to_predict, self.list_ind_imgs, nb_visit)
 			prediction = img_to_return(img_to_predict, self.imgs[closest], score)
-			return prediction, score, self, nb_visit
+			return prediction, score, self, nb_visit, best_intervale
 
 		node = self
 		score_actual_representant = -10000
+		intervale_representant = None
 		#Tant que l'on est pas dans un noeud trop petit
 		while len(node.list_ind_imgs) >= self.k :
 			#On cherche le centre le plus proche
 			centers = [son.representant for son in node.sons]
-			max_center, score_sim, nb_visit = find_closest_img_in_cluster(img_to_predict, centers, nb_visit)
+			max_center, score_sim, nb_visit, best_intervale = find_closest_img_in_cluster(img_to_predict, centers, nb_visit)
 
 			#Si le centre le plus proche n'est pas plus proche que le représentant actuel, 
 			#on retourne le représentant actuel
 			if score_actual_representant > score_sim :
 				prediction = img_to_return(img_to_predict, self.imgs[node.representant], score_actual_representant)
-				return prediction, score_actual_representant, node, nb_visit
-			score_actual_representant = score_sim
+				return prediction, score_actual_representant, node, nb_visit, intervale_representant
 
+			#changement de noeud, on descend dans le fils
+			score_actual_representant = score_sim
+			intervale_representant = best_intervale
 			#On attribut à node le bon fils
 			for son in node.sons :
 				if son.representant == max_center :
@@ -89,11 +94,11 @@ class Decision_Tree() :
 			#même image, donc on la retourne
 			if score_actual_representant == self.max_similarity :
 				prediction = img_to_return(img_to_predict, self.imgs[node.representant], score_actual_representant)
-				return prediction, score_actual_representant, node, nb_visit
+				return prediction, score_actual_representant, node, nb_visit, best_intervale
 
-		indice_prediction, score, nb_visit = find_closest_img_in_cluster(img_to_predict, node.list_ind_imgs, nb_visit)
+		indice_prediction, score, nb_visit, best_intervale = find_closest_img_in_cluster(img_to_predict, node.list_ind_imgs, nb_visit)
 		prediction = img_to_return(img_to_predict, self.imgs[indice_prediction], score)
-		return prediction, score, node, nb_visit
+		return prediction, score, node, nb_visit, best_intervale
 
 	def predict_closest_img(self, ind_img) :
 

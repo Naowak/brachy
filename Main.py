@@ -9,8 +9,8 @@ import Zoomed_Tree as zt
 import Quartil as qt
 import matplotlib.pyplot as plt
 
-NB_LEARN_IMG = 3000
-NB_TEST_IMG = 2000
+NB_LEARN_SLICE = 1
+NB_TEST_SLICE = 1
 
 class Main :
 	def __init__(self, path, method) :
@@ -21,13 +21,15 @@ class Main :
 		self.nb_learn_imgs = 0
 		self.nb_test_imgs = 0
 
-		self.extract_img_density(NB_LEARN_IMG, NB_TEST_IMG)
+		self.extract_img_density(NB_LEARN_SLICE, NB_TEST_SLICE)
+		print(str(len(self.learn_imgs)) + " quarts images d'apprentissage chargées.")
+		print(str(len(self.test_imgs)) + " images de tests chargées.")
 
 		if method == "zt_dt" :
 			self.zoomed_tree = zt.Zoomed_Tree(self.learn_imgs)
-			self.zoomed_tree.predict_all_imgs(self.test_imgs, plot=False)
+			self.zoomed_tree.predict_all_imgs(self.test_imgs, plot=True)
 
-	def extract_img_density(self, nb_learn_imgs, nb_test_imgs) :
+	def extract_img_density(self, nb_learn_slice, nb_test_slice) :
 
 		def get_list_img_density(self) :
 			directories = os.listdir(self.path)
@@ -57,7 +59,7 @@ class Main :
 
 			def extract_img_test(list_img_density, indice_test) :
 				images = list()
-				for i in indice_learn :
+				for i in indice_test :
 					images += list_img_density[i].extract_images()
 				return images
 
@@ -77,7 +79,7 @@ class Main :
 
 		print("Chargement des images à partir de " + self.path)
 		list_img_density = get_list_img_density(self)
-		self.learn_imgs, self.test_imgs = extract_and_seperate_img(list_img_density, 1, 1)
+		self.learn_imgs, self.test_imgs = extract_and_seperate_img(list_img_density, nb_learn_slice, nb_test_slice)
 
 
 if __name__ == '__main__':
