@@ -157,7 +157,6 @@ def extract_quartil(img, rayon = Img_Density.RAYON_SUB_IMG) :
 	return [up_left, up_right, down_left, down_right]
 
 def recompose_into_img(quartils, rayon = Img_Density.RAYON_SUB_IMG) :
-	# FAUDRAIT AUSSI PRENDRE EN COMPTE LES INTERVALLES
 	[up_left, up_right, down_left, down_right] = quartils
 	up_left = rotation(up_left, 2)
 	up_right = rotation(up_right, 3)

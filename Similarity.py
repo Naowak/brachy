@@ -13,14 +13,42 @@ class Dict_Sim :
 	def __init__(self, size = None) :
 		self.tab = None
 		if size != None :
-			self.tab = [[None for i in range(size)] for j in range(size)]
+			self.create_dict(size)
 
-	def set_similarity(self, ind_img1, ind_img2, sim) :
-		self.tab[ind_img1][ind_img2] = sim
-		self.tab[ind_img2][ind_img1] = sim
+	def create_dict(self, size) :
+		self.tab = list()
+		for i in range(size) :
+			self.tab += [list()]
+			for j in range(i+1, size) :
+				self.tab[i] += [None]
+
+	def set_similarity(self, ind_img1, ind_img2, score) :
+		ind_img2 += 1
+		ind_img1 += 1
+		if ind_img1 < ind_img2 :
+			ind_img2 -= ind_img1
+			ind_img1 -= 1
+			ind_img2 -= 1
+			self.tab[ind_img1][ind_img2] = score
+		elif ind_img1 > ind_img2 :
+			ind_img1 -= ind_img2
+			ind_img1 -= 1
+			ind_img2 -= 1
+			self.tab[ind_img2][ind_img1] = score
 
 	def get_similarity(self, ind_img1, ind_img2) :
-		return self.tab[ind_img1][ind_img2]
+		ind_img2 += 1
+		ind_img1 += 1
+		if ind_img1 < ind_img2 :
+			ind_img2 -= ind_img1
+			ind_img1 -= 1
+			ind_img2 -= 1
+			return self.tab[ind_img1][ind_img2]
+		elif ind_img1 > ind_img2 :
+			ind_img1 -= ind_img2
+			ind_img1 -= 1
+			ind_img2 -= 1
+			return self.tab[ind_img2][ind_img1]
 
 	def save_similarity(self, directory) :
 			file_name = directory + "similarity.don"
@@ -173,18 +201,17 @@ def get_disque_segment(img, intervale) :
 	for i in range(size) :
 		for j in range(size) :
 			# A AMELIORER, ON PEUT PARCOURIR QUE LES PIXELS DU DISQUE
-			if i != 0 or j != 0 :
-				if is_in_circle(i, j, size) :
-					p = [i, j]
-					proj = projection(p, size)
-					proj_norm = float(proj[0])/size
-					if proj_norm > 1 :
-						proj_norm = 1.0
-					value_on_circle = m.acos(proj_norm)
-					if value_on_circle in intervale :
-						res[i][j] = 0
-				else :
-					res[i][j] = -1
+			if is_in_circle(i, j, size) :
+				p = [i, j]
+				proj = projection(p, size)
+				proj_norm = float(proj[0])/size
+				if proj_norm > 1 :
+					proj_norm = 1.0
+				value_on_circle = m.acos(proj_norm)
+				if value_on_circle in intervale :
+					res[i][j] = 0
+			else :
+				res[i][j] = -1
 	return res
 
 def get_full_disque(q_intervals) :
@@ -210,7 +237,7 @@ def get_full_disque(q_intervals) :
 
 	def recompose_intervale_from_q_intervals(q_intervals) :
 
-		def inter_in_2pi(intervale) :
+		def modulo_2pi(intervale) :
 			limite = interval([0, m.pi*2])
 			res = interval()
 			for elem in intervale :
@@ -237,7 +264,7 @@ def get_full_disque(q_intervals) :
 		up_right += m.pi / 2
 		down_left += 1.5 * m.pi
 		fusion_inter = up_left | up_right | down_left | down_right
-		result_inter = inter_in_2pi(fusion_inter)
+		result_inter = modulo_2pi(fusion_inter)
 		return result_inter
 
 	rayon = imd.Img_Density.RAYON_SUB_IMG
