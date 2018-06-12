@@ -7,7 +7,6 @@ from matplotlib import pyplot as plt
 from interval import interval
 import math as m
 
-
 class Dict_Sim :
 
 	def __init__(self, size = None) :

@@ -366,9 +366,12 @@ class Zoomed_Tree() :
 		total_temps = 0
 		score_total = 0
 		nb_imgs = len(imgs)
-		for i, img in enumerate(imgs) :
+		tab = [[0 for i in range(200)] for j in range(200)]
+		for i, (img, c_abs, c_ord) in enumerate(imgs) :
 			t = time.time()
 			prediction, score, difference = predict_one_img(self, img)
+			pourcentage = (score / (2*math.pi))
+			tab[c_abs][c_ord] = int(pourcentage*255)
 			t_predict = time.time() - t
 			print("Prédiction " + str(i))
 			print("Temps : " + str(t_predict) + " secondes.")
@@ -388,6 +391,9 @@ class Zoomed_Tree() :
 		print("Temps moyen : " + str(temps_moyen))
 		print("Score moyen : " + str(score_moyen))
 		print("Pourcentage_moyen : " + str(score_pourcentage_moyen) + "%")
+
+		plt.imshow(tab)
+		plt.show()
 
 	def __str__(self) :
 

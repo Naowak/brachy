@@ -72,8 +72,6 @@ class Main :
 			self.model.predict_all_imgs(self.test_imgs)
 
 
-
-
 	def fsave_model(self, dir_save) :
 		print("Sauvegarde du modèle dans " + dir_save + "...")
 
@@ -182,7 +180,7 @@ class Main :
 			indice_test = indice_test[:nb_slice_test]
 
 			quart_img_learn = extract_img_learn(list_img_density, indice_learn)[:50]
-			img_test = extract_img_test(list_img_density, indice_test)[:50]
+			img_test = extract_img_test(list_img_density, indice_test)
 			return quart_img_learn, img_test
 
 		print("Chargement des images à partir de " + self.path)

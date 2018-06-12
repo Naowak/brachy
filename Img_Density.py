@@ -114,7 +114,8 @@ class Img_Density :
 			sub_img = [tmp[s_abs - rayon : s_abs + rayon] for tmp in sub_ord]
 			if len(sub_img) == 2*rayon and len(sub_img[0]) == 2*rayon :
 				sub_img = [[sub_img[i][j] if self.CIRCLE_SHAPE[i][j] == 1 else -1 for i in range(2*rayon)] for j in range(2*rayon)]
-				self.sub_imgs += [sub_img]
+				elem = (sub_img, s_abs, s_ord)
+				self.sub_imgs += [elem]
 
 
 	def extract_images(self) :
@@ -123,9 +124,49 @@ class Img_Density :
 	def extract_quart_images(self) :
 		rayon = self.RAYON_SUB_IMG
 		quart_images = list()
-		for img in self.sub_imgs :
+		for elem in self.sub_imgs :
+			img = elem[0]
 			quart_images += extract_quartil(img, rayon)
 		return quart_images
+
+	#------------------------- Plot --------------------------
+
+	def show_img_density(self) :
+		"""Affiche l'image de densité"""
+		plt.imshow(self.img_density)
+		self.add_sources_plot()
+		plt.show()
+
+	def show_img_materials(self) :
+		"""Affiche l'image de matériaux"""
+		plt.imshow(self.img_material)
+		self.add_sources_plot()
+		plt.show()
+
+	def add_sources_plot(self) :
+		"""Affiche les sources sur la dernière image chargé par plot"""
+		for source in self.sources :
+			plt.scatter(source[0], source[1], c='r')
+
+	def show_imgs(self) :
+		"""Affiche l'image de densité et l'image de matériaux cote à cote"""
+		fig = plt.figure()
+		fig.add_subplot(1, 2, 1)
+		plt.imshow(self.img_density)
+		self.add_sources_plot()
+		fig.add_subplot(1, 2, 2)
+		plt.imshow(self.img_material)
+		self.add_sources_plot()
+		plt.show()
+
+	def show_sub_imgs(self) :
+		"""Affiche toutes les sous images une par une"""
+		for sub_img in self.sub_imgs :
+			plt.imshow(sub_img)
+			plt.show()
+
+
+# Classe finie -----------------------------------------------
 
 def rotation(img, nb) :
 	""" Effectue nb rotation à 90 degrees sur l'images"""
@@ -169,42 +210,6 @@ def recompose_into_img(quartils, rayon = Img_Density.RAYON_SUB_IMG) :
 		img += [down_left[i] + down_right[i]]
 	return img
 
-
-	#------------------------- Plot --------------------------
-
-	def show_img_density(self) :
-		"""Affiche l'image de densité"""
-		plt.imshow(self.img_density)
-		self.add_sources_plot()
-		plt.show()
-
-	def show_img_materials(self) :
-		"""Affiche l'image de matériaux"""
-		plt.imshow(self.img_material)
-		self.add_sources_plot()
-		plt.show()
-
-	def add_sources_plot(self) :
-		"""Affiche les sources sur la dernière image chargé par plot"""
-		for source in self.sources :
-			plt.scatter(source[0], source[1], c='r')
-
-	def show_imgs(self) :
-		"""Affiche l'image de densité et l'image de matériaux cote à cote"""
-		fig = plt.figure()
-		fig.add_subplot(1, 2, 1)
-		plt.imshow(self.img_density)
-		self.add_sources_plot()
-		fig.add_subplot(1, 2, 2)
-		plt.imshow(self.img_material)
-		self.add_sources_plot()
-		plt.show()
-
-	def show_sub_imgs(self) :
-		"""Affiche toutes les sous images une par une"""
-		for sub_img in self.sub_imgs :
-			plt.imshow(sub_img)
-			plt.show()
 
 
 # ----------------------- Main -----------------------
