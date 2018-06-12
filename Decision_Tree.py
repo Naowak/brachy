@@ -3,6 +3,7 @@
 
 import random
 import Similarity as simy
+import Img_Density as imd
 from matplotlib import pyplot as plt
 import time
 import copy
@@ -29,6 +30,18 @@ class Decision_Tree() :
 		return self.tab_similarity.get_similarity(ind_img1, ind_img2)
 
 	# ------------------------- Prediction -------------------------------
+
+	def predict_all_imgs(self, list_imgs_to_predict) :
+		score_total = 0
+		for img in list_imgs_to_predict :
+			quart_img = imd.extract_quartil(img)
+			for q_img in quart_img :
+				prediction, score, node, nb_visit, best_intervale = self.predict(q_img)
+				score_total += score
+
+		nb_test = len(list_imgs_to_predict)
+		score_moyen = score_total / nb_test
+		print("Score moyen obtenu sur " + str(nb_test) + " images de tests : " + str(score_moyen))
 
 	def predict(self, img_to_predict) :
 
@@ -156,7 +169,6 @@ class Decision_Tree() :
 
 		center, score, nb_visit = find_closest_img_in_cluster(ind_img, node.list_ind_imgs, nb_visit)
 		return center, score, node, nb_visit
-
 
 	# ------------------------ Apprentissage -----------------------------
 
@@ -343,6 +355,12 @@ class Decision_Tree() :
 		print("Nombre d'image d'entrainement : " + str(len(self.list_ind_imgs)))
 		print("K = " + str(self.k))
 		print("\n")
+
+	# ------------------------ Save & Load -------------------------------
+
+	def save(file) :
+		with open(file, "w+") as f :
+			pass
 
 
 		
