@@ -5,6 +5,7 @@ import random
 import Similarity as simy
 from matplotlib import pyplot as plt
 import time
+import copy
 
 class Decision_Tree() :
 	
@@ -166,7 +167,7 @@ class Decision_Tree() :
 		for son in self.sons :
 			son.create_tree()
 
-	def split_in_k_sons(self, list_ind_imgs) :
+	def split_in_k_sons(self, list_ind_imgs, split_method = "random") :
 		if len(list_ind_imgs) < self.k :
 			#on est sur une feuille
 			return ([], [])
@@ -178,7 +179,7 @@ class Decision_Tree() :
 			families = [[] for _ in range(dec_tree.k)]
 			for i in range(dec_tree.k) :
 				ind = random.choice(list_ind_imgs)
-				list_ind_imgs.remove(ind)
+				list_ind_imgs.remove(ind),
 				families[i] += [ind]
 
 			# On créer des familles aléatoires
@@ -187,6 +188,36 @@ class Decision_Tree() :
 				ind_fam = random.choice(indice_families)
 				families[ind_fam] += [ind_img]
 			return families
+
+		def create_two_farest_families(dec_tree, list_ind_imgs) :
+			#On créer deux familles, en prenant comme représentant les deux points
+			#les plus éloignés
+			representants = (None, None)
+			score_min = simy.max_score_similarity()
+			for ind_premier in list_ind_imgs :
+				for ind_second in list_ind_imgs :
+					if ind_premier != ind_second :
+						score = dec_tree.get_score_similarity(ind_premier, ind_second)
+						if score < score_min :
+							score_min = score
+							representants = (ind_premier, ind_second)
+
+			ind_premier = representants[0]
+			ind_second = representants[1]
+			families = [[ind_premier], [ind_second]]
+
+			new_list = copy.copy(list_ind_imgs)
+			new_list.remove(ind_premier)
+			new_list.remove(ind_second)
+
+			for ind in new_list :
+				score_premier = dec_tree.get_score_similarity(ind, ind_premier)
+				score_second = dec_tree.get_score_similarity(ind, ind_second)
+				if score_premier > score_second :
+					families[0] += [ind]
+				else :
+					families[1] += [ind]
+			return (ind_premier, ind_second), families
 
 		def calcul_centers_for_families(dec_tree, families) :
 			
@@ -268,15 +299,22 @@ class Decision_Tree() :
 			return True
 
 
-		families = create_k_random_families(self, list_ind_imgs)
-		centers = calcul_centers_for_families(self, families)
-		old_families = [[]]
-		# On recalcule les familles jusqu'à convergence
-		# (Si les centres ne bougent pas, les familles restent les mêmes)
-		while not are_equal_families(old_families, families) :
-			old_families = families
-			families = calcul_new_families_for_centers(self, centers, list_ind_imgs)
+		centers = None
+		families = None
+
+		if split_method == "random" :
+			families = create_k_random_families(self, list_ind_imgs)
 			centers = calcul_centers_for_families(self, families)
+			old_families = [[]]
+			# On recalcule les familles jusqu'à convergence
+			# (Si les centres ne bougent pas, les familles restent les mêmes)
+			while not are_equal_families(old_families, families) :
+				old_families = families
+				families = calcul_new_families_for_centers(self, centers, list_ind_imgs)
+				centers = calcul_centers_for_families(self, families)
+
+		elif split_method == "farest_point" :
+			centers, families = create_two_farest_families(self, list_ind_imgs)
 
 		return (centers, families)
 

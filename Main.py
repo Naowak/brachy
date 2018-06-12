@@ -10,7 +10,7 @@ import Quartil as qt
 import matplotlib.pyplot as plt
 
 NB_LEARN_SLICE = 1
-NB_TEST_SLICE = 1
+NB_TEST_SLICE = 14
 
 class Main :
 	def __init__(self, path, method) :
@@ -27,7 +27,7 @@ class Main :
 
 		if method == "zt_dt" :
 			self.zoomed_tree = zt.Zoomed_Tree(self.learn_imgs)
-			self.zoomed_tree.predict_all_imgs(self.test_imgs, plot=True)
+			self.zoomed_tree.predict_all_imgs(self.test_imgs, plot=False)
 
 	def extract_img_density(self, nb_learn_slice, nb_test_slice) :
 
@@ -73,8 +73,8 @@ class Main :
 			indice_test = [i for i in list(range(nb_slice)) if i not in indice_learn]
 			indice_test = indice_test[:nb_slice_test]
 
-			quart_img_learn = extract_img_learn(list_img_density, indice_learn)[:100]
-			img_test = extract_img_test(list_img_density, indice_test)[:100]
+			quart_img_learn = extract_img_learn(list_img_density, indice_learn)[:500]
+			img_test = extract_img_test(list_img_density, indice_test)
 			return quart_img_learn, img_test
 
 		print("Chargement des images à partir de " + self.path)
