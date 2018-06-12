@@ -4,6 +4,8 @@
 import random
 import Similarity as simy
 import Img_Density as imd
+import Stats
+from ProgressBar import ProgressBar
 from matplotlib import pyplot as plt
 import time
 import copy
@@ -32,16 +34,41 @@ class Decision_Tree() :
 	# ------------------------- Prediction -------------------------------
 
 	def predict_all_imgs(self, list_imgs_to_predict) :
-		score_total = 0
-		for img in list_imgs_to_predict :
+
+		def predict_one_img_full(self, img_full) :
+			quart_img = imd.extract_quartil(img_full)
+			score = 0
+			quart_pred = []
+			quart_intervale = []
+			for q_img in quart_img :
+				q_pred, q_score, q_node, q_nb_visit, q_best_intervale = self.predict(q_img)
+				quart_pred += [q_pred]
+				score += q_score
+				quart_intervale += [q_best_intervale]
+
+			prediction = imd.recompose_into_img(quart_pred)
+			result_img = simy.get_full_disque(quart_intervale)
+			return prediction, score, result_img
+
+		nb_prediction = len(list_imgs_to_predict)
+		print("Prédiction de " + str(nb_prediction) + " images en cours...")
+		stats = Stats.Stats(nb_prediction)
+		progress_bar = ProgressBar(0, len(list_imgs_to_predict))
+		for i, (img, c_abs, c_ord) in enumerate(list_imgs_to_predict) :
 			quart_img = imd.extract_quartil(img)
 			for q_img in quart_img :
-				prediction, score, node, nb_visit, best_intervale = self.predict(q_img)
-				score_total += score
+				begin = time.time()
+				prediction, score, result_img = predict_one_img_full(self, img)
+				end = time.time()
 
-		nb_test = len(list_imgs_to_predict)
-		score_moyen = score_total / nb_test
-		print("Score moyen obtenu sur " + str(nb_test) + " images de tests : " + str(score_moyen))
+				temps = end - begin
+				stats.add_test(score, temps)
+				progress_bar.updateProgress(i+1, "")
+
+		print(stats)
+
+
+
 
 	def predict(self, img_to_predict) :
 
@@ -116,59 +143,6 @@ class Decision_Tree() :
 		prediction = img_to_return(img_to_predict, self.imgs[indice_prediction], score)
 		return prediction, score, node, nb_visit, best_intervale
 
-	def predict_closest_img(self, ind_img) :
-
-		nb_visit = 0
-
-		def calcul_similarity_with_all_imgs(ind_test, ind_imgs, nb_visit) :
-			dict_sim = {}
-			for ind_img in ind_imgs :
-				nb_visit += 1
-				dict_sim[ind_img] = simy.symmetric_similarity_between_two_imgs(self.tests[ind_test], self.imgs[ind_img])[0]
-			return dict_sim, nb_visit
-
-		def find_closest_img_in_cluster(ind_img, list_ind_imgs, nb_visit) :
-			dict_sim, nb_visit = calcul_similarity_with_all_imgs(ind_img, list_ind_imgs, nb_visit)
-			closest_img = None
-			score_max = 0
-			for key, score_sim in dict_sim.items() :
-				if score_sim > score_max :
-					closest_img = key
-					score_max = score_sim
-			return closest_img, score_max, nb_visit
-
-		if len(self.list_ind_imgs) < self.k :
-			#on est sur qu'il n'y a pas de sous cluster
-			closest, score, nb_visit = find_closest_img_in_cluster(self, ind_img, self.list_ind_imgs, nb_visit)
-			return closest, score, self, nb_visit
-
-		node = self
-		score_actual_representant = 0
-		#Tant que l'on est pas dans un noeud trop petit
-		while len(node.list_ind_imgs) >= self.k :
-			#On cherche le centre le plus proche
-			centers = [son.representant for son in node.sons]
-			max_center, score_sim, nb_visit = find_closest_img_in_cluster(ind_img, centers, nb_visit)
-
-			#Si le centre le plus proche n'est pas plus proche que le représentant actuel, 
-			#on retourne le représentant actuel
-			if score_actual_representant > score_sim :
-				return node.representant, score_actual_representant, node, nb_visit
-			score_actual_representant = score_sim
-
-			#On attribut à node le bon fils
-			for son in node.sons :
-				if son.representant == max_center :
-					node = son
-					break
-
-			#Si le score actuel égale le score max, on a retrouvé exactement la 
-			#même image, donc on la retourne
-			if score_actual_representant == self.max_similarity :
-				return node.representant, score_actual_representant, node, nb_visit
-
-		center, score, nb_visit = find_closest_img_in_cluster(ind_img, node.list_ind_imgs, nb_visit)
-		return center, score, node, nb_visit
 
 	# ------------------------ Apprentissage -----------------------------
 

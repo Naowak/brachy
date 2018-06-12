@@ -6,9 +6,11 @@ import matplotlib.pyplot as plt
 import Decision_Tree as dt
 import Img_Density as imd
 import Similarity as simy
+import Stats
 import random
 import time
 import math
+
 from ProgressBar import ProgressBar
 
 
@@ -363,34 +365,24 @@ class Zoomed_Tree() :
 			plt.imshow(difference)
 			plt.show()
 
-		total_temps = 0
-		score_total = 0
-		nb_imgs = len(imgs)
-		tab = [[0 for i in range(200)] for j in range(200)]
+		nb_prediction = len(imgs)
+		print("Prédiction de " + str(nb_prediction) + " images en cours...")
+		progress_bar = ProgressBar(0, nb_prediction)
+		tab = [[0 for i in range(120)] for j in range(120)]
+		stats = Stats.Stats(len(self.imgs))
 		for i, (img, c_abs, c_ord) in enumerate(imgs) :
-			t = time.time()
+			begin = time.time()
 			prediction, score, difference = predict_one_img(self, img)
+			end = time.time()
+
+			temps = end - begin
+			stats.add_test(score, temps)
 			pourcentage = (score / (2*math.pi))
 			tab[c_abs][c_ord] = int(pourcentage*255)
-			t_predict = time.time() - t
-			print("Prédiction " + str(i))
-			print("Temps : " + str(t_predict) + " secondes.")
-			print("Score : " + str(score))
-			total_temps += t_predict
-			score_total += score
-			if plot :
-				plot_result(img, prediction, difference)
-		temps_moyen = float(total_temps) / nb_imgs
-		score_moyen = float(score_total) / nb_imgs
-		score_pourcentage_moyen = (score_moyen / (2*math.pi)) * 100
-		score_pourcentage_moyen -= score_pourcentage_moyen%0.01
-		nb_learn_imgs = len(self.imgs)
-		nb_test_imgs = len(imgs)
-		print("\nApprentissage sur " + str(nb_learn_imgs) + " images.")
-		print("Test sur " + str(nb_test_imgs) + " images.")
-		print("Temps moyen : " + str(temps_moyen))
-		print("Score moyen : " + str(score_moyen))
-		print("Pourcentage_moyen : " + str(score_pourcentage_moyen) + "%")
+
+			progress_bar.updateProgress(i+1, "")
+
+		print(stats)
 
 		plt.imshow(tab)
 		plt.show()

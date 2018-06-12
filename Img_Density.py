@@ -129,6 +129,9 @@ class Img_Density :
 			quart_images += extract_quartil(img, rayon)
 		return quart_images
 
+	def extract_slice(self) :
+		return self.img_density
+
 	#------------------------- Plot --------------------------
 
 	def show_img_density(self) :

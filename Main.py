@@ -181,11 +181,12 @@ class Main :
 
 			quart_img_learn = extract_img_learn(list_img_density, indice_learn)[:50]
 			img_test = extract_img_test(list_img_density, indice_test)
-			return quart_img_learn, img_test
+			slices_test = [list_img_density[i].extract_slice() for i in indice_test]
+			return quart_img_learn, img_test, slices_test
 
 		print("Chargement des images à partir de " + self.path)
 		list_img_density = get_list_img_density(self)
-		self.learn_imgs, self.test_imgs = extract_and_seperate_img(list_img_density, nb_learn_slice, nb_test_slice)
+		self.learn_imgs, self.test_imgs, self.slices_test = extract_and_seperate_img(list_img_density, nb_learn_slice, nb_test_slice)
 		print(str(len(self.learn_imgs)) + " quarts images d'apprentissage chargées.")
 		print(str(len(self.test_imgs)) + " images de tests chargées.")
 
