@@ -18,40 +18,40 @@ def show_img(img) :
 
 ZOOM_ROOT = 32
 
+class Root() :
+	def __init__(self) :
+		self.sons = list()
+		self.type = "root"
+		self.profondeur = -1
+		self.id_imgs = list()
+		self.dict_sim = None
+		self.decision_tree = None
+
+class Node() :
+	def __init__(self, representant, profondeur) :
+		self.sons = list()
+		self.type = "node"
+		self.representant = representant
+		self.profondeur = profondeur
+		self.id_imgs = list()
+		self.dict_sim = None
+		self.decision_tree = None
+
+	def __str__(self) :
+		return str(self.representant)
+
+class Leaf() :
+	def __init__(self, img, identifiant) :
+		self.type = "leaf"
+		self.img = img
+		self.identifiant = identifiant
+		self.z_img = zi.Zoomed_Image(img)
+
 class Zoomed_Tree() :
 	""" Défini l'arbre qui zoom dans les images"""
 
-	class Root() :
-		def __init__(self) :
-			self.sons = list()
-			self.type = "root"
-			self.profondeur = -1
-			self.id_imgs = list()
-			self.dict_sim = None
-			self.decision_tree = None
-
-	class Node() :
-		def __init__(self, representant, profondeur) :
-			self.sons = list()
-			self.type = "node"
-			self.representant = representant
-			self.profondeur = profondeur
-			self.id_imgs = list()
-			self.dict_sim = None
-			self.decision_tree = None
-
-		def __str__(self) :
-			return str(self.representant)
-
-	class Leaf() :
-		def __init__(self, img, identifiant) :
-			self.type = "leaf"
-			self.img = img
-			self.identifiant = identifiant
-			self.z_img = zi.Zoomed_Image(img)
-
 	def __init__(self, list_img = list(), split_method = "random") :
-		self.root = Zoomed_Tree.Root()
+		self.root = Root()
 		self.imgs = list()
 		self.dict_sim = None
 
@@ -144,7 +144,7 @@ class Zoomed_Tree() :
 			def add_node_to_node(node, leaf, profondeur) :
 				zoom = get_zoom_child(node)
 				representant = leaf.z_img.extract_zoomed_img(zoom)
-				new_node = Zoomed_Tree.Node(representant, profondeur)
+				new_node = Node(representant, profondeur)
 				node.sons += [new_node]
 				return new_node
 
@@ -259,7 +259,7 @@ class Zoomed_Tree() :
 			node = recursive_find_and_add(self, node, leaf, profondeur)
 
 		identifiant = len(self.imgs)
-		leaf = Zoomed_Tree.Leaf(img, identifiant)
+		leaf = Leaf(img, identifiant)
 		find_node_and_add_leaf(self, leaf)
 
 	def find_closest_img(self, img, plot=False) :
