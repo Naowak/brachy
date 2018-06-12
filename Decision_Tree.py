@@ -9,7 +9,7 @@ import copy
 
 class Decision_Tree() :
 	
-	def __init__(self, representant, list_ind_imgs, similarity, imgs, tests, profondeur = 0, k = 5) :
+	def __init__(self, representant, list_ind_imgs, similarity, imgs, tests, profondeur = 0, k = 5, split_method = "random") :
 		self.list_ind_imgs = list_ind_imgs
 		self.k = k
 		self.tab_similarity = similarity
@@ -19,6 +19,8 @@ class Decision_Tree() :
 		self.imgs = imgs
 		self.tests = tests
 		self.max_similarity = simy.max_score_similarity()
+
+		self.split_method = split_method
 
 
 	# ------------------------ Getter & Setter ---------------------------
@@ -167,7 +169,7 @@ class Decision_Tree() :
 		for son in self.sons :
 			son.create_tree()
 
-	def split_in_k_sons(self, list_ind_imgs, split_method = "random") :
+	def split_in_k_sons(self, list_ind_imgs) :
 		if len(list_ind_imgs) < self.k :
 			#on est sur une feuille
 			return ([], [])
@@ -302,7 +304,7 @@ class Decision_Tree() :
 		centers = None
 		families = None
 
-		if split_method == "random" :
+		if self.split_method == "random" :
 			families = create_k_random_families(self, list_ind_imgs)
 			centers = calcul_centers_for_families(self, families)
 			old_families = [[]]
@@ -313,7 +315,7 @@ class Decision_Tree() :
 				families = calcul_new_families_for_centers(self, centers, list_ind_imgs)
 				centers = calcul_centers_for_families(self, families)
 
-		elif split_method == "farest_point" :
+		elif self.split_method == "farest_point" :
 			centers, families = create_two_farest_families(self, list_ind_imgs)
 
 		return (centers, families)

@@ -8,9 +8,10 @@ import Img_Density as imd
 import Zoomed_Tree as zt
 import Quartil as qt
 import matplotlib.pyplot as plt
+import sys
 
 NB_LEARN_SLICE = 1
-NB_TEST_SLICE = 14
+NB_TEST_SLICE = 1
 
 class Main :
 	def __init__(self, path, method) :
@@ -20,6 +21,12 @@ class Main :
 		self.test_imgs = list()
 		self.nb_learn_imgs = 0
 		self.nb_test_imgs = 0
+
+		self.split_method = None
+		self.load_model = None
+		self.save_model = None
+		self.path_save = None
+		self.extract_param(sys.argv)
 
 		self.extract_img_density(NB_LEARN_SLICE, NB_TEST_SLICE)
 		print(str(len(self.learn_imgs)) + " quarts images d'apprentissage chargées.")
@@ -73,7 +80,7 @@ class Main :
 			indice_test = [i for i in list(range(nb_slice)) if i not in indice_learn]
 			indice_test = indice_test[:nb_slice_test]
 
-			quart_img_learn = extract_img_learn(list_img_density, indice_learn)[:500]
+			quart_img_learn = extract_img_learn(list_img_density, indice_learn)[:50]
 			img_test = extract_img_test(list_img_density, indice_test)
 			return quart_img_learn, img_test
 
@@ -81,6 +88,24 @@ class Main :
 		list_img_density = get_list_img_density(self)
 		self.learn_imgs, self.test_imgs = extract_and_seperate_img(list_img_density, nb_learn_slice, nb_test_slice)
 
+	def extract_param(self, argv) :
+
+		def take_value(param, name_param, default_value) :
+			try :
+				if param[name_param] :
+					return param[name_param]
+			except KeyError :
+				return default_value
+
+		param = dict()
+		for elem in argv[1:] :
+			tab = elem.split("=")
+			param[tab[0]] = tab[1]
+
+		self.split_method = take_value(param, "split_method", "random")
+		self.load_model = take_value(param, "load_model", "false")
+		self.save_model = take_value(param, "save_model", "false")
+		self.path_save = take_value(param, "path_save", "./save/")
 
 if __name__ == '__main__':
 	path = "../../../working_dir/"

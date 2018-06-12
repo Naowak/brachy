@@ -50,10 +50,12 @@ class Zoomed_Tree() :
 			self.identifiant = identifiant
 			self.z_img = zi.Zoomed_Image(img)
 
-	def __init__(self, list_img = list()) :
+	def __init__(self, list_img = list(), split_method = "random") :
 		self.root = Zoomed_Tree.Root()
 		self.imgs = list()
 		self.dict_sim = None
+
+		self.split_method = split_method
 
 		if len(list_img) != 0 :
 			print("Ajout des images d'apprentissage dans l'arbre zoomé.")
@@ -90,7 +92,7 @@ class Zoomed_Tree() :
 					return id_imgs
 
 			node.id_imgs = extract_id_img_from_node(node)
-			node.decision_tree = dt.Decision_Tree(None, node.id_imgs, self.dict_sim, self.imgs, None)
+			node.decision_tree = dt.Decision_Tree(None, node.id_imgs, self.dict_sim, self.imgs, None, split_method = self.split_method)
 			node.decision_tree.create_tree()
 
 		def recursive_compute_decision_tree(self, node) :
