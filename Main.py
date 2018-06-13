@@ -31,6 +31,7 @@ class Main :
 		self.load_model = None
 		self.save_model = None
 		self.path_save = None
+		self.symmetric_similarity = None
 		self.extract_param(sys.argv)
 
 
@@ -40,7 +41,9 @@ class Main :
 				self.fload_model(self.path)
 			else :
 				self.extract_img_density(NB_LEARN_SLICE, NB_TEST_SLICE)
-				self.model = zt.Zoomed_Tree(self.learn_imgs, self.split_method)
+				self.model = zt.Zoomed_Tree(self.learn_imgs, \
+					split_method = self.split_method, \
+					symmetric_similarity = self.symmetric_similarity)
 
 			#sauvegarde des données
 			if self.save_model == "true" :
@@ -61,7 +64,8 @@ class Main :
 				self.dict_sim = None
 				self.compute_similarity()
 				self.model = dt.Decision_Tree(None, list_ind_img, self.dict_sim, self.learn_imgs, None, \
-					split_method = self.split_method)
+					split_method = self.split_method, \
+					symmetric_similarity = self.symmetric_similarity)
 				self.model.create_tree()
 
 			#sauvegarde des données
@@ -70,7 +74,6 @@ class Main :
 
 			#test des données
 			self.model.predict_all_imgs(self.test_imgs)
-
 
 	def fsave_model(self, dir_save) :
 		print("Sauvegarde du modèle dans " + dir_save + "...")
@@ -109,17 +112,10 @@ class Main :
 
 	def compute_similarity(self) :
 
-		def symmetric_similarity_between_two_imgs(img1, img2) :
-
-			def symmetric_img(img) :
-				len_first = len(img)
-				len_second = len(img[0])
-				return [[img[j][i] for j in range(len_second)] for i in range(len_first)]
-
-			symmetric_img2 = symmetric_img(img2)
-			score_first = simy.similarity_between_two_imgs(img1, img2)
-			score_second = simy.similarity_between_two_imgs(img1, symmetric_img2)
-			return max(score_first, score_second)
+		def compute_similarity_img1_img2(self, img1, img2) :
+			if self.symmetric_similarity == "true" :
+				return simy.symmetric_similarity_between_two_imgs(img1, img2)
+			return simy.similarity_between_two_imgs(img1, img2)
 
 		nb_imgs = len(self.learn_imgs)
 		self.dict_sim = simy.Dict_Sim(nb_imgs)
@@ -130,7 +126,7 @@ class Main :
 			for j in range(i+1, nb_imgs) :
 				img1 = self.learn_imgs[i]
 				img2 = self.learn_imgs[j]
-				score_sim, inter_sim = simy.similarity_between_two_imgs(img1, img2)
+				score_sim, inter_sim = compute_similarity_img1_img2(self, img1, img2)
 				self.dict_sim.set_similarity(i, j, score_sim)
 				avancement += 1
 				progress_bar.updateProgress(avancement, "")
@@ -210,6 +206,7 @@ class Main :
 		self.save_model = take_value(param, "save_model", "false")
 		self.path_save = take_value(param, "path_save", "./save/")
 		self.path = take_value(param, "path", "../../../working_dir/")
+		self.symmetric_similarity = take_value(param, "symmetric", "true")
 
 if __name__ == '__main__':
 

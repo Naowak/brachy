@@ -52,12 +52,13 @@ class Leaf() :
 class Zoomed_Tree() :
 	""" Défini l'arbre qui zoom dans les images"""
 
-	def __init__(self, list_img = list(), split_method = "random") :
+	def __init__(self, list_img = list(), split_method = "random", symmetric_similarity="true") :
 		self.root = Root()
 		self.imgs = list()
 		self.dict_sim = None
 
 		self.split_method = split_method
+		self.symmetric_similarity = symmetric_similarity
 
 		if len(list_img) != 0 :
 			print("Ajout des images d'apprentissage dans l'arbre zoomé.")
@@ -94,7 +95,9 @@ class Zoomed_Tree() :
 					return id_imgs
 
 			node.id_imgs = extract_id_img_from_node(node)
-			node.decision_tree = dt.Decision_Tree(None, node.id_imgs, self.dict_sim, self.imgs, None, split_method = self.split_method)
+			node.decision_tree = dt.Decision_Tree(None, node.id_imgs, self.dict_sim, self.imgs, None,\
+				 split_method = self.split_method, \
+				 symmetric_similarity = self.symmetric_similarity)
 			node.decision_tree.create_tree()
 
 		def recursive_compute_decision_tree(self, node) :
@@ -107,17 +110,11 @@ class Zoomed_Tree() :
 
 		def compute_similarity(self) :
 
-			def symmetric_similarity_between_two_imgs(img1, img2) :
-
-				def symmetric_img(img) :
-					len_first = len(img)
-					len_second = len(img[0])
-					return [[img[j][i] for j in range(len_second)] for i in range(len_first)]
-
-				symmetric_img2 = symmetric_img(img2)
-				score_first = simy.similarity_between_two_imgs(img1, img2)
-				score_second = simy.similarity_between_two_imgs(img1, symmetric_img2)
-				return max(score_first, score_second)
+			def compute_similarity_img1_img2(self, img1, img2) :
+				if self.symmetric_similarity == "true":
+					return simy.symmetric_similarity_between_two_imgs(img1, img2)
+				else :
+					return simy.similarity_between_two_imgs(img1, img2)
 
 			nb_imgs = len(self.imgs)
 			self.dict_sim = simy.Dict_Sim(nb_imgs)
@@ -128,7 +125,7 @@ class Zoomed_Tree() :
 				for j in range(i+1, nb_imgs) :
 					img1 = self.imgs[i]
 					img2 = self.imgs[j]
-					score_sim, inter_sim = simy.similarity_between_two_imgs(img1, img2)
+					score_sim, inter_sim = compute_similarity_img1_img2(self, img1, img2)
 					self.dict_sim.set_similarity(i, j, score_sim)
 					avancement += 1
 					progress_bar.updateProgress(avancement, "")
@@ -150,38 +147,14 @@ class Zoomed_Tree() :
 				node.sons += [new_node]
 				return new_node
 
-			def add_leaf_to_node(node, leaf) :
+			def add_leaf_to_node(self, node, leaf) :
 				"""Return False s'il y avait déjà l'image dans la database"""
 				for existing_leaf in node.sons :
-					if are_imgs_symmetric_equal(existing_leaf.img, leaf.img) :
+					if self.are_equal(existing_leaf.img, leaf.img) :
 						#image déjà existante
 						return False
 				node.sons.append(leaf)
 				return True
-
-			def are_imgs_symmetric_equal(img1, img2) :
-
-				def are_imgs_equal(img1, img2) : 
-					size1 = len(img1)
-					size2 = len(img2)
-					if size1 != size2 : 
-						print("Image de taille différentes donc non égales.")
-						print("Taille img1 : " + str(size1))
-						print("Taille img2 : " + str(size2))
-						raise ValueError
-					for i in range(size1) :
-						for j in range(size2) :
-							if img1[i][j] != img2[i][j] :
-								return False
-					return True
-
-				def symetric_img(img) :
-					len_first = len(img)
-					len_second = len(img[0])
-					return [[img[j][i] for j in range(len_second)] for i in range(len_first)]
-
-				symmetric_img2 = symetric_img(img2)
-				return are_imgs_equal(img1, img2) or are_imgs_equal(img1, symmetric_img2)
 
 			def get_zoom_child(node) :
 				zoom = ZOOM_ROOT / pow(2, node.profondeur + 1)
@@ -191,7 +164,7 @@ class Zoomed_Tree() :
 				if len(node.sons) == 0 :
 					#cas racine initiale
 					node = add_node_to_node(node, leaf, profondeur+1)
-					is_new_image = add_leaf_to_node(node, leaf)
+					is_new_image = add_leaf_to_node(self, node, leaf)
 					if is_new_image :
 						self.imgs += [leaf.img]
 					return node
@@ -207,7 +180,7 @@ class Zoomed_Tree() :
 					node_found = False
 
 					for son in node.sons :
-						if are_imgs_symmetric_equal(son.representant, img_leaf) :
+						if self.are_equal(son.representant, img_leaf) :
 							#on trouve un noeud avec un représentant égale
 							node = son
 							node_found = True
@@ -216,7 +189,7 @@ class Zoomed_Tree() :
 						#Aucun noeud ne lui correspond, on créer le sien
 						#on peut le renvoyer car on est sur que c'est ce noeud
 						node = add_node_to_node(node, leaf, profondeur+1)
-						is_new_image = add_leaf_to_node(node, leaf)
+						is_new_image = add_leaf_to_node(self, node, leaf)
 						if is_new_image :
 							self.imgs += [leaf.img]
 						return node
@@ -231,15 +204,15 @@ class Zoomed_Tree() :
 					leaf_present = node.sons[0]
 					node.sons = list() #clean des fils, on enlève les leaf, on mets des nodes
 					new_node_left = add_node_to_node(node, leaf_present, profondeur+1)
-					add_leaf_to_node(new_node_left, leaf_present)
+					add_leaf_to_node(self, new_node_left, leaf_present)
 
 					img_leaf = leaf.z_img.extract_zoomed_img(zoom)
 
-					if not are_imgs_symmetric_equal(new_node_left.representant, img_leaf) :
+					if not self.are_equal(new_node_left.representant, img_leaf) :
 						## Situation impossible en théorie : notre dernier zoom = l'image
 						#alors on peut créer un noeud en plus
 						new_node_right = add_node_to_node(node, leaf, profondeur+1)
-						is_new_image = add_leaf_to_node(new_node_right, leaf)
+						is_new_image = add_leaf_to_node(self, new_node_right, leaf)
 						if is_new_image :
 							self.imgs += [leaf.img]
 						return new_node_right
@@ -251,7 +224,7 @@ class Zoomed_Tree() :
 
 				if zoom <= 1 :
 					#il n'y a pas plus bas que un, donc on amasse les feuilles
-					is_new_image = add_leaf_to_node(node, leaf)
+					is_new_image = add_leaf_to_node(self, node, leaf)
 					if is_new_image :
 						self.imgs += [leaf.img]
 					return node
@@ -277,7 +250,7 @@ class Zoomed_Tree() :
 				node_found = False
 				for son in node.sons :
 					zoom = get_zoom_node(son)
-					if are_imgs_symmetric_equal(son.representant, z_img.extract_zoomed_img(zoom)) :
+					if self.are_equal(son.representant, z_img.extract_zoomed_img(zoom)) :
 						node = son
 						node_found = True
 						break
@@ -287,27 +260,6 @@ class Zoomed_Tree() :
 					#on va étudier toutes ses feuilles
 					return node
 			return node
-
-		def extract_img_from_node(node) :
-
-			def get_all_imgs_from_node(node) :
-
-				def recursive_research(node) :
-					if node.type == "leaf" :
-						return node.img
-					return [recursive_research(son) for son in node.sons]
-
-				return recursive_research(node)
-
-			if node.sons[0].type == "leaf" :
-				#cas où on atteint les feuilles
-				#on a trouvé l'image
-				leaf = node.sons[0]
-				return leaf.img
-			else :
-				#pas d'image égale, on obtient le noeud père le plus bas
-				imgs = get_all_imgs_from_node(node)
-				return imgs
 
 		def get_zoom_node(node) :
 			zoom = ZOOM_ROOT / pow(2, node.profondeur)
@@ -412,29 +364,36 @@ class Zoomed_Tree() :
 		node = self.root
 		return recursive_str(node, 0)
 
-def are_imgs_symmetric_equal(img1, img2) :
+	def are_equal(self, img1, img2) :
+		""" Return true si img1 == img2, False sinon"""
+		def are_imgs_equal(img1, img2) : 
+			size1 = len(img1)
+			size2 = len(img2)
+			if size1 != size2 : 
+				print("Image de taille différentes donc non égales.")
+				print("Taille img1 : " + str(size1))
+				print("Taille img2 : " + str(size2))
+				raise ValueError
+			for i in range(size1) :
+				for j in range(size2) :
+					if img1[i][j] != img2[i][j] :
+						return False
+			return True
 
-	def are_imgs_equal(img1, img2) : 
-		size1 = len(img1)
-		size2 = len(img2)
-		if size1 != size2 : 
-			print("Image de taille différentes donc non égales.")
-			print("Taille img1 : " + str(size1))
-			print("Taille img2 : " + str(size2))
-			raise ValueError
-		for i in range(size1) :
-			for j in range(size2) :
-				if img1[i][j] != img2[i][j] :
-					return False
-		return True
+		def are_imgs_symmetric_equal(img1, img2) :
 
-	def symetric_img(img) :
-		len_first = len(img)
-		len_second = len(img[0])
-		return [[img[j][i] for j in range(len_second)] for i in range(len_first)]
+			def symetric_img(img) :
+				len_first = len(img)
+				len_second = len(img[0])
+				return [[img[j][i] for j in range(len_second)] for i in range(len_first)]
 
-	symmetric_img2 = symetric_img(img2)
-	return are_imgs_equal(img1, img2) or are_imgs_equal(img1, symmetric_img2)
+			symmetric_img2 = symetric_img(img2)
+			return are_imgs_equal(img1, img2) or are_imgs_equal(img1, symmetric_img2)
+
+		if self.symmetric_similarity == "true":
+			return are_imgs_symmetric_equal(img1, img2)
+		else :
+			return are_imgs_equal(img1, img2)
 
 def create_random_img(size_x, size_y) :
 	return [[random.choice([0, 0, 0, 0, 1, 1, 2]) for i in range(size_x)] for j in range(size_y)]
