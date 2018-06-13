@@ -34,46 +34,40 @@ class Main :
 		self.symmetric_similarity = None
 		self.extract_param(sys.argv)
 
+	def run(self) :
 
-		if self.method == "zt_dt" :
-			#création/chargement des données
-			if self.load_model == "true" :
+		def create_zt_dt_method(self) :
+			self.extract_img_density(NB_LEARN_SLICE, NB_TEST_SLICE)
+			self.model = zt.Zoomed_Tree(self.learn_imgs, \
+				split_method = self.split_method, \
+				symmetric_similarity = self.symmetric_similarity)
+
+		def create_dt_method(self) :
+			self.extract_img_density(NB_LEARN_SLICE, NB_TEST_SLICE)
+			nb_imgs = len(self.learn_imgs)
+			list_ind_img = list(range(nb_imgs))
+			self.dict_sim = None
+			self.compute_similarity()
+			self.model = dt.Decision_Tree(None, list_ind_img, self.dict_sim, self.learn_imgs, None, \
+				split_method = self.split_method, \
+				symmetric_similarity = self.symmetric_similarity)
+			self.model.create_tree()
+
+		if self.load_model == "true" :
 				self.fload_model(self.path)
-			else :
-				self.extract_img_density(NB_LEARN_SLICE, NB_TEST_SLICE)
-				self.model = zt.Zoomed_Tree(self.learn_imgs, \
-					split_method = self.split_method, \
-					symmetric_similarity = self.symmetric_similarity)
+		else :
+			if self.method == "zt_dt" :
+				create_zt_dt_method(self)
+			elif self.method == "dt" :
+				create_dt_method(self)
 
-			#sauvegarde des données
-			if self.save_model == "true" :
-				self.fsave_model(self.path_save)
+		#sauvegarde des données
+		if self.save_model == "true" :
+			self.fsave_model(self.path_save)
 
-			#test des données
-			self.model.predict_all_imgs(self.test_imgs, plot=False)
+		#test des données
+		self.model.predict_all_imgs(self.test_imgs)		
 
-
-		elif self.method == "dt" :
-			#création/chargement des données
-			if self.load_model == "true" :
-				self.fload_model(self.path)
-			else :
-				self.extract_img_density(NB_LEARN_SLICE, NB_TEST_SLICE)
-				nb_imgs = len(self.learn_imgs)
-				list_ind_img = list(range(nb_imgs))
-				self.dict_sim = None
-				self.compute_similarity()
-				self.model = dt.Decision_Tree(None, list_ind_img, self.dict_sim, self.learn_imgs, None, \
-					split_method = self.split_method, \
-					symmetric_similarity = self.symmetric_similarity)
-				self.model.create_tree()
-
-			#sauvegarde des données
-			if self.save_model == "true" :
-				self.fsave_model(self.path_save)
-
-			#test des données
-			self.model.predict_all_imgs(self.test_imgs)
 
 	def fsave_model(self, dir_save) :
 		print("Sauvegarde du modèle dans " + dir_save + "...")
@@ -176,7 +170,7 @@ class Main :
 			indice_test = indice_test[:nb_slice_test]
 
 			quart_img_learn = extract_img_learn(list_img_density, indice_learn)[:50]
-			img_test = extract_img_test(list_img_density, indice_test)
+			img_test = extract_img_test(list_img_density, indice_test)[:50]
 			slices_test = [list_img_density[i].extract_slice() for i in indice_test]
 			return quart_img_learn, img_test, slices_test
 
@@ -211,6 +205,7 @@ class Main :
 if __name__ == '__main__':
 
 	main = Main()
+	main.run()
 
 
 

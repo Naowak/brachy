@@ -40,7 +40,7 @@ class Decision_Tree() :
 
 	# ------------------------- Prediction -------------------------------
 
-	def predict_all_imgs(self, list_imgs_to_predict) :
+	def predict_all_imgs(self, list_imgs_to_predict, plot = False) :
 
 		def predict_one_img_full(self, img_full) :
 			quart_img = imd.extract_quartil(img_full)
@@ -57,20 +57,45 @@ class Decision_Tree() :
 			result_img = simy.get_full_disque(quart_intervale)
 			return prediction, score, result_img
 
+		def plot_result(img, prediction, difference) :
+			fig = plt.figure()
+			fig.add_subplot(3, 1, 1)
+			plt.imshow(img)
+			
+			fig.add_subplot(3, 1, 2)
+			plt.imshow(prediction)
+
+			fig.add_subplot(3, 1, 3)
+			plt.imshow(difference)
+			plt.show()
+
 		nb_prediction = len(list_imgs_to_predict)
 		print("Prédiction de " + str(nb_prediction) + " images en cours...")
 		stats = Stats.Stats(nb_prediction)
 		progress_bar = ProgressBar(0, len(list_imgs_to_predict))
+
+		list_prediction = list()
+		list_score = list()
+		list_difference = list()
+
 		for i, (img, c_abs, c_ord) in enumerate(list_imgs_to_predict) :
 			begin = time.time()
-			prediction, score, result_img = predict_one_img_full(self, img)
+			prediction, score, difference = predict_one_img_full(self, img)
 			end = time.time()
+
+			list_prediction += [prediction]
+			list_score += [score]
+			list_difference += [difference]
 
 			temps = end - begin
 			stats.add_test(score, temps)
 			progress_bar.updateProgress(i+1, "")
 
+			if plot :
+				plot_result(img, prediction, difference)
+
 		print(stats)
+		return list_prediction, list_score, list_difference
 
 	def predict(self, img_to_predict) :
 

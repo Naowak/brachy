@@ -320,24 +320,33 @@ class Zoomed_Tree() :
 		nb_prediction = len(imgs)
 		print("Prédiction de " + str(nb_prediction) + " images en cours...")
 		progress_bar = ProgressBar(0, nb_prediction)
-		tab = [[0 for i in range(120)] for j in range(120)]
 		stats = Stats.Stats(len(self.imgs))
+
+		list_prediction = list()
+		list_score = list()
+		list_difference = list()
+
 		for i, (img, c_abs, c_ord) in enumerate(imgs) :
 			begin = time.time()
 			prediction, score, difference = predict_one_img(self, img)
 			end = time.time()
 
+			list_prediction += [prediction]
+			list_score += [score]
+			list_difference += [difference]
+
 			temps = end - begin
 			stats.add_test(score, temps)
 			pourcentage = (score / (2*math.pi))
-			tab[c_abs][c_ord] = int(pourcentage*255)
 
 			progress_bar.updateProgress(i+1, "")
 
-		print(stats)
+			if plot :
+				plot_result(img, prediction, difference)
 
-		plt.imshow(tab)
-		plt.show()
+		print(stats)
+		return list_prediction, list_score, list_difference
+
 
 	def __str__(self) :
 
