@@ -67,9 +67,6 @@ class Decision_Tree() :
 
 		print(stats)
 
-
-
-
 	def predict(self, img_to_predict) :
 
 		nb_visit = 0
@@ -317,7 +314,7 @@ class Decision_Tree() :
 			string += str(son)
 		return string
 
-	def display_stats(self) :
+	def display_caracteristic(self) :
 
 		def get_profondeur_max(self) :
 			if len(self.sons) == 0 :
