@@ -78,7 +78,7 @@ class Decision_Tree() :
 		list_score = list()
 		list_difference = list()
 
-		for i, (img, c_abs, c_ord) in enumerate(list_imgs_to_predict) :
+		for i, img in enumerate(list_imgs_to_predict) :
 			begin = time.time()
 			prediction, score, difference = predict_one_img_full(self, img)
 			end = time.time()

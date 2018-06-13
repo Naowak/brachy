@@ -1,6 +1,5 @@
 #!/usr/lib/env python2.7
 #-*- coding: utf-8 -*-
-import Quartil as qt
 from matplotlib import pyplot as plt
 import math
 import random

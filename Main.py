@@ -7,21 +7,24 @@ from ProgressBar import ProgressBar
 import Img_Density as imd
 import Zoomed_Tree as zt
 import Decision_Tree as dt
-import Quartil as qt
 import matplotlib.pyplot as plt
 import Similarity as simy
 import sys
 import cPickle as pickle
+import math
 
 NB_LEARN_SLICE = 1
-NB_TEST_SLICE = 1
+NB_TEST_SLICE = 5
 
 
 class Main :
 	def __init__(self) :
 
-		self.learn_imgs = list()
-		self.test_imgs = list()
+		self.learn_imgs = None
+		self.test_imgs = None
+		self.slices_test = None
+		self.first_indice_slice = None
+		self.model = None
 		self.nb_learn_imgs = 0
 		self.nb_test_imgs = 0
 
@@ -43,15 +46,88 @@ class Main :
 				symmetric_similarity = self.symmetric_similarity)
 
 		def create_dt_method(self) :
+
+			def compute_similarity(self) :
+
+				def compute_similarity_img1_img2(self, img1, img2) :
+					if self.symmetric_similarity == "true" :
+						return simy.symmetric_similarity_between_two_imgs(img1, img2)
+					return simy.similarity_between_two_imgs(img1, img2)
+
+				nb_imgs = len(self.learn_imgs)
+				self.dict_sim = simy.Dict_Sim(nb_imgs)
+				avancement = 0
+				fin = (nb_imgs * (nb_imgs - 1)) / 2
+				progress_bar = ProgressBar(avancement, fin)
+				for i in range(nb_imgs) :
+					for j in range(i+1, nb_imgs) :
+						img1 = self.learn_imgs[i]
+						img2 = self.learn_imgs[j]
+						score_sim, inter_sim = compute_similarity_img1_img2(self, img1, img2)
+						self.dict_sim.set_similarity(i, j, score_sim)
+						avancement += 1
+						progress_bar.updateProgress(avancement, "")
+
 			self.extract_img_density(NB_LEARN_SLICE, NB_TEST_SLICE)
 			nb_imgs = len(self.learn_imgs)
 			list_ind_img = list(range(nb_imgs))
 			self.dict_sim = None
-			self.compute_similarity()
+			compute_similarity(self)
 			self.model = dt.Decision_Tree(None, list_ind_img, self.dict_sim, self.learn_imgs, None, \
 				split_method = self.split_method, \
 				symmetric_similarity = self.symmetric_similarity)
 			self.model.create_tree()
+
+		def make_all_test(self, plot=False) :
+
+			def test_slice(self, indice_slice, plot=False) :
+
+				def find_indice_debut_fin_img(self, indice_slice) :
+					debut = self.first_indice_slice[indice_slice]
+					fin = self.first_indice_slice[indice_slice + 1] 
+					#on ne dépasse pas car la dernière valeur est le nombre d'images
+					return debut, fin
+
+				def make_predictions(self, indice_slice) :
+					print("Test de la slice " + str(indice_slice))
+
+					img_from_slice = list()
+					debut, fin = find_indice_debut_fin_img(self, indice_slice)
+					for i in range(debut, fin) :
+						(img, c_abs, c_ord) = self.test_imgs[i]
+						img_from_slice += [img]
+
+					result = self.model.predict_all_imgs(img_from_slice)
+					list_prediction = result[0]
+					list_score = result[1]
+					list_difference = result[2]
+
+					return list_prediction, list_score, list_difference
+
+				def calcul_img_success(self, indice_slice, list_score) :
+
+					def get_value_pixel(score) :
+						return 255 * (score/(2*math.pi))
+
+					img_slice = self.slices_test[indice_slice]
+					size_x, size_y = (len(img_slice), len(img_slice[0]))
+					img_success = [[0 for i in range(size_x)] for j in range(size_y)]
+
+					debut, fin = find_indice_debut_fin_img(self, indice_slice)
+					for cpt, i in enumerate(list(range(debut, fin))) :
+						(img, c_abs, c_ord) = self.test_imgs[i]
+						img_success[c_abs][c_ord] = get_value_pixel(list_score[cpt])
+
+					return img_success
+
+				list_prediction, list_score, list_difference = make_predictions(self, indice_slice)
+				if plot :
+					img_success = calcul_img_success(self, indice_slice, list_score)
+					plt.imshow(img_success)
+					plt.show()
+
+			for i in range(NB_TEST_SLICE) :
+				test_slice(self, i, plot)
 
 		if self.load_model == "true" :
 				self.fload_model(self.path)
@@ -66,8 +142,8 @@ class Main :
 			self.fsave_model(self.path_save)
 
 		#test des données
-		self.model.predict_all_imgs(self.test_imgs)		
-
+		# self.model.predict_all_imgs(self.test_imgs)	
+		make_all_test(self, plot=True)	
 
 	def fsave_model(self, dir_save) :
 		print("Sauvegarde du modèle dans " + dir_save + "...")
@@ -104,27 +180,6 @@ class Main :
 		with open(file_tree, "r") as input :
 			self.model = pickle.load(input)
 
-	def compute_similarity(self) :
-
-		def compute_similarity_img1_img2(self, img1, img2) :
-			if self.symmetric_similarity == "true" :
-				return simy.symmetric_similarity_between_two_imgs(img1, img2)
-			return simy.similarity_between_two_imgs(img1, img2)
-
-		nb_imgs = len(self.learn_imgs)
-		self.dict_sim = simy.Dict_Sim(nb_imgs)
-		avancement = 0
-		fin = (nb_imgs * (nb_imgs - 1)) / 2
-		progress_bar = ProgressBar(avancement, fin)
-		for i in range(nb_imgs) :
-			for j in range(i+1, nb_imgs) :
-				img1 = self.learn_imgs[i]
-				img2 = self.learn_imgs[j]
-				score_sim, inter_sim = compute_similarity_img1_img2(self, img1, img2)
-				self.dict_sim.set_similarity(i, j, score_sim)
-				avancement += 1
-				progress_bar.updateProgress(avancement, "")
-
 	def extract_img_density(self, nb_learn_slice, nb_test_slice) :
 
 		def get_list_img_density(self) :
@@ -155,9 +210,12 @@ class Main :
 
 			def extract_img_test(list_img_density, indice_test) :
 				images = list()
+				first_indice_for_each_slice = list()
 				for i in indice_test :
+					first_indice_for_each_slice += [len(images)]
 					images += list_img_density[i].extract_images()
-				return images
+				first_indice_for_each_slice += [len(images)] #limites pour le slice par slice
+				return images, first_indice_for_each_slice
 
 			nb_slice = len(list_img_density)
 			if nb_slice_learn + nb_slice_test > nb_slice :
@@ -170,13 +228,22 @@ class Main :
 			indice_test = indice_test[:nb_slice_test]
 
 			quart_img_learn = extract_img_learn(list_img_density, indice_learn)[:50]
-			img_test = extract_img_test(list_img_density, indice_test)[:50]
+			result = extract_img_test(list_img_density, indice_test)
+			img_test = result[0]
+			first_indice_slice = result[1]
+
 			slices_test = [list_img_density[i].extract_slice() for i in indice_test]
-			return quart_img_learn, img_test, slices_test
+			return quart_img_learn, img_test, slices_test, first_indice_slice
 
 		print("Chargement des images à partir de " + self.path)
 		list_img_density = get_list_img_density(self)
-		self.learn_imgs, self.test_imgs, self.slices_test = extract_and_seperate_img(list_img_density, nb_learn_slice, nb_test_slice)
+		result = extract_and_seperate_img(list_img_density, nb_learn_slice, nb_test_slice)
+
+		self.learn_imgs = result[0]
+		self.test_imgs = result[1]
+		self.slices_test = result[2]
+		self.first_indice_slice = result[3]
+
 		print(str(len(self.learn_imgs)) + " quarts images d'apprentissage chargées.")
 		print(str(len(self.test_imgs)) + " images de tests chargées.")
 

@@ -326,7 +326,7 @@ class Zoomed_Tree() :
 		list_score = list()
 		list_difference = list()
 
-		for i, (img, c_abs, c_ord) in enumerate(imgs) :
+		for i, img in enumerate(imgs) :
 			begin = time.time()
 			prediction, score, difference = predict_one_img(self, img)
 			end = time.time()
@@ -346,7 +346,6 @@ class Zoomed_Tree() :
 
 		print(stats)
 		return list_prediction, list_score, list_difference
-
 
 	def __str__(self) :
 
