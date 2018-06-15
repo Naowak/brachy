@@ -7,6 +7,7 @@ import Decision_Tree as dt
 import Img_Density as imd
 import Similarity as simy
 from Bcolor import bcolors
+from ProgressBar import ProgressBar
 import Stats
 import random
 import time
@@ -54,6 +55,13 @@ class Zoomed_Tree() :
 	""" Défini l'arbre qui zoom dans les images"""
 
 	def __init__(self, list_img = list(), split_method = "random", symmetric_similarity="true") :
+
+		def add_all_imgs(self, list_img) :
+			progress_bar = ProgressBar(0, len(list_img))
+			for i, img in enumerate(list_img) :
+				self.add_img(img)
+				progress_bar.updateProgress(i+1, "")
+
 		self.root = Root()
 		self.imgs = list()
 		self.dict_sim = None
@@ -63,8 +71,7 @@ class Zoomed_Tree() :
 
 		if len(list_img) != 0 :
 			print("Ajout des images d'apprentissage dans l'arbre zoomé.")
-			for img in list_img :
-				self.add_img(img)
+			add_all_imgs(self, list_img)
 			self.compute_all_decision_tree()
 
 	def compute_all_decision_tree(self) :
