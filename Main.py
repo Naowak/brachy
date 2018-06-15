@@ -16,14 +16,13 @@ import math
 NB_LEARN_SLICE = 1
 NB_TEST_SLICE = 10
 
-class Save :
+class Save_Model :
 	def __init__(self, main) :
 		self.learn_imgs = main.learn_imgs
 		self.slices_test = main.slices_test
 		self.first_indice_slice = main.first_indice_slice
 		self.model = main.model
 		self.nb_learn_imgs = main.nb_learn_imgs
-		self.nb_test_imgs = main.nb_test_imgs
 
 	def copy_into(self, main) :
 		main.learn_imgs = self.learn_imgs
@@ -31,6 +30,16 @@ class Save :
 		main.first_indice_slice = self.first_indice_slice
 		main.model = self.model
 		main.nb_learn_imgs = self.nb_learn_imgs
+
+class Save_Test :
+	def __init__(self, main) :
+		self.test_imgs = main.test_imgs
+		self.first_indice_slice = main.first_indice_slice
+		self.nb_test_imgs = main.nb_test_imgs
+
+	def copy_into(self, main) :
+		main.test_imgs = self.test_imgs
+		main.first_indice_slice = self.first_indice_slice
 		main.nb_test_imgs = self.nb_test_imgs
 
 class Main :
@@ -174,25 +183,21 @@ class Main :
 		file_model = dir_save + "model.dat"
 		file_img_test = dir_save + "tests.dat"
 
-		save_model = Save(self)
-		tests_imgs = self.test_imgs
-		self.test_imgs = None
+		save_model = Save_Model(self)
+		save_test = Save_Test(self)
 		#on sauvegade différements les images de tests du model
 
 		with open(file_model, "w+") as output :
 			pickle.dump(save_model, output, pickle.HIGHEST_PROTOCOL)
 
 		with open(file_img_test, "w+") as output :
-			pickle.dump(tests_imgs, output, pickle.HIGHEST_PROTOCOL)
-
-		self.test_imgs = tests_imgs
-		#on remet la bonne valeur
+			pickle.dump(save_test, output, pickle.HIGHEST_PROTOCOL)
 
 	def fload_model(self, dir_load) :
-
 		print("Chargement du modèle à partir de " + dir_load + "...")
 
 		if self.path_test != None :
+			print("Chargement des images de tests à partir de " + self.path_test + "...")
 			file_img_test = self.path_test
 		else :
 			file_img_test = dir_load + "tests.dat"
@@ -200,11 +205,12 @@ class Main :
 		file_model = dir_load + "model.dat"
 
 		with open(file_model, "r") as input :
-			save = pickle.load(input)
-			save.copy_into(self)
+			save_model = pickle.load(input)
+			save_model.copy_into(self)
 
 		with open(file_img_test, "r") as input :
-			self.test_imgs = pickle.load(input)
+			save_test = pickle.load(input)
+			save_test.copy_into(self)
 
 	def extract_img_density(self, nb_learn_slice, nb_test_slice) :
 
