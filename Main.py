@@ -63,7 +63,11 @@ class Main :
 		self.path_test = None
 		self.nb_img_for_each_slice = None
 		self.plot = None
+		self.ask_help = None
 		self.extract_param(sys.argv)
+		if self.ask_help == "true" :
+			self.help()
+			exit()
 
 	def run(self, plot=False) :
 
@@ -303,6 +307,19 @@ class Main :
 		self.path_test = take_value(param, "path_test", None)
 		self.nb_img_for_each_slice = int(take_value(param, "nb_img_slice", 10000))
 		self.plot = take_value(param, "plot", "false")
+		self.ask_help = take_value(param, "help", "true")
+
+	def help(self) :
+		print("method=value --- values = [zt_dt, dt]")
+		print("split_method=value --- values = [random, farest_point]")
+		print("load_model=value --- values = [false, true]")
+		print("save_model=value --- values = [false, true]")
+		print("path_save=value --- default = ./save/")
+		print("path=value --- default = ../../../working_dir/")
+		print("symmetric=value --- values = [true, false]")
+		print("path_test=value --- default = None")
+		print("nb_img_slice=value --- default = 10000")
+		print("plot=value --- value = [false, true]")
 
 if __name__ == '__main__':
 
