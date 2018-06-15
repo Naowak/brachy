@@ -14,8 +14,24 @@ import cPickle as pickle
 import math
 
 NB_LEARN_SLICE = 1
-NB_TEST_SLICE = 5
+NB_TEST_SLICE = 10
 
+class Save :
+	def __init__(self, main) :
+		self.learn_imgs = main.learn_imgs
+		self.slices_test = main.slices_test
+		self.first_indice_slice = main.first_indice_slice
+		self.model = main.model
+		self.nb_learn_imgs = main.nb_learn_imgs
+		self.nb_test_imgs = main.nb_test_imgs
+
+	def copy_into(self, main) :
+		main.learn_imgs = self.learn_imgs
+		main.slices_test = self.slices_test
+		main.first_indice_slice = self.first_indice_slice
+		main.model = self.model
+		main.nb_learn_imgs = self.nb_learn_imgs
+		main.nb_test_imgs = self.nb_test_imgs
 
 class Main :
 	def __init__(self) :
@@ -35,9 +51,12 @@ class Main :
 		self.save_model = None
 		self.path_save = None
 		self.symmetric_similarity = None
+		self.path_test = None
+		self.nb_img_for_each_slice = None
+		self.plot = None
 		self.extract_param(sys.argv)
 
-	def run(self) :
+	def run(self, plot=False) :
 
 		def create_zt_dt_method(self) :
 			self.extract_img_density(NB_LEARN_SLICE, NB_TEST_SLICE)
@@ -142,8 +161,8 @@ class Main :
 			self.fsave_model(self.path_save)
 
 		#test des données
-		# self.model.predict_all_imgs(self.test_imgs)	
-		make_all_test(self, plot=True)	
+		# self.model.predict_all_imgs(self.test_imgs)
+		make_all_test(self, plot)	
 
 	def fsave_model(self, dir_save) :
 		print("Sauvegarde du modèle dans " + dir_save + "...")
@@ -152,33 +171,40 @@ class Main :
 		if not os.path.exists(dir_save) :
 			os.makedirs(dir_save)
 
-		file_img_learn = dir_save + "imgs.dat"
+		file_model = dir_save + "model.dat"
 		file_img_test = dir_save + "tests.dat"
-		file_tree = dir_save + "tree.dat"
 
-		with open(file_img_learn, "w+") as output :
-			pickle.dump(self.learn_imgs, output, pickle.HIGHEST_PROTOCOL)
+		save_model = Save(self)
+		tests_imgs = self.test_imgs
+		self.test_imgs = None
+		#on sauvegade différements les images de tests du model
+
+		with open(file_model, "w+") as output :
+			pickle.dump(save_model, output, pickle.HIGHEST_PROTOCOL)
 
 		with open(file_img_test, "w+") as output :
-			pickle.dump(self.test_imgs, output, pickle.HIGHEST_PROTOCOL)
+			pickle.dump(tests_imgs, output, pickle.HIGHEST_PROTOCOL)
 
-		with open(file_tree, "w+") as output :
-			pickle.dump(self.model, output, pickle.HIGHEST_PROTOCOL)
+		self.test_imgs = tests_imgs
+		#on remet la bonne valeur
 
 	def fload_model(self, dir_load) :
-		print("Chargement du modèle à partir de " + dir_load + "...")
-		file_img_learn = dir_load + "imgs.dat"
-		file_img_test = dir_load + "tests.dat"
-		file_tree = dir_load + "tree.dat"
 
-		with open(file_img_learn, "r") as input :
-			self.learn_imgs = pickle.load(input)
+		print("Chargement du modèle à partir de " + dir_load + "...")
+
+		if self.path_test != None :
+			file_img_test = self.path_test
+		else :
+			file_img_test = dir_load + "tests.dat"
+
+		file_model = dir_load + "model.dat"
+
+		with open(file_model, "r") as input :
+			save = pickle.load(input)
+			save.copy_into(self)
 
 		with open(file_img_test, "r") as input :
 			self.test_imgs = pickle.load(input)
-
-		with open(file_tree, "r") as input :
-			self.model = pickle.load(input)
 
 	def extract_img_density(self, nb_learn_slice, nb_test_slice) :
 
@@ -195,25 +221,25 @@ class Main :
 					list_img_density += [imd.Img_Density(density_file, config_file)]
 			return list_img_density
 
-		def extract_and_seperate_img(list_img_density, nb_slice_learn, nb_slice_test) :
+		def extract_and_seperate_img(list_img_density, nb_slice_learn, nb_slice_test, nb_img_slice) :
 
 			def get_indice_slice_learn(size_list_img_density, nb_slice_learn) :
 				parcour = list(range(-nb_slice_learn//2+1, nb_slice_learn//2+1, 1))
 				indices = [size_list_img_density//2 + elem for elem in parcour]
 				return indices
 
-			def extract_img_learn(list_img_density, indice_learn) :
+			def extract_img_learn(list_img_density, indice_learn, nb_img_slice) :
 				images = list()
 				for i in indice_learn :
-					images += list_img_density[i].extract_quart_images()
+					images += list_img_density[i].extract_quart_images()[:nb_img_slice]
 				return images
 
-			def extract_img_test(list_img_density, indice_test) :
+			def extract_img_test(list_img_density, indice_test, nb_img_slice) :
 				images = list()
 				first_indice_for_each_slice = list()
 				for i in indice_test :
 					first_indice_for_each_slice += [len(images)]
-					images += list_img_density[i].extract_images()
+					images += list_img_density[i].extract_images()[:nb_img_slice]
 				first_indice_for_each_slice += [len(images)] #limites pour le slice par slice
 				return images, first_indice_for_each_slice
 
@@ -227,8 +253,8 @@ class Main :
 			indice_test = [i for i in list(range(nb_slice)) if i not in indice_learn]
 			indice_test = indice_test[:nb_slice_test]
 
-			quart_img_learn = extract_img_learn(list_img_density, indice_learn)[:50]
-			result = extract_img_test(list_img_density, indice_test)
+			quart_img_learn = extract_img_learn(list_img_density, indice_learn, nb_img_slice)
+			result = extract_img_test(list_img_density, indice_test, nb_img_slice)
 			img_test = result[0]
 			first_indice_slice = result[1]
 
@@ -237,7 +263,7 @@ class Main :
 
 		print("Chargement des images à partir de " + self.path)
 		list_img_density = get_list_img_density(self)
-		result = extract_and_seperate_img(list_img_density, nb_learn_slice, nb_test_slice)
+		result = extract_and_seperate_img(list_img_density, nb_learn_slice, nb_test_slice, self.nb_img_for_each_slice)
 
 		self.learn_imgs = result[0]
 		self.test_imgs = result[1]
@@ -268,11 +294,15 @@ class Main :
 		self.path_save = take_value(param, "path_save", "./save/")
 		self.path = take_value(param, "path", "../../../working_dir/")
 		self.symmetric_similarity = take_value(param, "symmetric", "true")
+		self.path_test = take_value(param, "path_test", None)
+		self.nb_img_for_each_slice = int(take_value(param, "nb_img_slice", 10000))
+		self.plot = take_value(param, "plot", "false")
 
 if __name__ == '__main__':
 
 	main = Main()
-	main.run()
+	plot = main.plot == "true"
+	main.run(plot)
 
 
 

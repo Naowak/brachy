@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import Decision_Tree as dt
 import Img_Density as imd
 import Similarity as simy
+from Bcolor import bcolors
 import Stats
 import random
 import time
@@ -344,7 +345,9 @@ class Zoomed_Tree() :
 			if plot :
 				plot_result(img, prediction, difference)
 
+		print(bcolors.OKGREEN)
 		print(stats)
+		print(bcolors.ENDC)
 		return list_prediction, list_score, list_difference
 
 	def __str__(self) :
