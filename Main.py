@@ -14,7 +14,7 @@ import cPickle as pickle
 import math
 
 NB_LEARN_SLICE = 1
-NB_TEST_SLICE = 10
+NB_TEST_SLICE = 1
 
 class Save_Model :
 	def __init__(self, main) :
@@ -307,7 +307,7 @@ class Main :
 		self.path_test = take_value(param, "path_test", None)
 		self.nb_img_for_each_slice = int(take_value(param, "nb_img_slice", 10000))
 		self.plot = take_value(param, "plot", "false")
-		self.ask_help = take_value(param, "help", "true")
+		self.ask_help = take_value(param, "help", "false")
 
 	def help(self) :
 		print("method=value --- values = [zt_dt, dt]")
