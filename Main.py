@@ -152,10 +152,47 @@ class Main :
 
 					return img_success
 
+				def calcul_img_recompt(self, indice_slice, list_prediction) :
+
+					def do_recompt(img_recompt, prediction, c_abs, c_ord) :
+						size_x, size_y = (len(prediction), len(prediction[0]))
+						translation_x, translation_y = (size_x/2, size_y/2)
+
+						for i in range(size_x) :
+							for j in range(size_y) :
+								if prediction[i][j] == 0 :
+									#un point à recalculer
+									img_recompt[c_abs + i - translation_x][c_ord + j - translation_y][0] += 1
+								if prediction[i][j] != -1 :
+									img_recompt[c_abs + i - translation_x][c_ord + j - translation_y][1] += 1
+
+					img_slice = self.slices_test[indice_slice]
+					size_x, size_y = (len(img_slice), len(img_slice[0]))
+					img_recompt = [[[0, 0] for i in range(size_x)] for j in range(size_y)]
+
+					debut, fin = find_indice_debut_fin_img(self, indice_slice)
+					for cpt, i in enumerate(list(range(debut, fin))) :
+						(img, c_abs, c_ord) = self.test_imgs[i]
+						prediction = list_prediction[cpt]
+						do_recompt(img_recompt, prediction, c_abs, c_ord)
+
+					return img_recompt
+
+ 
 				list_prediction, list_score, list_difference = make_predictions(self, indice_slice)
 				if plot :
 					img_success = calcul_img_success(self, indice_slice, list_score)
+					img_recompt = calcul_img_recompt(self, indice_slice, list_prediction)
+
+					fig = plt.figure()
+					fig.add_subplot(3, 1, 1)
+					plt.imshow(self.slices_test[indice_slice])
+
+					fig.add_subplot(3, 1, 2)
 					plt.imshow(img_success)
+
+					fig.add_subplot(3, 1, 3)
+					plt.imshow(img_recompt)
 					plt.show()
 
 			for i in range(NB_TEST_SLICE) :
