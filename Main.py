@@ -166,6 +166,15 @@ class Main :
 								if prediction[i][j] != -1 :
 									img_recompt[c_abs + i - translation_x][c_ord + j - translation_y][1] += 1
 
+					def transform_img_recompt(img_recompt) :
+						size_x, size_y = (len(img_recompt), len(img_recompt[0]))
+						for i in range(size_x) :
+							for j in range(size_y) :
+								if img_recompt[i][j][1] > 0 :
+									img_recompt[i][j] = float(img_recompt[i][j][0]) / img_recompt[i][j][1] * 255
+								else :
+									img_recompt[i][j] = 0
+
 					img_slice = self.slices_test[indice_slice]
 					size_x, size_y = (len(img_slice), len(img_slice[0]))
 					img_recompt = [[[0, 0] for i in range(size_x)] for j in range(size_y)]
@@ -175,6 +184,7 @@ class Main :
 						(img, c_abs, c_ord) = self.test_imgs[i]
 						prediction = list_prediction[cpt]
 						do_recompt(img_recompt, prediction, c_abs, c_ord)
+					transform_img_recompt(img_recompt)
 
 					return img_recompt
 
