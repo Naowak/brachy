@@ -13,20 +13,18 @@ import sys
 import cPickle as pickle
 import math
 
-NB_LEARN_SLICE = 1
-NB_TEST_SLICE = 1
+NB_LEARN_SLICE = 0
+NB_TEST_SLICE = 15
 
 class Save_Model :
 	def __init__(self, main) :
 		self.learn_imgs = main.learn_imgs
-		self.slices_test = main.slices_test
 		self.first_indice_slice = main.first_indice_slice
 		self.model = main.model
 		self.nb_learn_imgs = main.nb_learn_imgs
 
 	def copy_into(self, main) :
 		main.learn_imgs = self.learn_imgs
-		main.slices_test = self.slices_test
 		main.first_indice_slice = self.first_indice_slice
 		main.model = self.model
 		main.nb_learn_imgs = self.nb_learn_imgs
@@ -36,11 +34,13 @@ class Save_Test :
 		self.test_imgs = main.test_imgs
 		self.first_indice_slice = main.first_indice_slice
 		self.nb_test_imgs = main.nb_test_imgs
+		self.slices_test = main.slices_test
 
 	def copy_into(self, main) :
 		main.test_imgs = self.test_imgs
 		main.first_indice_slice = self.first_indice_slice
 		main.nb_test_imgs = self.nb_test_imgs
+		main.slices_test = self.slices_test
 
 class Main :
 	def __init__(self) :
