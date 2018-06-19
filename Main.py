@@ -64,12 +64,13 @@ class Main :
 		self.nb_img_for_each_slice = None
 		self.plot = None
 		self.ask_help = None
+		self.save_result = None
 		self.extract_param(sys.argv)
 		if self.ask_help == "true" :
 			self.help()
 			exit()
 
-	def run(self, plot=False) :
+	def run(self, plot=False, save_result=False) :
 
 		def create_zt_dt_method(self) :
 			self.extract_img_density(NB_LEARN_SLICE, NB_TEST_SLICE)
@@ -110,9 +111,9 @@ class Main :
 				symmetric_similarity = self.symmetric_similarity)
 			self.model.create_tree()
 
-		def make_all_test(self, plot=False) :
+		def make_all_test(self, plot=False, save_result=False) :
 
-			def test_slice(self, indice_slice, plot=False) :
+			def test_slice(self, indice_slice, plot=False, save_result=False) :
 
 				def find_indice_debut_fin_img(self, indice_slice) :
 					debut = self.first_indice_slice[indice_slice]
@@ -129,10 +130,17 @@ class Main :
 						(img, c_abs, c_ord) = self.test_imgs[i]
 						img_from_slice += [img]
 
-					result = self.model.predict_all_imgs(img_from_slice)
-					list_prediction = result[0]
-					list_score = result[1]
-					list_difference = result[2]
+					list_prediction = []
+					list_score = []
+					list_difference = []
+
+					if len(img_from_slice) > 0 :
+						result = self.model.predict_all_imgs(img_from_slice)
+						list_prediction = result[0]
+						list_score = result[1]
+						list_difference = result[2]
+					else :
+						print("No image to predict")
 
 					return list_prediction, list_score, list_difference
 
@@ -175,6 +183,9 @@ class Main :
 								else :
 									img_recompt[i][j] = 0
 
+					def reverse_img_into_symmetric(img) :
+						return [[img[i][j] for i in range(len(img))] for j in range(len(img[0]))]
+
 					img_slice = self.slices_test[indice_slice]
 					size_x, size_y = (len(img_slice), len(img_slice[0]))
 					img_recompt = [[[0, 0] for i in range(size_x)] for j in range(size_y)]
@@ -185,12 +196,11 @@ class Main :
 						prediction = list_prediction[cpt]
 						do_recompt(img_recompt, prediction, c_abs, c_ord)
 					transform_img_recompt(img_recompt)
+					img_recompt = reverse_img_into_symmetric(img_recompt)
 
 					return img_recompt
 
- 
-				list_prediction, list_score, list_difference = make_predictions(self, indice_slice)
-				if plot :
+				def plot_result(self, indice_slice, list_score, list_prediction) :
 					img_success = calcul_img_success(self, indice_slice, list_score)
 					img_recompt = calcul_img_recompt(self, indice_slice, list_prediction)
 
@@ -205,8 +215,35 @@ class Main :
 					plt.imshow(img_recompt)
 					plt.show()
 
+				def save_img_result(self, indice_slice, list_score, list_prediction, dir_result="./result/") :
+					img_success = calcul_img_success(self, indice_slice, list_score)
+					img_recompt = calcul_img_recompt(self, indice_slice, list_prediction)
+
+					fig = plt.figure()
+					fig.add_subplot(3, 1, 1)
+					plt.imshow(self.slices_test[indice_slice])
+
+					fig.add_subplot(3, 1, 2)
+					plt.imshow(img_success)
+
+					fig.add_subplot(3, 1, 3)
+					plt.imshow(img_recompt)
+
+					name = dir_result + "result_slice_" + str(indice_slice) + ".png"
+					fig.savefig(name)
+
+				list_prediction, list_score, list_difference = make_predictions(self, indice_slice)
+				if len(list_prediction) > 0 :
+					if plot :
+						plot_result(self, indice_slice, list_score, list_prediction)
+					if save_result :
+						save_img_result(self, indice_slice, list_score, list_prediction)
+				else :
+					print("Aucune image dans cette slice")
+
 			for i in range(NB_TEST_SLICE) :
-				test_slice(self, i, plot)
+				if i >= 12 :
+					test_slice(self, i, plot, save_result)
 
 		if self.load_model == "true" :
 				self.fload_model(self.path)
@@ -222,7 +259,7 @@ class Main :
 
 		#test des données
 		# self.model.predict_all_imgs(self.test_imgs)
-		make_all_test(self, plot)	
+		make_all_test(self, plot, save_result)	
 
 	def fsave_model(self, dir_save) :
 		print("Sauvegarde du modèle dans " + dir_save + "...")
@@ -355,6 +392,7 @@ class Main :
 		self.nb_img_for_each_slice = int(take_value(param, "nb_img_slice", 10000))
 		self.plot = take_value(param, "plot", "false")
 		self.ask_help = take_value(param, "help", "false")
+		self.save_result = take_value(param, "save_result", "true")
 
 	def help(self) :
 		print("method=value --- values = [zt_dt, dt]")
@@ -367,12 +405,14 @@ class Main :
 		print("path_test=value --- default = None")
 		print("nb_img_slice=value --- default = 10000")
 		print("plot=value --- value = [false, true]")
+		print("save_result=value --- value = [true, false]")
 
 if __name__ == '__main__':
 
 	main = Main()
 	plot = main.plot == "true"
-	main.run(plot)
+	save_result = main.save_result == "true"
+	main.run(plot = plot, save_result = save_result)
 
 
 
