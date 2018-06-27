@@ -13,8 +13,8 @@ import sys
 import cPickle as pickle
 import math
 
-NB_LEARN_SLICE = 0
-NB_TEST_SLICE = 15
+NB_LEARN_SLICE = 1
+NB_TEST_SLICE = 4
 
 class Save_Model :
 	def __init__(self, main) :
@@ -149,6 +149,9 @@ class Main :
 					def get_value_pixel(score) :
 						return 255 * (score/(2*math.pi))
 
+					def reverse_img_into_symmetric(img) :
+						return [[img[i][j] for i in range(len(img))] for j in range(len(img[0]))]
+
 					img_slice = self.slices_test[indice_slice]
 					size_x, size_y = (len(img_slice), len(img_slice[0]))
 					img_success = [[0 for i in range(size_x)] for j in range(size_y)]
@@ -158,20 +161,22 @@ class Main :
 						(img, c_abs, c_ord) = self.test_imgs[i]
 						img_success[c_abs][c_ord] = get_value_pixel(list_score[cpt])
 
+					img_success = reverse_img_into_symmetric(img_success)
+
 					return img_success
 
-				def calcul_img_recompt(self, indice_slice, list_prediction) :
+				def calcul_img_recompt(self, indice_slice, list_difference) :
 
-					def do_recompt(img_recompt, prediction, c_abs, c_ord) :
-						size_x, size_y = (len(prediction), len(prediction[0]))
+					def do_recompt(img_recompt, difference, c_abs, c_ord) :
+						size_x, size_y = (len(difference), len(difference[0]))
 						translation_x, translation_y = (size_x/2, size_y/2)
 
 						for i in range(size_x) :
 							for j in range(size_y) :
-								if prediction[i][j] == 0 :
+								if difference[i][j] == 0 :
 									#un point à recalculer
 									img_recompt[c_abs + i - translation_x][c_ord + j - translation_y][0] += 1
-								if prediction[i][j] != -1 :
+								if difference[i][j] != -1 :
 									img_recompt[c_abs + i - translation_x][c_ord + j - translation_y][1] += 1
 
 					def transform_img_recompt(img_recompt) :
@@ -193,16 +198,16 @@ class Main :
 					debut, fin = find_indice_debut_fin_img(self, indice_slice)
 					for cpt, i in enumerate(list(range(debut, fin))) :
 						(img, c_abs, c_ord) = self.test_imgs[i]
-						prediction = list_prediction[cpt]
-						do_recompt(img_recompt, prediction, c_abs, c_ord)
+						difference = list_difference[cpt]
+						do_recompt(img_recompt, difference, c_abs, c_ord)
 					transform_img_recompt(img_recompt)
 					img_recompt = reverse_img_into_symmetric(img_recompt)
 
 					return img_recompt
 
-				def plot_result(self, indice_slice, list_score, list_prediction) :
+				def plot_result(self, indice_slice, list_score, list_difference) :
 					img_success = calcul_img_success(self, indice_slice, list_score)
-					img_recompt = calcul_img_recompt(self, indice_slice, list_prediction)
+					img_recompt = calcul_img_recompt(self, indice_slice, list_difference)
 
 					fig = plt.figure()
 					fig.add_subplot(3, 1, 1)
@@ -215,9 +220,9 @@ class Main :
 					plt.imshow(img_recompt)
 					plt.show()
 
-				def save_img_result(self, indice_slice, list_score, list_prediction, dir_result="./result/") :
+				def save_img_result(self, indice_slice, list_score, list_difference, dir_result="./result/") :
 					img_success = calcul_img_success(self, indice_slice, list_score)
-					img_recompt = calcul_img_recompt(self, indice_slice, list_prediction)
+					img_recompt = calcul_img_recompt(self, indice_slice, list_difference)
 
 					fig = plt.figure()
 					fig.add_subplot(3, 1, 1)
@@ -235,15 +240,15 @@ class Main :
 				list_prediction, list_score, list_difference = make_predictions(self, indice_slice)
 				if len(list_prediction) > 0 :
 					if plot :
-						plot_result(self, indice_slice, list_score, list_prediction)
+						plot_result(self, indice_slice, list_score, list_difference)
 					if save_result :
-						save_img_result(self, indice_slice, list_score, list_prediction)
+						save_img_result(self, indice_slice, list_score, list_difference)
 				else :
 					print("Aucune image dans cette slice")
 
 			for i in range(NB_TEST_SLICE) :
-				if i >= 12 :
-					test_slice(self, i, plot, save_result)
+				# if i >= 12 :
+				test_slice(self, i, plot, save_result)
 
 		if self.load_model == "true" :
 				self.fload_model(self.path)
