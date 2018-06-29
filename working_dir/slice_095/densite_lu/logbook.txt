@@ -1,0 +1,3 @@
+  
+ nombre de processeurs et taches maximuns           4           4
+  

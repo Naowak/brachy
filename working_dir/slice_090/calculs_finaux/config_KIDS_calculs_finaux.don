@@ -1,0 +1,51 @@
+-M1
+-lf 123
+-mf 103
+-Lx 119.14056399999998
+-Ly 99.60932399999999
+-2d
+-ordre 1
+-n_groupe_particules 2
+-group 1 e-
+-group 2 g
+-n_cycles 1200
+-seuil_residu 1.e-1
+-b_maximum
+-densite lu_HU densite_hu.don
+-frontiere groupe 1
+-frontiere type_de_particule g
+-frontiere direction_M1 0.0 0.0 0.0
+-frontiere volume_sphere 60.53890447154471 46.903419553398045 59.57028199999999 0.6 0.6 1
+-frontiere spectre_mono 1e+20 0.03
+-densite spheroid 3.5832 60.53890447154471 46.903419553398045 59.57028199999999 0.6 0.6 15
+-GS_para_alea
+-python
+-nofusion
+
+fin fichier KIDS
+
+title
+  cepxs regression test
+first-order
+energy 0.035
+cutoff 0.001
+legendre 8
+electron-source
+ full-coupling
+electrons
+ linear 30
+photons
+ linear 30
+ no-lines
+material H .1111 O .8889
+ density 1.
+material Ti 1.0
+ density 4.507
+material N 1.0
+ density 0.001
+material Ag 1.0
+ density 10.490
+material Ti .282 N .082 Ag .635
+ density 3.5832
+material H .1111 O .8889
+ density 4.507

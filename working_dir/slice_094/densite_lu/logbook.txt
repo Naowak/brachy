@@ -1,0 +1,60 @@
+ 
+                     CCCC   EEEEE   PPPP    X   X    SSSS
+                    C       E       P   P    X X    S    
+                    C       EEEE    PPPP      X      SSS 
+                    C       E       P        X X        S
+                     CCCC   EEEEE   P       X   X   SSSS 
+               A COUPLED ELECTRON/PHOTON X-SECTION GENERATION CODE
+ VERSION: 7.5.4
+ DATE: January 16, 2013
+   cepxs regression test                                                 
+
+ EXECUTION DATE    6-29-18      CEPXS START TIME   13:20:44
+ INPUT/GRID GENERATION SUCCESSFUL
+ PROCESSING X-SECTIONS FOR MATERIAL   1 UNKNOWN                                 
+ e_to_e_tot_1.dat                                                                
+ e_to_e_1.dat                                                                    
+ p_to_p_tot_1.dat                                                                
+ p_to_p_1.dat                                                                    
+ e_to_g_1.dat                                                                    
+ p_to_g_1.dat                                                                    
+ p_to_e_1.dat                                                                    
+ e_edep_1.dat                                                                    
+ g_to_g_tot_1.dat                                                                
+ g_to_g_1.dat                                                                    
+ g_to_e_1.dat                                                                    
+ g_to_p_1.dat                                                                    
+ g_edep_1.dat                                                                    
+ PROCESSING X-SECTIONS FOR MATERIAL   2 TI                                      
+ e_to_e_tot_2.dat                                                                
+ e_to_e_2.dat                                                                    
+ p_to_p_tot_2.dat                                                                
+ p_to_p_2.dat                                                                    
+ e_to_g_2.dat                                                                    
+ p_to_g_2.dat                                                                    
+ p_to_e_2.dat                                                                    
+ e_edep_2.dat                                                                    
+ g_to_g_tot_2.dat                                                                
+ g_to_g_2.dat                                                                    
+ g_to_e_2.dat                                                                    
+ g_to_p_2.dat                                                                    
+ g_edep_2.dat                                                                    
+ PROCESSING X-SECTIONS FOR MATERIAL   3 N                                       
+ e_to_e_tot_3.dat                                                                
+ e_to_e_3.dat                                                                    
+ p_to_p_tot_3.dat                                                                
+ p_to_p_3.dat                                                                    
+ e_to_g_3.dat                                                                    
+ p_to_g_3.dat                                                                    
+ p_to_e_3.dat                                                                    
+ e_edep_3.dat                                                                    
+ g_to_g_tot_3.dat                                                                
+ g_to_g_3.dat                                                                    
+ g_to_e_3.dat                                                                    
+ g_to_p_3.dat                                                                    
+ g_edep_3.dat                                                                    
+ PROCESSING X-SECTIONS FOR MATERIAL   4 AG                                      
+ e_to_e_tot_4.dat                                                                
+  
+ nombre de processeurs et taches maximuns           4           4
+  
