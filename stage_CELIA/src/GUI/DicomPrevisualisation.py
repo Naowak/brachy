@@ -9,7 +9,7 @@
 from MainGUI import *
 from threading import Thread
 from MultiSlider import *
-# from Atlas import *
+from Atlas import *
 
 class DicomPrevisualisation(tk.Frame):
     """
@@ -400,24 +400,28 @@ class LancerCalculs(Thread):
             
             # Generation des fichiers .don
             if self.calculs_finaux:
-                filename_hounsfield, filename_config = self.dicom_navigation.dicom_parser.generate_DICOM_calculs_finaux(self.slice.get_slice_id(),
+                filename_config = self.dicom_navigation.dicom_parser.generate_DICOM_calculs_finaux(self.slice.get_slice_id(),
                                                                                  self.dicom_navigation.working_directory,
                                                                                  self.options)
+                # /!\ IL FAUT TROUVER LE HOUNSFIELD pour les calculs finaux !!!!! 
             else:
                 self.slice.preparatifs_precalculs(self.options) # Calcul de la densite, HU_array, etc.
-                filename_config = self.dicom_navigation.dicom_parser.generate_DICOM_previsualisation(self.slice.get_slice_id(),
+                filename_hounsfield, filename_config = self.dicom_navigation.dicom_parser.generate_DICOM_previsualisation(self.slice.get_slice_id(),
                                                                                    self.dicom_navigation.working_directory,
                                                                                    self.options)
 
-                # /!\ IL FAUT TROUVER LE HOUNSFIELD pour les calculs finaux !!!!! 
 
             #---------------------------- Intégration de Paraka --------------------------------------
             # Ici on doit lancer Paraka et extraire les zones à calculer et celle à recopier pour chacune de nos sources
             # On doit aussi les enregistrer dans un dossier temporaire de manière à ce que M1 vienne les lire
             # On lance paraka avec le model enregistrer avec le fichier de test correspondant à l'ensemble des images 
             # extraite (zone d'influence) à partir de config_kids.don et densite_hu.don
-            # param = "load_model=true path=short_model/"
-            # paraka = Atlas()
+            param = "load_model=true path=src/Paraka/short_model/"
+            param += " config_file=" + filename_config 
+            param += " density_file=" + filename_hounsfield
+            param += " plot=true"
+            paraka = Atlas(param)
+            paraka.run(plot=False)
 
             # Puis Lancement du calcul M1
             command = self.dicom_navigation.PATH_start_previsualisation + " " + self.slice.get_slice_directory() + " " + str(self.dicom_navigation.densite_lu.get())

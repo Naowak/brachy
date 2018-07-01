@@ -11,6 +11,7 @@ sys.path.append("./ressources/")
 sys.path.append("./src/GUI")
 sys.path.append("./src/previsualisation/")
 sys.path.append("./src/HDV/")
+sys.path.append("./src/Paraka/")
 
 from MainGUI import *
 

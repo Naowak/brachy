@@ -411,7 +411,7 @@ class Atlas :
 		self.slices_test = [img_density.extract_slice()]
 		self.first_indice_slice = [0, len(self.test_imgs)]
 
-	def extract_param(self, argv) :
+	def extract_param(self, options) :
 
 		def take_value(param, name_param, default_value) :
 			try :
@@ -421,7 +421,8 @@ class Atlas :
 				return default_value
 
 		param = dict()
-		for elem in argv[1:] :
+		args = options.split(" ")
+		for elem in args :
 			tab = elem.split("=")
 			param[tab[0]] = tab[1]
 
