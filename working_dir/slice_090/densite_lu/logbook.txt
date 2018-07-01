@@ -1,3 +1,1294 @@
+ 
+                     CCCC   EEEEE   PPPP    X   X    SSSS
+                    C       E       P   P    X X    S    
+                    C       EEEE    PPPP      X      SSS 
+                    C       E       P        X X        S
+                     CCCC   EEEEE   P       X   X   SSSS 
+               A COUPLED ELECTRON/PHOTON X-SECTION GENERATION CODE
+ VERSION: 7.5.4
+ DATE: January 16, 2013
+   cepxs regression test                                                 
+
+ EXECUTION DATE    7- 1-18      CEPXS START TIME   13:18: 1
+ INPUT/GRID GENERATION SUCCESSFUL
+ PROCESSING X-SECTIONS FOR MATERIAL   1 UNKNOWN                                 
+ e_to_e_tot_1.dat                                                                
+ e_to_e_1.dat                                                                    
+ p_to_p_tot_1.dat                                                                
+ p_to_p_1.dat                                                                    
+ e_to_g_1.dat                                                                    
+ p_to_g_1.dat                                                                    
+ p_to_e_1.dat                                                                    
+ e_edep_1.dat                                                                    
+ g_to_g_tot_1.dat                                                                
+ g_to_g_1.dat                                                                    
+ g_to_e_1.dat                                                                    
+ g_to_p_1.dat                                                                    
+ g_edep_1.dat                                                                    
+ PROCESSING X-SECTIONS FOR MATERIAL   2 TI                                      
+ e_to_e_tot_2.dat                                                                
+ e_to_e_2.dat                                                                    
+ p_to_p_tot_2.dat                                                                
+ p_to_p_2.dat                                                                    
+ e_to_g_2.dat                                                                    
+ p_to_g_2.dat                                                                    
+ p_to_e_2.dat                                                                    
+ e_edep_2.dat                                                                    
+ g_to_g_tot_2.dat                                                                
+ g_to_g_2.dat                                                                    
+ g_to_e_2.dat                                                                    
+ g_to_p_2.dat                                                                    
+ g_edep_2.dat                                                                    
+ PROCESSING X-SECTIONS FOR MATERIAL   3 N                                       
+ e_to_e_tot_3.dat                                                                
+ e_to_e_3.dat                                                                    
+ p_to_p_tot_3.dat                                                                
+ p_to_p_3.dat                                                                    
+ e_to_g_3.dat                                                                    
+ p_to_g_3.dat                                                                    
+ p_to_e_3.dat                                                                    
+ e_edep_3.dat                                                                    
+ g_to_g_tot_3.dat                                                                
+ g_to_g_3.dat                                                                    
+ g_to_e_3.dat                                                                    
+ g_to_p_3.dat                                                                    
+ g_edep_3.dat                                                                    
+ PROCESSING X-SECTIONS FOR MATERIAL   4 AG                                      
+ e_to_e_tot_4.dat                                                                
+ e_to_e_4.dat                                                                    
+ p_to_p_tot_4.dat                                                                
+ p_to_p_4.dat                                                                    
+ e_to_g_4.dat                                                                    
+ p_to_g_4.dat                                                                    
+ p_to_e_4.dat                                                                    
+ e_edep_4.dat                                                                    
+ g_to_g_tot_4.dat                                                                
+ g_to_g_4.dat                                                                    
+ g_to_e_4.dat                                                                    
+ g_to_p_4.dat                                                                    
+ g_edep_4.dat                                                                    
+ PROCESSING X-SECTIONS FOR MATERIAL   5 UNKNOWN                                 
+ e_to_e_tot_5.dat                                                                
+ e_to_e_5.dat                                                                    
+ p_to_p_tot_5.dat                                                                
+ p_to_p_5.dat                                                                    
+ e_to_g_5.dat                                                                    
+ p_to_g_5.dat                                                                    
+ p_to_e_5.dat                                                                    
+ e_edep_5.dat                                                                    
+ g_to_g_tot_5.dat                                                                
+ g_to_g_5.dat                                                                    
+ g_to_e_5.dat                                                                    
+ g_to_p_5.dat                                                                    
+ g_edep_5.dat                                                                    
+ PROCESSING X-SECTIONS FOR MATERIAL   6 UNKNOWN                                 
+ e_to_e_tot_6.dat                                                                
+ e_to_e_6.dat                                                                    
+ p_to_p_tot_6.dat                                                                
+ p_to_p_6.dat                                                                    
+ e_to_g_6.dat                                                                    
+ p_to_g_6.dat                                                                    
+ p_to_e_6.dat                                                                    
+ e_edep_6.dat                                                                    
+ g_to_g_tot_6.dat                                                                
+ g_to_g_6.dat                                                                    
+ g_to_e_6.dat                                                                    
+ g_to_p_6.dat                                                                    
+ g_edep_6.dat                                                                    
+ PERFORMING FINAL CHECKS
+ 
+ X-SECTIONS SUCCESSFULLY GENERATED
+
+  TOTAL CPU TIME (SEC) =            1
   
  nombre de processeurs et taches maximuns           4           4
+  
+ densite lu sur le fichier dicom (format HU) : densite_hu.don                                                                                                                  
+ materiau mis a 1
+  
+ warning : le materiau            2  n'est pas utilise
+  
+ warning : le materiau            3  n'est pas utilise
+  
+ warning : le materiau            4  n'est pas utilise
+  
+ warning : le materiau            5  n'est pas utilise
+  
+ warning : le materiau            6  n'est pas utilise
+  
+  
+ ============== Recapitulatif ==============
+ modele M1
+ type de relaxation GS_parallele_aleatoire   
+ n_cycles, n_energie_grid =         1200          30
+ n_energie_en_memoire =           30
+ lf, mf, nf =          133         128           1
+ Lx, Ly, Lz =    12.8906183       12.4023371       1.00000000    
+ e_min, e_max =    1.00000005E-03   3.55762728E-02
+ n_groupe_particules            2
+ ordre, seuil_residu =           1  0.10000000000000001     
+ valeur propre b pour Mn = maximum
+ champs magnetique : non
+ calcul 2d
+ type des particules e-g 
+ ===========================================
+  
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    9.1456902574210660E+035   9.6945200468030512E-002          34
+ residu relatif, residu absolu, n_cycles =    546271498715422.50        9.5896649619650456E-002         112
+ residu relatif, residu absolu, n_cycles =    1.3782653187819069        9.4180768309475665E-002          64
+ residu relatif, residu absolu, n_cycles =    1.6127611585888451        9.2677469861649042E-002          67
+ residu relatif, residu absolu, n_cycles =   0.60620793288316421        9.1551554553580175E-002          96
+ residu relatif, residu absolu, n_cycles =   0.45795731269892898        9.8808219330792507E-002          82
+ residu relatif, residu absolu, n_cycles =    9.5728763562806490E-002  0.13204820177090285               87
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.6493091583580715E-002  0.28721836523406913               71
+ residu relatif, residu absolu, n_cycles =    9.2948730219144265E-002  0.78626815757785307               57
+ residu relatif, residu absolu, n_cycles =    9.9432733657519923E-002   1.3390332711733206               40
+ residu relatif, residu absolu, n_cycles =    9.3104108210087494E-002   2.2509807703798415               22
+ residu relatif, residu absolu, n_cycles =    9.9354343521463828E-002   2.8781820972123611                8
+ residu relatif, residu absolu, n_cycles =    8.8559749116962891E-002   2.6139593845197062                4
+ residu relatif, residu absolu, n_cycles =    8.5491809941251898E-002   6.4486244443402452                2
+ residu relatif, residu absolu, n_cycles =    7.6445566805745366E-002   6.8534219052993999                2
+ residu relatif, residu absolu, n_cycles =    6.3902161967335142E-002   7.3163667715305829                2
+ residu relatif, residu absolu, n_cycles =    4.8709235047008387E-002   7.8428599171278828                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.2690590392230483E-002   8.4379284416047717                2
+ residu relatif, residu absolu, n_cycles =    1.8381484128564784E-002   9.1045162106476081                2
+ residu relatif, residu absolu, n_cycles =    8.1069951829516301E-003   9.8108394766992220                2
+ residu relatif, residu absolu, n_cycles =    2.5553934726578104E-003   10.619971108330848                2
+ residu relatif, residu absolu, n_cycles =    6.3552701464376405E-004   11.369593031068916                2
+ residu relatif, residu absolu, n_cycles =    5.3483314716254340E-004   11.785707203875033                2
+ residu relatif, residu absolu, n_cycles =    4.3069562125946811E-004   10.756911896576979                2
+ residu relatif, residu absolu, n_cycles =    3.7392428238835839E-004   22.524446052590008                2
+ residu relatif, residu absolu, n_cycles =    2.2035773962681839E-004   17.654400075095616                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    9.0981843439899111E+035   9.8246272336373133E-002          33
+ residu relatif, residu absolu, n_cycles =    53376738019416864.        8.8406367922682708E-002         116
+ residu relatif, residu absolu, n_cycles =    1.9291340283893612        9.5807176086837240E-002          63
+ residu relatif, residu absolu, n_cycles =    1.7118541942342493        9.3020734459351315E-002          66
+ residu relatif, residu absolu, n_cycles =   0.70619026337329960        9.7556903131044051E-002          94
+ residu relatif, residu absolu, n_cycles =   0.40903292485315229        9.2753650936815812E-002          82
+ residu relatif, residu absolu, n_cycles =    9.3103374349500403E-002  0.13712703035653437               87
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.9036143332837875E-002  0.29039450931478455               71
+ residu relatif, residu absolu, n_cycles =    9.3638050006710147E-002  0.75180660325836246               57
+ residu relatif, residu absolu, n_cycles =    8.7659828797066838E-002   1.0426180473822300               42
+ residu relatif, residu absolu, n_cycles =    9.2652506040451985E-002   2.2114295488944933               22
+ residu relatif, residu absolu, n_cycles =    9.8732066192837240E-002   2.8379737737745061                8
+ residu relatif, residu absolu, n_cycles =    8.8027483864922595E-002   2.5628586212778166                4
+ residu relatif, residu absolu, n_cycles =    8.5018078528362281E-002   6.4508573818390564                2
+ residu relatif, residu absolu, n_cycles =    7.6143429746603000E-002   6.8555309211865252                2
+ residu relatif, residu absolu, n_cycles =    6.3760991946832588E-002   7.3183441764675479                2
+ residu relatif, residu absolu, n_cycles =    4.8692385943438395E-002   7.8446949491265023                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.2742804492673062E-002   8.4396050653410644                2
+ residu relatif, residu absolu, n_cycles =    1.8447265320568819E-002   9.1060092209347729                2
+ residu relatif, residu absolu, n_cycles =    8.1518666898536055E-003   9.8121064082055138                2
+ residu relatif, residu absolu, n_cycles =    2.5739509301606896E-003   10.620943048175977                2
+ residu relatif, residu absolu, n_cycles =    6.5701930179982765E-004   11.370145792589748                2
+ residu relatif, residu absolu, n_cycles =    5.5425123086456202E-004   11.785622585421379                2
+ residu relatif, residu absolu, n_cycles =    4.4750766022697198E-004   10.755637957765003                2
+ residu relatif, residu absolu, n_cycles =    3.8947070465246230E-004   22.538066831440840                2
+ residu relatif, residu absolu, n_cycles =    2.2515971164797241E-004   17.656437901681528                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.5767852896213972E+035   9.6225834891744536E-002          35
+ residu relatif, residu absolu, n_cycles =    81268514522799392.        9.8915334637125762E-002         116
+ residu relatif, residu absolu, n_cycles =    1.9040885662407225        9.5902548937174648E-002          63
+ residu relatif, residu absolu, n_cycles =    1.6443446220186611        8.8454539511910887E-002          66
+ residu relatif, residu absolu, n_cycles =   0.70753505623561352        9.0800644165318925E-002          96
+ residu relatif, residu absolu, n_cycles =   0.38630811713732777        9.7869703153034865E-002          80
+ residu relatif, residu absolu, n_cycles =    9.7068092131408851E-002  0.15897125310554480               85
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.6964566485691239E-002  0.25209984140796016               73
+ residu relatif, residu absolu, n_cycles =    9.3204486048397164E-002  0.75182752399321617               57
+ residu relatif, residu absolu, n_cycles =    8.9962735968499241E-002   1.0437029581377342               42
+ residu relatif, residu absolu, n_cycles =    9.4205000701152758E-002   2.2092107744189446               22
+ residu relatif, residu absolu, n_cycles =    8.2956560562454235E-002   2.2726265915528789               10
+ residu relatif, residu absolu, n_cycles =    9.6755188241657075E-002   6.1011148095753924                2
+ residu relatif, residu absolu, n_cycles =    9.1638216242777362E-002   6.4518065380162186                2
+ residu relatif, residu absolu, n_cycles =    8.2357255555474171E-002   6.8564992924680181                2
+ residu relatif, residu absolu, n_cycles =    6.8987079800843093E-002   7.3193408099423563                2
+ residu relatif, residu absolu, n_cycles =    5.2763986614850447E-002   7.8457278260060637                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.5522692685601695E-002   8.4406804419624919                2
+ residu relatif, residu absolu, n_cycles =    2.0031167171893346E-002   9.1071316783161347                2
+ residu relatif, residu absolu, n_cycles =    8.8549650275649185E-003   9.8132767853512242                2
+ residu relatif, residu absolu, n_cycles =    2.7913906687417798E-003   10.622168247003339                2
+ residu relatif, residu absolu, n_cycles =    6.4765149153085612E-004   11.371417087713512                2
+ residu relatif, residu absolu, n_cycles =    5.4513064501898224E-004   11.786902853571672                2
+ residu relatif, residu absolu, n_cycles =    4.3925942121152378E-004   10.756823480894813                2
+ residu relatif, residu absolu, n_cycles =    3.9106836331468075E-004   22.537814545073832                2
+ residu relatif, residu absolu, n_cycles =    2.2581087392326924E-004   17.658870879744221                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.2367216333374104E+035   9.5596891356541425E-002          36
+ residu relatif, residu absolu, n_cycles =    158997873089.61221        8.3552820739902750E-002         110
+ residu relatif, residu absolu, n_cycles =    1.3258280225596546        9.7013956314308619E-002          64
+ residu relatif, residu absolu, n_cycles =    1.6941578942274917        8.9164769799918692E-002          67
+ residu relatif, residu absolu, n_cycles =   0.65967644117532220        9.8849264422847527E-002          98
+ residu relatif, residu absolu, n_cycles =   0.15036657351188717        9.1317369777745752E-002          85
+ residu relatif, residu absolu, n_cycles =    9.8775591075004235E-002  0.13065421939440214               87
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.9906127820819035E-002  0.30421455553016163               69
+ residu relatif, residu absolu, n_cycles =    9.6576677438415762E-002  0.81954409101042491               57
+ residu relatif, residu absolu, n_cycles =    9.7427956982655883E-002   1.1471476619972467               42
+ residu relatif, residu absolu, n_cycles =    9.2510574916971872E-002   2.1935354581094542               22
+ residu relatif, residu absolu, n_cycles =    9.8148296771205013E-002   2.8374133855749153                8
+ residu relatif, residu absolu, n_cycles =    8.7034072789520051E-002   2.5967932053669087                4
+ residu relatif, residu absolu, n_cycles =    8.3641674702345334E-002   6.4504696292684240                2
+ residu relatif, residu absolu, n_cycles =    7.4437638407944554E-002   6.8552651953162691                2
+ residu relatif, residu absolu, n_cycles =    6.1790338234415723E-002   7.3182180298909794                2
+ residu relatif, residu absolu, n_cycles =    4.6708812697666746E-002   7.8447267963064462                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.1074946332067026E-002   8.4398161484328860                2
+ residu relatif, residu absolu, n_cycles =    1.7332542620743196E-002   9.1064269849625514                2
+ residu relatif, residu absolu, n_cycles =    7.6026896903892372E-003   9.8127669840383955                2
+ residu relatif, residu absolu, n_cycles =    2.4040336260709888E-003   10.621910455116145                2
+ residu relatif, residu absolu, n_cycles =    6.3235869175631864E-004   11.371501115177956                2
+ residu relatif, residu absolu, n_cycles =    5.3262838434722380E-004   11.787473069043376                2
+ residu relatif, residu absolu, n_cycles =    4.2999235409890615E-004   10.758242097635968                2
+ residu relatif, residu absolu, n_cycles =    3.7222093345317775E-004   22.526847698316132                2
+ residu relatif, residu absolu, n_cycles =    2.1740962407321927E-004   17.658759913470654                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.6788002352373690E+035   9.7345593492480398E-002          34
+ residu relatif, residu absolu, n_cycles =    34132610134013.879        9.1392458195447432E-002         112
+ residu relatif, residu absolu, n_cycles =    1.3516425601578643        9.3217476995954313E-002          64
+ residu relatif, residu absolu, n_cycles =    1.7365231181338723        9.1989833309555111E-002          67
+ residu relatif, residu absolu, n_cycles =   0.60136527299021214        9.1092740539085310E-002          98
+ residu relatif, residu absolu, n_cycles =   0.47229541938104780        9.6280001554567618E-002          84
+ residu relatif, residu absolu, n_cycles =    9.7352684634336620E-002  0.13450179072984472               87
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.4386727330894954E-002  0.27614877743893190               71
+ residu relatif, residu absolu, n_cycles =    9.1899313885437872E-002  0.80385481195815400               57
+ residu relatif, residu absolu, n_cycles =    9.0116520869203340E-002   1.1057368566659018               42
+ residu relatif, residu absolu, n_cycles =    8.8505176199460120E-002   2.1965446199577849               22
+ residu relatif, residu absolu, n_cycles =    9.4814196958964952E-002   2.8542261078388664                8
+ residu relatif, residu absolu, n_cycles =    8.4230185957585982E-002   2.5897321795847770                4
+ residu relatif, residu absolu, n_cycles =    8.1116683403062884E-002   6.4515903305321247                2
+ residu relatif, residu absolu, n_cycles =    7.2353968919396078E-002   6.8563977861723160                2
+ residu relatif, residu absolu, n_cycles =    6.0350913931774032E-002   7.3193637990281477                2
+ residu relatif, residu absolu, n_cycles =    4.5917643687560232E-002   7.8458877555241662                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.0770926100366244E-002   8.4409933315815344                2
+ residu relatif, residu absolu, n_cycles =    1.7283142995418558E-002   9.1076172520828109                2
+ residu relatif, residu absolu, n_cycles =    7.6193368582048405E-003   9.8139539597675238                2
+ residu relatif, residu absolu, n_cycles =    2.4053753321946029E-003   10.623069000683936                2
+ residu relatif, residu absolu, n_cycles =    6.3911955227790218E-004   11.372559272114666                2
+ residu relatif, residu absolu, n_cycles =    5.3827187011568447E-004   11.788279687365641                2
+ residu relatif, residu absolu, n_cycles =    4.3311291424281533E-004   10.758278019023416                2
+ residu relatif, residu absolu, n_cycles =    3.7452233084587491E-004   22.538992174859303                2
+ residu relatif, residu absolu, n_cycles =    2.2303876326343732E-004   17.660884467998002                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    9.2405271692047958E+035   9.8338454576977513E-002          33
+ residu relatif, residu absolu, n_cycles =    3527194487639118.0        9.3912830286150925E-002         114
+ residu relatif, residu absolu, n_cycles =    2.7666631327940832        9.3131111972739128E-002          63
+ residu relatif, residu absolu, n_cycles =    1.6922819761409460        9.2783620509717987E-002          67
+ residu relatif, residu absolu, n_cycles =   0.62718693735346198        9.2143276967616192E-002          96
+ residu relatif, residu absolu, n_cycles =   0.47936344351401095        9.8783355224820735E-002          82
+ residu relatif, residu absolu, n_cycles =    9.8078290386687347E-002  0.15272518634917703               85
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.6955224121878347E-002  0.28404314927476881               71
+ residu relatif, residu absolu, n_cycles =    9.1403913267896666E-002  0.76276550586528136               57
+ residu relatif, residu absolu, n_cycles =    9.8407242676324058E-002   1.3137113364519293               40
+ residu relatif, residu absolu, n_cycles =    9.2451661420300257E-002   2.1863614104067710               22
+ residu relatif, residu absolu, n_cycles =    9.8388256497780088E-002   2.8547481261837495                8
+ residu relatif, residu absolu, n_cycles =    8.7628569007585116E-002   2.5803791302680588                4
+ residu relatif, residu absolu, n_cycles =    8.4552492573225529E-002   6.4458405473556839                2
+ residu relatif, residu absolu, n_cycles =    7.5568083341182327E-002   6.8507631550524248                2
+ residu relatif, residu absolu, n_cycles =    6.3146145813657878E-002   7.3138395375432177                2
+ residu relatif, residu absolu, n_cycles =    4.8124384744717148E-002   7.8404746860697561                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.2298850009672975E-002   8.4357030767299399                2
+ residu relatif, residu absolu, n_cycles =    1.8165811038373281E-002   9.1024811556361112                2
+ residu relatif, residu absolu, n_cycles =    8.0162227419381966E-003   9.8090487674461553                2
+ residu relatif, residu absolu, n_cycles =    2.5294717416374066E-003   10.618509221369120                2
+ residu relatif, residu absolu, n_cycles =    6.4150321010200293E-004   11.368620566752059                2
+ residu relatif, residu absolu, n_cycles =    5.4008887534405710E-004   11.785516200944347                2
+ residu relatif, residu absolu, n_cycles =    4.3536083594385155E-004   10.758302990708248                2
+ residu relatif, residu absolu, n_cycles =    3.8807359856431130E-004   22.504729343898727                2
+ residu relatif, residu absolu, n_cycles =    2.1414919658128178E-004   17.651714623672223                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    9.0286256973856059E+035   9.6089701236482958E-002          35
+ residu relatif, residu absolu, n_cycles =    5108824307478594.0        9.2299390126110284E-002         116
+ residu relatif, residu absolu, n_cycles =    1.8221351329763220        9.3015398135970914E-002          63
+ residu relatif, residu absolu, n_cycles =    1.5838744988596818        9.3201490448698660E-002          66
+ residu relatif, residu absolu, n_cycles =   0.75918668436528536        9.9597802683764516E-002          94
+ residu relatif, residu absolu, n_cycles =   0.41648771919633459        9.1383973894325843E-002          82
+ residu relatif, residu absolu, n_cycles =    9.6203144101569701E-002  0.15496708825888925               85
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.3314639088977733E-002  0.24858571759348780               73
+ residu relatif, residu absolu, n_cycles =    9.1452491851710185E-002  0.74818710450583936               57
+ residu relatif, residu absolu, n_cycles =    8.7156591823855836E-002   1.0649271243808871               42
+ residu relatif, residu absolu, n_cycles =    9.1987268100517633E-002   2.1729522097424674               22
+ residu relatif, residu absolu, n_cycles =    9.7979890893725566E-002   2.8290169301677608                8
+ residu relatif, residu absolu, n_cycles =    8.7299026543239733E-002   2.5779127786390856                4
+ residu relatif, residu absolu, n_cycles =    8.4241904195364384E-002   6.4456463483975401                2
+ residu relatif, residu absolu, n_cycles =    7.5395514237806729E-002   6.8505858100515855                2
+ residu relatif, residu absolu, n_cycles =    6.3110956419570832E-002   7.3136853172977574                2
+ residu relatif, residu absolu, n_cycles =    4.8183816550179469E-002   7.8403491420878106                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.2397482683719052E-002   8.4356128893860127                2
+ residu relatif, residu absolu, n_cycles =    1.8254140638714209E-002   9.1024373178650588                2
+ residu relatif, residu absolu, n_cycles =    8.0691855782433226E-003   9.8090718935806862                2
+ residu relatif, residu absolu, n_cycles =    2.5499608082996173E-003   10.618635511991549                2
+ residu relatif, residu absolu, n_cycles =    6.4498179313204299E-004   11.368913145385665                2
+ residu relatif, residu absolu, n_cycles =    5.4290091577977235E-004   11.786083633834826                2
+ residu relatif, residu absolu, n_cycles =    4.3765651149266644E-004   10.759501082560814                2
+ residu relatif, residu absolu, n_cycles =    3.9403298083747482E-004   22.494950421633671                2
+ residu relatif, residu absolu, n_cycles =    2.1095934886011106E-004   17.651780222454914                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.8003333936301282E+035   9.5284042115277454E-002          37
+ residu relatif, residu absolu, n_cycles =    7333969416344590.0        9.4626734258999562E-002         117
+ residu relatif, residu absolu, n_cycles =    1.8266340425583469        9.8762737034745585E-002          63
+ residu relatif, residu absolu, n_cycles =    1.4608521977792164        9.2472583558069713E-002          65
+ residu relatif, residu absolu, n_cycles =   0.64707730182069345        9.1165025720853027E-002          96
+ residu relatif, residu absolu, n_cycles =   0.40482617004195093        9.7088656967665388E-002          80
+ residu relatif, residu absolu, n_cycles =    9.5601856932514329E-002  0.15566356131960624               85
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.7215779015523404E-002  0.24182322577968565               73
+ residu relatif, residu absolu, n_cycles =    9.1836792007537860E-002  0.76982996012063032               57
+ residu relatif, residu absolu, n_cycles =    8.9862584364316517E-002   1.0734781306466536               42
+ residu relatif, residu absolu, n_cycles =    9.3958740700735899E-002   2.1132167728951807               22
+ residu relatif, residu absolu, n_cycles =    8.2657218335243240E-002   2.1872782586047048               10
+ residu relatif, residu absolu, n_cycles =    9.6360270820901719E-002   6.0956990179038861                2
+ residu relatif, residu absolu, n_cycles =    9.1235148719445366E-002   6.4466797257999815                2
+ residu relatif, residu absolu, n_cycles =    8.1966581167374389E-002   6.8516825370334065                2
+ residu relatif, residu absolu, n_cycles =    6.8636774974069323E-002   7.3148580999506301                2
+ residu relatif, residu absolu, n_cycles =    5.2437527783480653E-002   7.8416111485431248                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.5298212026838201E-002   8.4369768290788123                2
+ residu relatif, residu absolu, n_cycles =    1.9904611790697323E-002   9.1039147923679256                2
+ residu relatif, residu absolu, n_cycles =    8.8006803461738465E-003   9.8106679472673868                2
+ residu relatif, residu absolu, n_cycles =    2.7757656530127271E-003   10.620364333502797                2
+ residu relatif, residu absolu, n_cycles =    6.4714666743217639E-004   11.370761285881226                2
+ residu relatif, residu absolu, n_cycles =    5.4461104691136267E-004   11.787989852653268                2
+ residu relatif, residu absolu, n_cycles =    4.3877085855522892E-004   10.761221130284170                2
+ residu relatif, residu absolu, n_cycles =    3.9066217056541380E-004   22.497404593354979                2
+ residu relatif, residu absolu, n_cycles =    2.1107711516676574E-004   17.654990781912471                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    9.2057129961313716E+035   9.4902877512413206E-002          38
+ residu relatif, residu absolu, n_cycles =    534205334087.36200        9.1806039793853045E-002         112
+ residu relatif, residu absolu, n_cycles =    1.3488281629417118        9.3648093299679921E-002          65
+ residu relatif, residu absolu, n_cycles =    1.6532696577680255        9.7457995461837144E-002          65
+ residu relatif, residu absolu, n_cycles =   0.50604536893809959        9.3537423998752464E-002          99
+ residu relatif, residu absolu, n_cycles =   0.16272608133541186        9.9122022300846144E-002          83
+ residu relatif, residu absolu, n_cycles =    9.8927704618065840E-002  0.14409001661242693               85
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.8998061755383768E-002  0.28481235006016681               69
+ residu relatif, residu absolu, n_cycles =    9.6146398605186992E-002  0.79562918153381190               57
+ residu relatif, residu absolu, n_cycles =    9.9429777477606535E-002  0.96300412224911625               44
+ residu relatif, residu absolu, n_cycles =    8.9294491417076544E-002   1.8811096548502531               23
+ residu relatif, residu absolu, n_cycles =    8.7647836595494813E-002   2.3715396363629866                9
+ residu relatif, residu absolu, n_cycles =    8.4396605174827027E-002   2.4596291161048511                3
+ residu relatif, residu absolu, n_cycles =    9.7902817438109746E-002   6.4449865365129133                2
+ residu relatif, residu absolu, n_cycles =    8.4069360327091613E-002   6.8499894407556132                2
+ residu relatif, residu absolu, n_cycles =    6.9902254683259557E-002   7.3131564983855419                2
+ residu relatif, residu absolu, n_cycles =    5.3066278486088261E-002   7.8398932315976202                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.5450600309887538E-002   8.4352366480420695                2
+ residu relatif, residu absolu, n_cycles =    1.9838958810625786E-002   9.1021499818934437                2
+ residu relatif, residu absolu, n_cycles =    8.7158025892668366E-003   9.8088869266720735                2
+ residu relatif, residu absolu, n_cycles =    2.7458808569450106E-003   10.618576053512815                2
+ residu relatif, residu absolu, n_cycles =    6.3228862678718482E-004   11.369015141579654                2
+ residu relatif, residu absolu, n_cycles =    5.3255067130003543E-004   11.786404188650410                2
+ residu relatif, residu absolu, n_cycles =    4.2992193806682441E-004   10.760165616951266                2
+ residu relatif, residu absolu, n_cycles =    3.7459790631256737E-004   22.490063628855701                2
+ residu relatif, residu absolu, n_cycles =    2.1008767883056418E-004   17.651830076536896                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.7270666902489733E+035   9.6076244759955784E-002          36
+ residu relatif, residu absolu, n_cycles =    336380846188.80322        9.7591953014806013E-002         111
+ residu relatif, residu absolu, n_cycles =    1.5680049277926513        9.8802203434586400E-002          64
+ residu relatif, residu absolu, n_cycles =    1.7897754767793941        9.9237167096742379E-002          66
+ residu relatif, residu absolu, n_cycles =   0.67659760762620835        9.3857726713800188E-002         100
+ residu relatif, residu absolu, n_cycles =   0.15094205610488276        9.3268373734398100E-002          85
+ residu relatif, residu absolu, n_cycles =    9.5522721811658912E-002  0.13300205021547135               87
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.9433620790708444E-002  0.29689422743934085               69
+ residu relatif, residu absolu, n_cycles =    9.5359885018545434E-002  0.81705958079230556               57
+ residu relatif, residu absolu, n_cycles =    9.4645687043022605E-002  0.94028777813174236               44
+ residu relatif, residu absolu, n_cycles =    9.7496342513553991E-002   2.1665310760613488               22
+ residu relatif, residu absolu, n_cycles =    9.5619123967060307E-002   2.5341662692645897                9
+ residu relatif, residu absolu, n_cycles =    9.1754803752693265E-002   2.5945566003819365                3
+ residu relatif, residu absolu, n_cycles =    9.6732596443984756E-002   6.4502977538786794                2
+ residu relatif, residu absolu, n_cycles =    8.2900681699953113E-002   6.8551281831907103                2
+ residu relatif, residu absolu, n_cycles =    6.8794983717073849E-002   7.3181169390284619                2
+ residu relatif, residu absolu, n_cycles =    5.2128164733459409E-002   7.8446633834300652                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.4763639210057332E-002   8.4397922894391346                2
+ residu relatif, residu absolu, n_cycles =    1.9424593237747988E-002   9.1064444942293505                2
+ residu relatif, residu absolu, n_cycles =    8.5237039579623940E-003   9.8128266621038147                2
+ residu relatif, residu absolu, n_cycles =    2.6850070403952684E-003   10.622014942488871                2
+ residu relatif, residu absolu, n_cycles =    6.3370330105065142E-004   11.371649930412824                2
+ residu relatif, residu absolu, n_cycles =    5.3369281725731054E-004   11.787660641118750                2
+ residu relatif, residu absolu, n_cycles =    4.3081204165522835E-004   10.758404315034220                2
+ residu relatif, residu absolu, n_cycles =    3.7718154883993062E-004   22.527953196101894                2
+ residu relatif, residu absolu, n_cycles =    2.1706775129498235E-004   17.658875635234967                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.7749754500717043E+035   9.7888956442484118E-002          34
+ residu relatif, residu absolu, n_cycles =    2349849438175.4590        9.6516468538340866E-002         110
+ residu relatif, residu absolu, n_cycles =    1.4512943156919178        9.2550723334518858E-002          64
+ residu relatif, residu absolu, n_cycles =    1.7978233478841634        9.1750284492163464E-002          67
+ residu relatif, residu absolu, n_cycles =   0.62722544353088017        8.8236737584422339E-002         100
+ residu relatif, residu absolu, n_cycles =   0.15839764232825512        9.6733661503724380E-002          85
+ residu relatif, residu absolu, n_cycles =    9.7113644727865628E-002  0.13696180796424443               87
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.9365626682671626E-002  0.30735028809581155               69
+ residu relatif, residu absolu, n_cycles =    9.4971376256407752E-002  0.81306681325501706               57
+ residu relatif, residu absolu, n_cycles =    8.9342381174551275E-002  0.90610029359498467               44
+ residu relatif, residu absolu, n_cycles =    9.2818241822547609E-002   2.1688713328225000               22
+ residu relatif, residu absolu, n_cycles =    9.8890332596138664E-002   2.8582032258720460                8
+ residu relatif, residu absolu, n_cycles =    8.7833495744713178E-002   2.5745304169483068                4
+ residu relatif, residu absolu, n_cycles =    8.4537286041612883E-002   6.4518121885765112                2
+ residu relatif, residu absolu, n_cycles =    7.5330499421549818E-002   6.8565706575553849                2
+ residu relatif, residu absolu, n_cycles =    6.2599545523195896E-002   7.3194819523629100                2
+ residu relatif, residu absolu, n_cycles =    4.7364553550457170E-002   7.8459441803323369                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.1534867168632491E-002   8.4409792582876353                2
+ residu relatif, residu absolu, n_cycles =    1.7598080105187004E-002   9.1075213560004205                2
+ residu relatif, residu absolu, n_cycles =    7.7202066571412757E-003   9.8137622755921168                2
+ residu relatif, residu absolu, n_cycles =    2.4395750245638013E-003   10.622757712634789                2
+ residu relatif, residu absolu, n_cycles =    6.3397518899867712E-004   11.372099132464655                2
+ residu relatif, residu absolu, n_cycles =    5.3387326928171772E-004   11.787631732076761                2
+ residu relatif, residu absolu, n_cycles =    4.3092779278508189E-004   10.757367181958209                2
+ residu relatif, residu absolu, n_cycles =    3.7927581761768053E-004   22.541539812124654                2
+ residu relatif, residu absolu, n_cycles =    2.2012009870931543E-004   17.660397564044636                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.8651474410053895E+035   9.8669633937051804E-002          33
+ residu relatif, residu absolu, n_cycles =    213008608233269.47        9.6259178027226458E-002         113
+ residu relatif, residu absolu, n_cycles =    1.9829474531052755        9.4635319557507397E-002          63
+ residu relatif, residu absolu, n_cycles =    1.8073273497101334        9.3052025812425568E-002          67
+ residu relatif, residu absolu, n_cycles =   0.62753917267503223        9.0231212836415553E-002          98
+ residu relatif, residu absolu, n_cycles =   0.48735638202676090        9.6810782759898420E-002          84
+ residu relatif, residu absolu, n_cycles =    9.5427999368553992E-002  0.13894366534449445               87
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.3792007882089468E-002  0.27275986761347559               71
+ residu relatif, residu absolu, n_cycles =    9.9968642361815657E-002  0.88840506842968348               55
+ residu relatif, residu absolu, n_cycles =    9.5517414781648907E-002   1.0665768183237787               42
+ residu relatif, residu absolu, n_cycles =    8.9444446022995561E-002   2.1593461816504331               22
+ residu relatif, residu absolu, n_cycles =    9.5404392217713921E-002   2.8611413211001206                8
+ residu relatif, residu absolu, n_cycles =    8.4211191557942988E-002   2.5632112293741498                4
+ residu relatif, residu absolu, n_cycles =    8.0668701636640097E-002   6.4474569738143082                2
+ residu relatif, residu absolu, n_cycles =    7.1860886571662314E-002   6.8523725258189101                2
+ residu relatif, residu absolu, n_cycles =    5.9906115193865905E-002   7.3154459556041900                2
+ residu relatif, residu absolu, n_cycles =    4.5561790492338834E-002   7.8420814520414099                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.0526991307078682E-002   8.4373115182749157                2
+ residu relatif, residu absolu, n_cycles =    1.7147042022096878E-002   9.1040884244758615                2
+ residu relatif, residu absolu, n_cycles =    7.5619201051484496E-003   9.8106398569501625                2
+ residu relatif, residu absolu, n_cycles =    2.3892187708008036E-003   10.620063667928559                2
+ residu relatif, residu absolu, n_cycles =    6.5638752059200898E-004   11.370072315169056                2
+ residu relatif, residu absolu, n_cycles =    5.5371873391919953E-004   11.786721448725114                2
+ residu relatif, residu absolu, n_cycles =    4.4707194769898114E-004   10.758793778754091                2
+ residu relatif, residu absolu, n_cycles =    3.8665775209789470E-004   22.514836831860396                2
+ residu relatif, residu absolu, n_cycles =    2.2040602428075588E-004   17.654453688160736                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    9.1188621421105465E+035   9.6741064832491411E-002          35
+ residu relatif, residu absolu, n_cycles =    336304783109187.69        9.9820335635512861E-002         114
+ residu relatif, residu absolu, n_cycles =    1.8997448841968350        9.5208663389856341E-002          63
+ residu relatif, residu absolu, n_cycles =    1.3923873297977407        9.8916057893971260E-002          66
+ residu relatif, residu absolu, n_cycles =   0.72280462198163797        9.1509711744087979E-002          96
+ residu relatif, residu absolu, n_cycles =   0.47548987884543864        9.9913857800306941E-002          82
+ residu relatif, residu absolu, n_cycles =    9.8798265878685607E-002  0.15469842398537001               85
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.7081330152426620E-002  0.27735134450073251               71
+ residu relatif, residu absolu, n_cycles =    9.8866450942058148E-002  0.88377258933811942               55
+ residu relatif, residu absolu, n_cycles =    9.9598914393120463E-002   1.3064592258061907               40
+ residu relatif, residu absolu, n_cycles =    9.2305145918584797E-002   2.1739336899620056               22
+ residu relatif, residu absolu, n_cycles =    9.8079890042973086E-002   2.8768921115215824                8
+ residu relatif, residu absolu, n_cycles =    8.7229553847520500E-002   2.6164037247593961                4
+ residu relatif, residu absolu, n_cycles =    8.4091069640165383E-002   6.4463806678271709                2
+ residu relatif, residu absolu, n_cycles =    7.5086524595092130E-002   6.8513311460226287                2
+ residu relatif, residu absolu, n_cycles =    6.2691988294319434E-002   7.3144457257625035                2
+ residu relatif, residu absolu, n_cycles =    4.7745391779660855E-002   7.8411282654371188                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.2027799642415894E-002   8.4364136370685987                2
+ residu relatif, residu absolu, n_cycles =    1.8007657857777158E-002   9.1032611569570605                2
+ residu relatif, residu absolu, n_cycles =    7.9461372790181079E-003   9.8099153763337412                2
+ residu relatif, residu absolu, n_cycles =    2.5086156790125992E-003   10.619495507955694                2
+ residu relatif, residu absolu, n_cycles =    6.4315068258537591E-004   11.369767206464127                2
+ residu relatif, residu absolu, n_cycles =    5.4133079132726535E-004   11.786876234134068                2
+ residu relatif, residu absolu, n_cycles =    4.3622379692834039E-004   10.760049177677223                2
+ residu relatif, residu absolu, n_cycles =    3.9255257657018635E-004   22.497953131333073                2
+ residu relatif, residu absolu, n_cycles =    2.1110937060298308E-004   17.653460417673781                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.7600257384261420E+035   9.6080164777419097E-002          37
+ residu relatif, residu absolu, n_cycles =    495669715812649.12        9.9367216361372412E-002         115
+ residu relatif, residu absolu, n_cycles =    1.8066878475893660        8.8955965046278881E-002          65
+ residu relatif, residu absolu, n_cycles =    1.4844845768653294        9.4283465921066165E-002          65
+ residu relatif, residu absolu, n_cycles =   0.61516122069223367        9.1530543925530519E-002          96
+ residu relatif, residu absolu, n_cycles =   0.42932736683205053        9.0435849466897367E-002          82
+ residu relatif, residu absolu, n_cycles =    9.8085436660174247E-002  0.15264238200275312               85
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.4049115959946666E-002  0.23893876991093060               73
+ residu relatif, residu absolu, n_cycles =    9.9194542753636733E-002  0.90431220001507195               55
+ residu relatif, residu absolu, n_cycles =    8.9183757105111519E-002   1.0696043316813597               42
+ residu relatif, residu absolu, n_cycles =    9.2612602577463968E-002   2.1046084139326360               22
+ residu relatif, residu absolu, n_cycles =    9.8503157283019310E-002   2.7651671499807557                8
+ residu relatif, residu absolu, n_cycles =    8.7675266190505086E-002   2.5394095700520278                4
+ residu relatif, residu absolu, n_cycles =    8.4561919102516772E-002   6.4474015084854948                2
+ residu relatif, residu absolu, n_cycles =    7.5576736115308865E-002   6.8524090877155421                2
+ residu relatif, residu absolu, n_cycles =    6.3217792610827175E-002   7.3155924165546029                2
+ residu relatif, residu absolu, n_cycles =    4.8240490148987653E-002   7.8423556862054165                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.2421984894947485E-002   8.4377344476773342                2
+ residu relatif, residu absolu, n_cycles =    1.8262584977814258E-002   9.1046888989490924                2
+ residu relatif, residu absolu, n_cycles =    8.0718978672313889E-003   9.8114597349207759                2
+ residu relatif, residu absolu, n_cycles =    2.5511200153597552E-003   10.621177274336697                2
+ residu relatif, residu absolu, n_cycles =    6.4583760353063651E-004   11.371583653411502                2
+ residu relatif, residu absolu, n_cycles =    5.4351601052379220E-004   11.788784252670016                2
+ residu relatif, residu absolu, n_cycles =    4.3803789354930904E-004   10.761865896762224                2
+ residu relatif, residu absolu, n_cycles =    3.9497529390151992E-004   22.499059367579175                2
+ residu relatif, residu absolu, n_cycles =    2.1401915631429432E-004   17.656593316860061                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    9.4991724911055552E+035   9.3949497561575099E-002          38
+ residu relatif, residu absolu, n_cycles =    8151458117891.2383        9.4905569150431482E-002         114
+ residu relatif, residu absolu, n_cycles =    1.3886839373950035        9.4062569723691258E-002          65
+ residu relatif, residu absolu, n_cycles =    1.6539742744429395        9.2555754921368819E-002          66
+ residu relatif, residu absolu, n_cycles =   0.51340256598293954        8.9140376291325582E-002          99
+ residu relatif, residu absolu, n_cycles =   0.15350531222756308        8.9109248810616007E-002          85
+ residu relatif, residu absolu, n_cycles =    9.3411442372445766E-002  0.14521090146682272               85
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.9147677690598054E-002  0.29083668251838141               69
+ residu relatif, residu absolu, n_cycles =    9.7925698428444397E-002  0.76126282251526767               57
+ residu relatif, residu absolu, n_cycles =    9.1530715115945058E-002  0.81601559553147085               45
+ residu relatif, residu absolu, n_cycles =    9.4941551003694544E-002   2.3249343537351668               21
+ residu relatif, residu absolu, n_cycles =    8.6599416495975509E-002   2.5150930537318743                9
+ residu relatif, residu absolu, n_cycles =    8.5215682475015889E-002   2.6012720134848264                3
+ residu relatif, residu absolu, n_cycles =    7.0653304694272709E-002   2.2260576390588231                3
+ residu relatif, residu absolu, n_cycles =    8.8665700815349482E-002   6.8519957091172179                2
+ residu relatif, residu absolu, n_cycles =    7.0790976939457864E-002   7.3151391700980080                2
+ residu relatif, residu absolu, n_cycles =    5.3616189965531857E-002   7.8418542934400497                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.5858395656735993E-002   8.4371762011375715                2
+ residu relatif, residu absolu, n_cycles =    2.0103092887717940E-002   9.1040638362906883                2
+ residu relatif, residu absolu, n_cycles =    8.8468854942095106E-003   9.8107570812567690                2
+ residu relatif, residu absolu, n_cycles =    2.7898795041753680E-003   10.620376063100013                2
+ residu relatif, residu absolu, n_cycles =    6.3321998125962702E-004   11.370662108040047                2
+ residu relatif, residu absolu, n_cycles =    5.3327952297881217E-004   11.787717743979311                2
+ residu relatif, residu absolu, n_cycles =    4.3047301721253338E-004   10.760597850934358                2
+ residu relatif, residu absolu, n_cycles =    3.7858703087187867E-004   22.501469489814450                2
+ residu relatif, residu absolu, n_cycles =    2.1030883681862631E-004   17.655356576400440                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    9.2510263395747989E+035   9.5615749736196909E-002          36
+ residu relatif, residu absolu, n_cycles =    5319282393490.7900        9.8394001268592615E-002         113
+ residu relatif, residu absolu, n_cycles =    1.7120664822100886        9.9438344709332813E-002          64
+ residu relatif, residu absolu, n_cycles =    1.8181679223601390        9.6578913763024993E-002          66
+ residu relatif, residu absolu, n_cycles =   0.52556693500741380        9.8411035404362551E-002          99
+ residu relatif, residu absolu, n_cycles =   0.14749603589603852        9.4340348662964188E-002          85
+ residu relatif, residu absolu, n_cycles =    9.7370477619682066E-002  0.15195483678037591               85
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.8630817369024265E-002  0.29658289711372871               69
+ residu relatif, residu absolu, n_cycles =    9.4860698738483074E-002  0.79540857041313295               57
+ residu relatif, residu absolu, n_cycles =    9.4484018308245057E-002  0.78598570496719999               45
+ residu relatif, residu absolu, n_cycles =    8.6746680990081523E-002   1.9174769182725611               23
+ residu relatif, residu absolu, n_cycles =    8.5678043881384905E-002   2.4344531468751529                9
+ residu relatif, residu absolu, n_cycles =    8.2494213105720651E-002   2.5062982622291354                3
+ residu relatif, residu absolu, n_cycles =    9.9431818045619180E-002   6.4504449677888225                2
+ residu relatif, residu absolu, n_cycles =    8.5535194299339520E-002   6.8552606127284532                2
+ residu relatif, residu absolu, n_cycles =    7.1200095839666550E-002   7.3182330409765726                2
+ residu relatif, residu absolu, n_cycles =    5.4095099962013303E-002   7.8447614433527484                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.6158820466344048E-002   8.4398705153435039                2
+ residu relatif, residu absolu, n_cycles =    2.0242339488743349E-002   9.1065010739104579                2
+ residu relatif, residu absolu, n_cycles =    8.8932812964230470E-003   9.8128597336788115                2
+ residu relatif, residu absolu, n_cycles =    2.7999652730055428E-003   10.622021268065366                2
+ residu relatif, residu absolu, n_cycles =    6.3414939406714142E-004   11.371624944070952                2
+ residu relatif, residu absolu, n_cycles =    5.3401312744096713E-004   11.787597745603589                2
+ residu relatif, residu absolu, n_cycles =    4.3103690959148827E-004   10.758295235402576                2
+ residu relatif, residu absolu, n_cycles =    3.8117109996191074E-004   22.528464973400801                2
+ residu relatif, residu absolu, n_cycles =    2.1901671422358418E-004   17.658829670324096                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    9.3311987982470303E+035   9.7468257435971387E-002          34
+ residu relatif, residu absolu, n_cycles =    3585223340494.9434        9.6800328674257599E-002         111
+ residu relatif, residu absolu, n_cycles =    1.6766087310346800        9.3058480729457077E-002          64
+ residu relatif, residu absolu, n_cycles =    1.8150466939158794        9.2039297401538794E-002          67
+ residu relatif, residu absolu, n_cycles =   0.69286074650905871        9.4166546290693293E-002         100
+ residu relatif, residu absolu, n_cycles =   0.15206924387456497        9.7761432874849646E-002          85
+ residu relatif, residu absolu, n_cycles =    9.3400447186122823E-002  0.13838691298779862               87
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.8517641933065975E-002  0.30082132272735623               69
+ residu relatif, residu absolu, n_cycles =    9.5314325976296452E-002  0.80440810968183052               57
+ residu relatif, residu absolu, n_cycles =    9.8622937943174130E-002  0.89915879042937508               44
+ residu relatif, residu absolu, n_cycles =    9.9850998501303218E-002   2.1738078834237360               22
+ residu relatif, residu absolu, n_cycles =    9.4764975977059226E-002   2.5449278745803103                9
+ residu relatif, residu absolu, n_cycles =    9.0911284454679039E-002   2.5650861201595028                3
+ residu relatif, residu absolu, n_cycles =    9.9366484070709429E-002   6.4516966410627763                2
+ residu relatif, residu absolu, n_cycles =    8.5317545818446736E-002   6.8564871386362007                2
+ residu relatif, residu absolu, n_cycles =    7.0878105425546650E-002   7.3194326134894565                2
+ residu relatif, residu absolu, n_cycles =    5.3744095202425415E-002   7.8459338987943825                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.5854961468972608E-002   8.4410150444998564                2
+ residu relatif, residu absolu, n_cycles =    2.0035424300123082E-002   9.1076115966080131                2
+ residu relatif, residu absolu, n_cycles =    8.7880551990389584E-003   9.8139164264125522                2
+ residu relatif, residu absolu, n_cycles =    2.7640865973724504E-003   10.622991674064604                2
+ residu relatif, residu absolu, n_cycles =    6.3448032814738880E-004   11.372432655491206                2
+ residu relatif, residu absolu, n_cycles =    5.3423937387569011E-004   11.788091915590602                2
+ residu relatif, residu absolu, n_cycles =    4.3118980726185248E-004   10.757999946969891                2
+ residu relatif, residu absolu, n_cycles =    3.8339548445934224E-004   22.540239382049375                2
+ residu relatif, residu absolu, n_cycles =    2.2030340481207880E-004   17.660599316406156                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    9.0891575374892668E+035   9.9018571995583296E-002          33
+ residu relatif, residu absolu, n_cycles =    13412412138374.605        9.6057596644650092E-002         111
+ residu relatif, residu absolu, n_cycles =    1.8849185440368110        9.6474917032935814E-002          63
+ residu relatif, residu absolu, n_cycles =    1.7230233653244025        9.9141411191025000E-002          66
+ residu relatif, residu absolu, n_cycles =   0.70111185919292573        9.7806962944431697E-002          98
+ residu relatif, residu absolu, n_cycles =   0.15207882312787346        9.9425417878958131E-002          85
+ residu relatif, residu absolu, n_cycles =    9.4001439452410032E-002  0.14044845393389993               87
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.8008664807051199E-002  0.30527954668967211               69
+ residu relatif, residu absolu, n_cycles =    9.7542371204768233E-002  0.78247995505133561               57
+ residu relatif, residu absolu, n_cycles =    9.3262703891209150E-002  0.86674755998134889               44
+ residu relatif, residu absolu, n_cycles =    9.5318094144419982E-002   2.1528460938026921               22
+ residu relatif, residu absolu, n_cycles =    9.6966029711515425E-002   2.5202689301579175                9
+ residu relatif, residu absolu, n_cycles =    9.3241411801753438E-002   2.5549628468363306                3
+ residu relatif, residu absolu, n_cycles =    9.4808816628859177E-002   6.4515609251235109                2
+ residu relatif, residu absolu, n_cycles =    8.1256257846942473E-002   6.8563503460749819                2
+ residu relatif, residu absolu, n_cycles =    6.7345701165158325E-002   7.3192992202123390                2
+ residu relatif, residu absolu, n_cycles =    5.0943640329028407E-002   7.8458055047003485                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.3908292922781469E-002   8.4408940658198865                2
+ residu relatif, residu absolu, n_cycles =    1.8908168585879744E-002   9.1075037916198696                2
+ residu relatif, residu absolu, n_cycles =    8.2814894034894827E-003   9.8138337095472306                2
+ residu relatif, residu absolu, n_cycles =    2.6067712103745042E-003   10.622953676828011                2
+ residu relatif, residu absolu, n_cycles =    6.3661658876567890E-004   11.372476951834656                2
+ residu relatif, residu absolu, n_cycles =    5.3597259402829022E-004   11.788288752455554                2
+ residu relatif, residu absolu, n_cycles =    4.3253172690096270E-004   10.758584369202410                2
+ residu relatif, residu absolu, n_cycles =    3.8757273983874450E-004   22.534928184149386                2
+ residu relatif, residu absolu, n_cycles =    2.2118028137967595E-004   17.660230037207914                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    9.1618921304270547E+035   9.7496859147868029E-002          35
+ residu relatif, residu absolu, n_cycles =    20175518495850.035        9.0916764068173395E-002         113
+ residu relatif, residu absolu, n_cycles =    1.8960953552939404        9.5953070955686753E-002          63
+ residu relatif, residu absolu, n_cycles =    1.4492006036779463        9.7691991261843164E-002          66
+ residu relatif, residu absolu, n_cycles =   0.68935615521369364        9.9539969577466331E-002          96
+ residu relatif, residu absolu, n_cycles =   0.46971712152830553        9.6183790557758192E-002          84
+ residu relatif, residu absolu, n_cycles =    9.4975476400839767E-002  0.14041198103248356               87
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.3719061016609456E-002  0.26587953650133017               71
+ residu relatif, residu absolu, n_cycles =    9.4051624210777438E-002  0.74404968345305533               57
+ residu relatif, residu absolu, n_cycles =    9.5269267969081417E-002   1.0554061732011015               42
+ residu relatif, residu absolu, n_cycles =    8.9332748844689600E-002   2.1623426370791061               22
+ residu relatif, residu absolu, n_cycles =    9.5453705754744336E-002   2.8495307730344948                8
+ residu relatif, residu absolu, n_cycles =    8.4353012921124723E-002   2.5947116573581894                4
+ residu relatif, residu absolu, n_cycles =    8.0894474241607811E-002   6.4468580742042327                2
+ residu relatif, residu absolu, n_cycles =    7.1813756998119746E-002   6.8518088681728919                2
+ residu relatif, residu absolu, n_cycles =    5.9459886993630313E-002   7.3149263344071489                2
+ residu relatif, residu absolu, n_cycles =    4.4821101603365977E-002   7.8416141316640537                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    2.9914626098751493E-002   8.4369071175602066                2
+ residu relatif, residu absolu, n_cycles =    1.6804721574930584E-002   9.1037647103438957                2
+ residu relatif, residu absolu, n_cycles =    7.4139944680310576E-003   9.8104302856462375                2
+ residu relatif, residu absolu, n_cycles =    2.3453594239494888E-003   10.620025305796451                2
+ residu relatif, residu absolu, n_cycles =    6.4012995635748596E-004   11.370308243566511                2
+ residu relatif, residu absolu, n_cycles =    5.3881531507639813E-004   11.787412953942635                2
+ residu relatif, residu absolu, n_cycles =    4.3440777554228284E-004   10.760537109921435                2
+ residu relatif, residu absolu, n_cycles =    3.9175920417556988E-004   22.498382882791944                2
+ residu relatif, residu absolu, n_cycles =    2.1103595009634512E-004   17.654322306648496                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    9.0501789749147416E+035   9.6913272438080095E-002          37
+ residu relatif, residu absolu, n_cycles =    29311075645356.242        8.7840787956405653E-002         115
+ residu relatif, residu absolu, n_cycles =    1.8241979919049556        9.0467153001833112E-002          65
+ residu relatif, residu absolu, n_cycles =    1.5369532370206616        9.4520889958908977E-002          65
+ residu relatif, residu absolu, n_cycles =   0.61353958656114849        9.1802943646343130E-002          96
+ residu relatif, residu absolu, n_cycles =   0.43697923752140194        8.7188779639409450E-002          84
+ residu relatif, residu absolu, n_cycles =    9.5431988339914231E-002  0.13775672839775763               87
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.7032186546366972E-002  0.26534099484457330               71
+ residu relatif, residu absolu, n_cycles =    9.9900802103907602E-002  0.90499187252410063               55
+ residu relatif, residu absolu, n_cycles =    9.9241856100692014E-002   1.2744874668506496               40
+ residu relatif, residu absolu, n_cycles =    9.1976089218430673E-002   2.1201325015021442               22
+ residu relatif, residu absolu, n_cycles =    9.7497365767794927E-002   2.7793874986545295                8
+ residu relatif, residu absolu, n_cycles =    8.6639570923440809E-002   2.5560262790937918                4
+ residu relatif, residu absolu, n_cycles =    8.3503762171790147E-002   6.4489668919415148                2
+ residu relatif, residu absolu, n_cycles =    7.4540338265337153E-002   6.8539614037580803                2
+ residu relatif, residu absolu, n_cycles =    6.2218765764916972E-002   7.3171364362991023                2
+ residu relatif, residu absolu, n_cycles =    4.7373937465960303E-002   7.8438950376055496                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.1773360393750540E-002   8.4392705242032449                2
+ residu relatif, residu absolu, n_cycles =    1.7863523346962604E-002   9.1062188214547017                2
+ residu relatif, residu absolu, n_cycles =    7.8835306081875226E-003   9.8129691765061775                2
+ residu relatif, residu absolu, n_cycles =    2.4902553652095026E-003   10.622646070848058                2
+ residu relatif, residu absolu, n_cycles =    6.4302678707412147E-004   11.372948743978682                2
+ residu relatif, residu absolu, n_cycles =    5.4112879044335919E-004   11.789908296828541                2
+ residu relatif, residu absolu, n_cycles =    4.3630783236013718E-004   10.762336375758814                2
+ residu relatif, residu absolu, n_cycles =    3.9577637807689989E-004   22.507058012125047                2
+ residu relatif, residu absolu, n_cycles =    2.1440327069298707E-004   17.659505280659548                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.9365268599888794E+035   9.2949201535349080E-002          38
+ residu relatif, residu absolu, n_cycles =    123745068371913.69        9.4094918384900625E-002         116
+ residu relatif, residu absolu, n_cycles =    1.3934956951041295        9.4401222040723848E-002          65
+ residu relatif, residu absolu, n_cycles =    1.6607648210557218        9.2266027816599386E-002          66
+ residu relatif, residu absolu, n_cycles =   0.51839210525252932        9.4051931154716592E-002          97
+ residu relatif, residu absolu, n_cycles =   0.16150594534132454        9.8975455647202559E-002          83
+ residu relatif, residu absolu, n_cycles =    9.5610717496957723E-002  0.16318060485751593               83
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.6411651114750030E-002  0.25990149185986988               71
+ residu relatif, residu absolu, n_cycles =    9.4426250409028661E-002  0.74472387924414207               57
+ residu relatif, residu absolu, n_cycles =    9.6998669049720751E-002  0.97739237477275853               43
+ residu relatif, residu absolu, n_cycles =    9.8245372962447078E-002   2.3104376929063744               21
+ residu relatif, residu absolu, n_cycles =    9.1709787202044452E-002   2.5155315905612725                9
+ residu relatif, residu absolu, n_cycles =    9.0375744712203859E-002   2.6076112770940552                3
+ residu relatif, residu absolu, n_cycles =    7.5079573729522689E-002   2.2272808812236824                3
+ residu relatif, residu absolu, n_cycles =    9.4687256475233739E-002   6.8507406242922837                2
+ residu relatif, residu absolu, n_cycles =    7.5772744505583065E-002   7.3138519856318069                2
+ residu relatif, residu absolu, n_cycles =    5.7498891620730887E-002   7.8405260541410797                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.8514969273879165E-002   8.4357980792126437                2
+ residu relatif, residu absolu, n_cycles =    2.1616302781954165E-002   9.1026275187840415                2
+ residu relatif, residu absolu, n_cycles =    9.5159521700879171E-003   9.8092597529488650                2
+ residu relatif, residu absolu, n_cycles =    2.9950122318450107E-003   10.618809181551219                2
+ residu relatif, residu absolu, n_cycles =    6.5868770649130256E-004   11.369043754600233                2
+ residu relatif, residu absolu, n_cycles =    5.3346934820298236E-004   11.786111268385774                2
+ residu relatif, residu absolu, n_cycles =    4.3059940321389233E-004   10.759208462896394                2
+ residu relatif, residu absolu, n_cycles =    3.8196309989789397E-004   22.498976289879291                2
+ residu relatif, residu absolu, n_cycles =    2.1029335317461489E-004   17.652557615775955                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.7933004637344357E+035   9.4731382469857531E-002          36
+ residu relatif, residu absolu, n_cycles =    83326967700211.578        9.5411008483480664E-002         115
+ residu relatif, residu absolu, n_cycles =    1.7586913283042123        9.7188722036852734E-002          64
+ residu relatif, residu absolu, n_cycles =    1.7310927652612571        9.3958085992496554E-002          66
+ residu relatif, residu absolu, n_cycles =   0.54899249652561832        8.9953686522786874E-002          99
+ residu relatif, residu absolu, n_cycles =   0.15119929215747357        9.2976364450668716E-002          85
+ residu relatif, residu absolu, n_cycles =    9.7996530039320642E-002  0.17116235646889807               83
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.9346191086558608E-002  0.30218477722721132               69
+ residu relatif, residu absolu, n_cycles =    9.5984435475111818E-002  0.76779284168827544               57
+ residu relatif, residu absolu, n_cycles =    9.0215564613521371E-002  0.78762541743367243               45
+ residu relatif, residu absolu, n_cycles =    9.3974660499118443E-002   2.3692343576335322               21
+ residu relatif, residu absolu, n_cycles =    8.7087953399854631E-002   2.5874610706832928                9
+ residu relatif, residu absolu, n_cycles =    8.6273354122574725E-002   2.6576449708698857                3
+ residu relatif, residu absolu, n_cycles =    7.1546738390276907E-002   2.2488417857348604                3
+ residu relatif, residu absolu, n_cycles =    9.0846037235682062E-002   6.8549758035802864                2
+ residu relatif, residu absolu, n_cycles =    7.2645290390212031E-002   7.3179199688846275                2
+ residu relatif, residu absolu, n_cycles =    5.5060632644028565E-002   7.8444163402127076                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.6836096173390259E-002   8.4394904469648306                2
+ residu relatif, residu absolu, n_cycles =    2.0650863196962084E-002   9.1060848673636023                2
+ residu relatif, residu absolu, n_cycles =    9.0841298568221929E-003   9.8124101799194268                2
+ residu relatif, residu absolu, n_cycles =    2.8610423221006355E-003   10.621540286946201                2
+ residu relatif, residu absolu, n_cycles =    6.3449828938687649E-004   11.371124289218889                2
+ residu relatif, residu absolu, n_cycles =    5.3425965965429206E-004   11.787105087476014                2
+ residu relatif, residu absolu, n_cycles =    4.3120438730501827E-004   10.757926322590825                2
+ residu relatif, residu absolu, n_cycles =    3.8468321463606058E-004   22.526053857083220                2
+ residu relatif, residu absolu, n_cycles =    2.1777425935149824E-004   17.658088950343764                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.9323162596019983E+035   9.6535420086974133E-002          34
+ residu relatif, residu absolu, n_cycles =    57169385689156.172        9.4743215641273831E-002         113
+ residu relatif, residu absolu, n_cycles =    1.7839490174692509        9.1089024033691526E-002          64
+ residu relatif, residu absolu, n_cycles =    1.8871626183041308        9.7264774856954117E-002          66
+ residu relatif, residu absolu, n_cycles =   0.54137874618690041        9.9885401971229720E-002          99
+ residu relatif, residu absolu, n_cycles =   0.14766577869957542        9.7397894731246173E-002          85
+ residu relatif, residu absolu, n_cycles =    9.4059854542890522E-002  0.15582764796336990               85
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.7929641780624022E-002  0.30284475477675199               69
+ residu relatif, residu absolu, n_cycles =    9.3529880303684074E-002  0.78010375777198704               57
+ residu relatif, residu absolu, n_cycles =    9.3839027127684702E-002  0.74265713368777264               45
+ residu relatif, residu absolu, n_cycles =    9.9737239862299390E-002   2.3807820912519455               21
+ residu relatif, residu absolu, n_cycles =    9.1146752404104636E-002   2.6095485667314113                9
+ residu relatif, residu absolu, n_cycles =    8.7398882706794759E-002   2.6345991534899857                3
+ residu relatif, residu absolu, n_cycles =    7.1542986801799463E-002   2.2197568486442170                3
+ residu relatif, residu absolu, n_cycles =    8.8306114165239563E-002   6.8558395870688758                2
+ residu relatif, residu absolu, n_cycles =    7.0534938653083606E-002   7.3188028138364434                2
+ residu relatif, residu absolu, n_cycles =    5.3374731081574207E-002   7.8453210293673505                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.5647864439738344E-002   8.4404217148607703                2
+ residu relatif, residu absolu, n_cycles =    1.9952221514417206E-002   9.1070472611777955                2
+ residu relatif, residu absolu, n_cycles =    8.7652123003656990E-003   9.8134013828918452                2
+ residu relatif, residu absolu, n_cycles =    2.7603253326668980E-003   10.622557965959135                2
+ residu relatif, residu absolu, n_cycles =    6.3524940474848272E-004   11.372141105356638                2
+ residu relatif, residu absolu, n_cycles =    5.3484238370528760E-004   11.788053383213292                2
+ residu relatif, residu absolu, n_cycles =    4.3164257819505139E-004   10.758543224623541                2
+ residu relatif, residu absolu, n_cycles =    3.8730295246318153E-004   22.532788907592895                2
+ residu relatif, residu absolu, n_cycles =    2.2010921916316569E-004   17.659463882154583                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.8652335444426291E+035   9.9073141293870501E-002          33
+ residu relatif, residu absolu, n_cycles =    7341629083503.0908        8.3377689335656813E-002         111
+ residu relatif, residu absolu, n_cycles =    1.6544696244725228        9.3962491013724919E-002          63
+ residu relatif, residu absolu, n_cycles =    1.8928873904865509        9.4997785849813998E-002          66
+ residu relatif, residu absolu, n_cycles =   0.69182304846516096        8.9753053999754570E-002         100
+ residu relatif, residu absolu, n_cycles =   0.15190909019427101        9.8799702391657113E-002          85
+ residu relatif, residu absolu, n_cycles =    9.7017386185139901E-002  0.15799844258847587               85
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.8248019850200818E-002  0.29787569665663738               69
+ residu relatif, residu absolu, n_cycles =    9.5245865632992283E-002  0.76862717994140395               57
+ residu relatif, residu absolu, n_cycles =    9.6414560402777683E-002  0.75788387350973008               45
+ residu relatif, residu absolu, n_cycles =    8.9084974092992777E-002   1.8942390840801908               23
+ residu relatif, residu absolu, n_cycles =    8.8194104710068860E-002   2.4288757251603150                9
+ residu relatif, residu absolu, n_cycles =    8.5120567077959799E-002   2.4748024196995639                3
+ residu relatif, residu absolu, n_cycles =    9.8888150734680727E-002   6.4476146485390320                2
+ residu relatif, residu absolu, n_cycles =    8.5117613387212659E-002   6.8524707921321468                2
+ residu relatif, residu absolu, n_cycles =    7.0797351545807852E-002   7.3154837655207681                2
+ residu relatif, residu absolu, n_cycles =    5.3718543390376940E-002   7.8420548048865850                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.5847543114045970E-002   8.4372162903304400                2
+ residu relatif, residu absolu, n_cycles =    2.0029770437682323E-002   9.1039219998585903                2
+ residu relatif, residu absolu, n_cycles =    8.7823112873008369E-003   9.8104061173312385                2
+ residu relatif, residu absolu, n_cycles =    2.7608329645690904E-003   10.619767901355820                2
+ residu relatif, residu absolu, n_cycles =    6.3698546713398542E-004   11.369741989725718                2
+ residu relatif, residu absolu, n_cycles =    5.3591016758526881E-004   11.786421963056775                2
+ residu relatif, residu absolu, n_cycles =    4.3241922591810011E-004   10.758862200883470                2
+ residu relatif, residu absolu, n_cycles =    3.9028467111815684E-004   22.506330456224333                2
+ residu relatif, residu absolu, n_cycles =    2.1070689229437550E-004   17.654112750898836                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.8681999386926297E+035   9.8063116241994208E-002          35
+ residu relatif, residu absolu, n_cycles =    1281531170689.2151        8.8098776296719708E-002         111
+ residu relatif, residu absolu, n_cycles =    1.7594952779482300        9.5430056301046354E-002          63
+ residu relatif, residu absolu, n_cycles =    1.8147112889250694        9.9350000967421137E-002          65
+ residu relatif, residu absolu, n_cycles =   0.68034863129921508        9.2140702087129656E-002          98
+ residu relatif, residu absolu, n_cycles =   0.14915729335558833        9.8471447850687899E-002          85
+ residu relatif, residu absolu, n_cycles =    9.7996315784359064E-002  0.15795918509827941               85
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.9369157527429502E-002  0.29686990932785645               69
+ residu relatif, residu absolu, n_cycles =    9.6667707766871974E-002  0.73762289064557662               57
+ residu relatif, residu absolu, n_cycles =    9.4636828289878169E-002  0.85376587270783721               44
+ residu relatif, residu absolu, n_cycles =    9.6110752719657799E-002   2.1434015887951645               22
+ residu relatif, residu absolu, n_cycles =    9.5213304842562962E-002   2.5044701155217242                9
+ residu relatif, residu absolu, n_cycles =    9.1515933560958745E-002   2.5798547604142636                3
+ residu relatif, residu absolu, n_cycles =    9.5931109399004871E-002   6.4477006617611101                2
+ residu relatif, residu absolu, n_cycles =    8.2364611430858395E-002   6.8527237759400927                2
+ residu relatif, residu absolu, n_cycles =    6.8318187687293516E-002   7.3159247680302304                2
+ residu relatif, residu absolu, n_cycles =    5.1695847372509880E-002   7.8427087460458926                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.4407312028801561E-002   8.4381113664699043                2
+ residu relatif, residu absolu, n_cycles =    1.9179063081890022E-002   9.1050922988038661                2
+ residu relatif, residu absolu, n_cycles =    8.3941586575748094E-003   9.8118896539826999                2
+ residu relatif, residu absolu, n_cycles =    2.6392624397142380E-003   10.621634996810803                2
+ residu relatif, residu absolu, n_cycles =    6.3736232105445466E-004   11.372061054119856                2
+ residu relatif, residu absolu, n_cycles =    5.3652361211378155E-004   11.789257207266077                2
+ residu relatif, residu absolu, n_cycles =    4.3291793170665383E-004   10.762248297968503                2
+ residu relatif, residu absolu, n_cycles =    3.9160762707403254E-004   22.500792339929923                2
+ residu relatif, residu absolu, n_cycles =    2.1402327843861332E-004   17.657412917707784                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    9.0992290355685279E+035   9.7317379013820676E-002          37
+ residu relatif, residu absolu, n_cycles =    2208490107416.7847        9.9650555393706222E-002         111
+ residu relatif, residu absolu, n_cycles =    1.3632632352910026        9.6312083477194610E-002          64
+ residu relatif, residu absolu, n_cycles =    1.6476341472144058        9.2063096058488225E-002          65
+ residu relatif, residu absolu, n_cycles =   0.68084762538926169        9.5623720098640813E-002          96
+ residu relatif, residu absolu, n_cycles =   0.45716358947573849        9.4796841729805167E-002          84
+ residu relatif, residu absolu, n_cycles =    9.9930198092829436E-002  0.15512152280703861               85
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.5320503504303197E-002  0.25440586221616102               71
+ residu relatif, residu absolu, n_cycles =    9.6532380268842852E-002  0.89333244726717764               55
+ residu relatif, residu absolu, n_cycles =    9.6584592291813043E-002   1.0266976616268666               42
+ residu relatif, residu absolu, n_cycles =    8.9456952444250365E-002   2.0948648852455083               22
+ residu relatif, residu absolu, n_cycles =    9.5905251254595703E-002   2.7502356074344627                8
+ residu relatif, residu absolu, n_cycles =    8.4826338682116129E-002   2.5274157100440369                4
+ residu relatif, residu absolu, n_cycles =    8.1420553288124808E-002   6.4444004985346481                2
+ residu relatif, residu absolu, n_cycles =    7.2329691884494646E-002   6.8494442181088111                2
+ residu relatif, residu absolu, n_cycles =    5.9913371403975062E-002   7.3126591782192438                2
+ residu relatif, residu absolu, n_cycles =    4.5171826498760843E-002   7.8394514105002724                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    2.9954512239739436E-002   8.4348613139528421                2
+ residu relatif, residu absolu, n_cycles =    1.6702482018145740E-002   9.1018591060207807                2
+ residu relatif, residu absolu, n_cycles =    7.3666824868697366E-003   9.8087109124669105                2
+ residu relatif, residu absolu, n_cycles =    2.3307840578824005E-003   10.618565047390376                2
+ residu relatif, residu absolu, n_cycles =    6.4099831511899344E-004   11.369254698583097                2
+ residu relatif, residu absolu, n_cycles =    5.3943763428416927E-004   11.787042078119814                2
+ residu relatif, residu absolu, n_cycles =    4.3478575723038379E-004   10.761647842644084                2
+ residu relatif, residu absolu, n_cycles =    3.9474164567594933E-004   22.478538695174684                2
+ residu relatif, residu absolu, n_cycles =    2.1072219721284495E-004   17.651502418164402                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.9611933041778501E+035   9.4179185603303142E-002          36
+ residu relatif, residu absolu, n_cycles =    1373838944959845.8        9.8391487579785303E-002         116
+ residu relatif, residu absolu, n_cycles =    1.6988919661432160        9.4416131757330407E-002          64
+ residu relatif, residu absolu, n_cycles =    1.7465951802427095        9.1415836748467191E-002          66
+ residu relatif, residu absolu, n_cycles =   0.52794194033856079        9.1496267080932350E-002          97
+ residu relatif, residu absolu, n_cycles =   0.14799182992590670        8.8479946147323699E-002          85
+ residu relatif, residu absolu, n_cycles =    9.9331050261308840E-002  0.18993510311447620               81
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.8515019221844469E-002  0.26738724475301268               71
+ residu relatif, residu absolu, n_cycles =    9.2726576410977077E-002  0.74254120365946752               57
+ residu relatif, residu absolu, n_cycles =    9.5907907241481641E-002  0.93195544561244603               43
+ residu relatif, residu absolu, n_cycles =    9.8955353880362612E-002   2.3516572665578170               21
+ residu relatif, residu absolu, n_cycles =    9.2099731809885135E-002   2.5940594283855294                9
+ residu relatif, residu absolu, n_cycles =    9.1150064181540938E-002   2.6715338840719456                3
+ residu relatif, residu absolu, n_cycles =    7.6084876734257276E-002   2.2542986788570216                3
+ residu relatif, residu absolu, n_cycles =    9.7039151994021841E-002   6.8510531704376252                2
+ residu relatif, residu absolu, n_cycles =    7.7781568297003181E-002   7.3141849615504997                2
+ residu relatif, residu absolu, n_cycles =    5.9069774022678975E-002   7.8408802852914379                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.9579556432635270E-002   8.4361742330309291                2
+ residu relatif, residu absolu, n_cycles =    2.2212896726058001E-002   9.1030250101122814                2
+ residu relatif, residu absolu, n_cycles =    9.7742072414620049E-003   9.8096730456516603                2
+ residu relatif, residu absolu, n_cycles =    3.0724027604864907E-003   10.619231046799268                2
+ residu relatif, residu absolu, n_cycles =    6.7278358879487466E-004   11.369448634416653                2
+ residu relatif, residu absolu, n_cycles =    5.3445911158060016E-004   11.786442713462455                2
+ residu relatif, residu absolu, n_cycles =    4.3134267127007217E-004   10.759228468085155                2
+ residu relatif, residu absolu, n_cycles =    3.8774529864192195E-004   22.505495028424896                2
+ residu relatif, residu absolu, n_cycles =    2.1748795526930272E-004   17.652968662248579                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    9.0019353962498179E+035   9.5546535275654432E-002          34
+ residu relatif, residu absolu, n_cycles =    898172124338214.75        8.7520850398404432E-002         115
+ residu relatif, residu absolu, n_cycles =    1.7629344863518306        9.8981638010358711E-002          62
+ residu relatif, residu absolu, n_cycles =    1.8131743135644083        9.3978745749807968E-002          66
+ residu relatif, residu absolu, n_cycles =   0.59103719553097411        8.6983002497478742E-002          99
+ residu relatif, residu absolu, n_cycles =   0.14909737931061082        9.3640342848517452E-002          85
+ residu relatif, residu absolu, n_cycles =    9.3762133223398436E-002  0.17254215446690838               83
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.9771756571633841E-002  0.30526503374997882               69
+ residu relatif, residu absolu, n_cycles =    9.4311700748509197E-002  0.75396317291383230               57
+ residu relatif, residu absolu, n_cycles =    8.9336438811599861E-002  0.73729090137695952               45
+ residu relatif, residu absolu, n_cycles =    9.4705240298322765E-002   2.3587101838888738               21
+ residu relatif, residu absolu, n_cycles =    8.8412123505911919E-002   2.6023698500077073                9
+ residu relatif, residu absolu, n_cycles =    8.7716719384050457E-002   2.6432057324634344                3
+ residu relatif, residu absolu, n_cycles =    7.2960930529083562E-002   2.2232392605639806                3
+ residu relatif, residu absolu, n_cycles =    9.3472345917912231E-002   6.8519708240112722                2
+ residu relatif, residu absolu, n_cycles =    7.4887803161204386E-002   7.3150057238396062                2
+ residu relatif, residu absolu, n_cycles =    5.6813295084080506E-002   7.8415960582602890                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.8024549884602465E-002   8.4367762656300389                2
+ residu relatif, residu absolu, n_cycles =    2.1316760531999223E-002   9.1035020425852000                2
+ residu relatif, residu absolu, n_cycles =    9.3720837771258027E-003   9.8100088312416354                2
+ residu relatif, residu absolu, n_cycles =    2.9471134610840415E-003   10.619396118772938                2
+ residu relatif, residu absolu, n_cycles =    6.4936783739414977E-004   11.369399704809581                2
+ residu relatif, residu absolu, n_cycles =    5.3504877023752479E-004   11.786113707680792                2
+ residu relatif, residu absolu, n_cycles =    4.3178773319875940E-004   10.758550017497445                2
+ residu relatif, residu absolu, n_cycles =    3.9027066889932017E-004   22.507469077540360                2
+ residu relatif, residu absolu, n_cycles =    2.1447031926415737E-004   17.653556439639186                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.9824663161699742E+035   9.9406312916705014E-002          33
+ residu relatif, residu absolu, n_cycles =    137130677160145.56        9.6176166118134079E-002         111
+ residu relatif, residu absolu, n_cycles =    1.8043670790062123        9.8280846511031819E-002          62
+ residu relatif, residu absolu, n_cycles =    1.8991037878772299        9.2310774120750047E-002          66
+ residu relatif, residu absolu, n_cycles =   0.54241172163337925        9.6018082924188522E-002          99
+ residu relatif, residu absolu, n_cycles =   0.14559551590735151        9.6724457519680992E-002          85
+ residu relatif, residu absolu, n_cycles =    9.8741043797868355E-002  0.17659044227323245               83
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.7541198822365699E-002  0.30064089777173425               69
+ residu relatif, residu absolu, n_cycles =    9.2654286819143075E-002  0.74353856281009079               57
+ residu relatif, residu absolu, n_cycles =    9.2827662842779213E-002  0.74204398009837658               45
+ residu relatif, residu absolu, n_cycles =    9.8162368520899254E-002   2.3471996129581481               21
+ residu relatif, residu absolu, n_cycles =    8.9921149633411676E-002   2.5815796702158957                9
+ residu relatif, residu absolu, n_cycles =    8.6227847711041847E-002   2.6349157892446819                3
+ residu relatif, residu absolu, n_cycles =    7.1152105732229312E-002   2.2213644205257137                3
+ residu relatif, residu absolu, n_cycles =    9.1251090765917212E-002   6.8504584508652222                2
+ residu relatif, residu absolu, n_cycles =    7.3033629237934591E-002   7.3135912151922655                2
+ residu relatif, residu absolu, n_cycles =    5.5312305793137402E-002   7.8402908039993768                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.6950389539193482E-002   8.4355939122023056                2
+ residu relatif, residu absolu, n_cycles =    2.0675209525947719E-002   9.1024649283266061                2
+ residu relatif, residu absolu, n_cycles =    9.0747397356382535E-003   9.8091557823213194                2
+ residu relatif, residu absolu, n_cycles =    2.8519002018670739E-003   10.618790432705792                2
+ residu relatif, residu absolu, n_cycles =    6.3638804572160954E-004   11.369154730290781                2
+ residu relatif, residu absolu, n_cycles =    5.3570807225540704E-004   11.786429810021270                2
+ residu relatif, residu absolu, n_cycles =    4.3228435318348518E-004   10.759978196754941                2
+ residu relatif, residu absolu, n_cycles =    3.9304109786472382E-004   22.493679562959255                2
+ residu relatif, residu absolu, n_cycles =    2.1063268428760554E-004   17.652182144859292                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.8775872302382018E+035   9.8330958672366978E-002          35
+ residu relatif, residu absolu, n_cycles =    630745515685.04114        9.2481442689028692E-002         109
+ residu relatif, residu absolu, n_cycles =    1.5108377556311234        9.4037710509768627E-002          63
+ residu relatif, residu absolu, n_cycles =    1.8113262751082859        9.9414176147846534E-002          65
+ residu relatif, residu absolu, n_cycles =   0.65194895301257949        8.8269712007337478E-002         100
+ residu relatif, residu absolu, n_cycles =   0.14647812634679588        9.7589340294525762E-002          85
+ residu relatif, residu absolu, n_cycles =    9.3599506226776499E-002  0.15685148520574654               85
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.8959330038109361E-002  0.29074611326398558               69
+ residu relatif, residu absolu, n_cycles =    9.4627534634141211E-002  0.73975620645786477               57
+ residu relatif, residu absolu, n_cycles =    9.6079206742661238E-002  0.77975980059142125               45
+ residu relatif, residu absolu, n_cycles =    8.7075994124600944E-002   1.8960709382643195               23
+ residu relatif, residu absolu, n_cycles =    8.6393178637856408E-002   2.4120987142082324                9
+ residu relatif, residu absolu, n_cycles =    8.3349944267113438E-002   2.4998438353053176                3
+ residu relatif, residu absolu, n_cycles =    6.8678996056967048E-002   2.1342353732745951                3
+ residu relatif, residu absolu, n_cycles =    8.1297697623435319E-002   6.8513197688855776                2
+ residu relatif, residu absolu, n_cycles =    6.4990856313032030E-002   7.3144799063119672                2
+ residu relatif, residu absolu, n_cycles =    4.9118505922630055E-002   7.8412128148653162                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.2742838438543816E-002   8.4365571445863363                2
+ residu relatif, residu absolu, n_cycles =    1.8286820028732196E-002   9.1034782192854315                2
+ residu relatif, residu absolu, n_cycles =    8.0195805599202405E-003   9.8102277482473124                2
+ residu relatif, residu absolu, n_cycles =    2.5281957329388411E-003   10.619939250235436                2
+ residu relatif, residu absolu, n_cycles =    6.3680618173738714E-004   11.370388958774805                2
+ residu relatif, residu absolu, n_cycles =    5.3603483195904789E-004   11.787741140610306                2
+ residu relatif, residu absolu, n_cycles =    4.3252298485232265E-004   10.761332859891667                2
+ residu relatif, residu absolu, n_cycles =    3.9339512358850444E-004   22.492210667652504                2
+ residu relatif, residu absolu, n_cycles =    2.1061368922360382E-004   17.654277225864494                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.9681578098666517E+035   9.7735900746001469E-002          37
+ residu relatif, residu absolu, n_cycles =    147674030777.27292        9.7436271644503719E-002         109
+ residu relatif, residu absolu, n_cycles =    1.6325343844363800        9.9635861084436034E-002          63
+ residu relatif, residu absolu, n_cycles =    1.7128794991003031        9.1720576836396034E-002          65
+ residu relatif, residu absolu, n_cycles =   0.65905296352222886        9.0616135819405183E-002          98
+ residu relatif, residu absolu, n_cycles =   0.46432492877228315        9.7062198279852296E-002          84
+ residu relatif, residu absolu, n_cycles =    9.8049042952204804E-002  0.15435157054967610               85
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.4099123218026520E-002  0.24691500375080205               71
+ residu relatif, residu absolu, n_cycles =    9.9887736592266921E-002  0.88553115440451202               55
+ residu relatif, residu absolu, n_cycles =    9.7434741456303417E-002  0.83823864352654542               44
+ residu relatif, residu absolu, n_cycles =    9.7446411035686464E-002   2.0532553721096209               22
+ residu relatif, residu absolu, n_cycles =    9.3909671838914729E-002   2.4130568899487956                9
+ residu relatif, residu absolu, n_cycles =    9.0230920997647179E-002   2.5067992343397374                3
+ residu relatif, residu absolu, n_cycles =    9.7514685254545319E-002   6.4456105451301680                2
+ residu relatif, residu absolu, n_cycles =    8.3876774463505707E-002   6.8505895412277180                2
+ residu relatif, residu absolu, n_cycles =    6.9631541562863983E-002   7.3137380537764631                2
+ residu relatif, residu absolu, n_cycles =    5.2707179983001201E-002   7.8404604692941540                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.5077236357772559E-002   8.4357941424892164                2
+ residu relatif, residu absolu, n_cycles =    1.9543070876724456E-002   9.1027046597125310                2
+ residu relatif, residu absolu, n_cycles =    8.5461206432499801E-003   9.8094505477036531                2
+ residu relatif, residu absolu, n_cycles =    2.6834290725436614E-003   10.619169090103831                2
+ residu relatif, residu absolu, n_cycles =    6.3855848072063204E-004   11.369669605556753                2
+ residu relatif, residu absolu, n_cycles =    5.3746582068128334E-004   11.787172883809401                2
+ residu relatif, residu absolu, n_cycles =    4.3361806125307269E-004   10.761300886423244                2
+ residu relatif, residu absolu, n_cycles =    3.9500966801388242E-004   22.482667617255697                2
+ residu relatif, residu absolu, n_cycles =    2.1078186494189862E-004   17.652940046567636                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.2703357106822458E+035   9.4510477617425551E-002          34
+ residu relatif, residu absolu, n_cycles =    15379760890948816.        9.7741006259760413E-002         115
+ residu relatif, residu absolu, n_cycles =    1.5927058876738920        8.9436014277174875E-002          64
+ residu relatif, residu absolu, n_cycles =    1.8137446876728225        9.4242313471710110E-002          66
+ residu relatif, residu absolu, n_cycles =   0.57326458007238501        8.7448361411659098E-002          97
+ residu relatif, residu absolu, n_cycles =   0.14626423891739693        8.8129046279634804E-002          85
+ residu relatif, residu absolu, n_cycles =    9.7499903789151063E-002  0.18947643507465614               81
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.9037328927911797E-002  0.26866889946436162               71
+ residu relatif, residu absolu, n_cycles =    9.9395135388386652E-002  0.85923022746278421               55
+ residu relatif, residu absolu, n_cycles =    9.7000975283895147E-002  0.86825706845362705               43
+ residu relatif, residu absolu, n_cycles =    8.4950427615007304E-002   1.9462359953529063               23
+ residu relatif, residu absolu, n_cycles =    8.8033978423504633E-002   2.4764957482762022                9
+ residu relatif, residu absolu, n_cycles =    8.7738696511733827E-002   2.4869671997225096                3
+ residu relatif, residu absolu, n_cycles =    7.3219441125970272E-002   2.1076598089257157                3
+ residu relatif, residu absolu, n_cycles =    9.3982888704208387E-002   6.8583384450667877                2
+ residu relatif, residu absolu, n_cycles =    7.5479821764036475E-002   7.3212715089766132                2
+ residu relatif, residu absolu, n_cycles =    5.7360262865497731E-002   7.8477604386099129                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.8440750505524174E-002   8.4428288945436858                2
+ residu relatif, residu absolu, n_cycles =    2.1570642679370873E-002   9.1094112319910927                2
+ residu relatif, residu absolu, n_cycles =    9.4890549907520119E-003   9.8156901460366370                2
+ residu relatif, residu absolu, n_cycles =    2.9835850085614393E-003   10.624723564520812                2
+ residu relatif, residu absolu, n_cycles =    6.5592020021549950E-004   11.374057469414735                2
+ residu relatif, residu absolu, n_cycles =    5.4897074369819653E-004   11.789459040607237                2
+ residu relatif, residu absolu, n_cycles =    4.4170132525012731E-004   10.758641628075065                2
+ residu relatif, residu absolu, n_cycles =    3.9292897871408668E-004   22.549738582612633                2
+ residu relatif, residu absolu, n_cycles =    2.2752965247760284E-004   17.664037393806790                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.6761940175316105E+035   9.9661881748521669E-002          33
+ residu relatif, residu absolu, n_cycles =    2098748383274134.0        9.1034616184889089E-002         113
+ residu relatif, residu absolu, n_cycles =    1.4022623014981879        9.3465297148079690E-002          63
+ residu relatif, residu absolu, n_cycles =    1.8379423022308174        9.1697924272977807E-002          66
+ residu relatif, residu absolu, n_cycles =   0.59768192766778516        9.7350837036444302E-002          97
+ residu relatif, residu absolu, n_cycles =   0.14091626691433845        9.2534161691685032E-002          85
+ residu relatif, residu absolu, n_cycles =    9.9010741276656600E-002  0.19516409985968847               81
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.5680707531990331E-002  0.26597519161443567               71
+ residu relatif, residu absolu, n_cycles =    9.8902882750156781E-002  0.84002914243318694               55
+ residu relatif, residu absolu, n_cycles =    9.0620545658234825E-002  0.71272730853525923               45
+ residu relatif, residu absolu, n_cycles =    9.6494795541823303E-002   2.3944884492029326               21
+ residu relatif, residu absolu, n_cycles =    9.0542329584791373E-002   2.6031128078117818                9
+ residu relatif, residu absolu, n_cycles =    8.9914145117668390E-002   2.6268387245006295                3
+ residu relatif, residu absolu, n_cycles =    7.4972581311964617E-002   2.2242322389281499                3
+ residu relatif, residu absolu, n_cycles =    9.6715341885486000E-002   6.8532538219873480                2
+ residu relatif, residu absolu, n_cycles =    7.7618754275690358E-002   7.3162513627802834                2
+ residu relatif, residu absolu, n_cycles =    5.8917658929562244E-002   7.8428040548305571                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.9430756095900611E-002   8.4379408042219683                2
+ residu relatif, residu absolu, n_cycles =    2.2092632120703195E-002   9.1046121420802955                2
+ residu relatif, residu absolu, n_cycles =    9.7022041652736184E-003   9.8110432140418329                2
+ residu relatif, residu absolu, n_cycles =    3.0441067530754696E-003   10.620322296834566                2
+ residu relatif, residu absolu, n_cycles =    6.6653190756373580E-004   11.370148020650143                2
+ residu relatif, residu absolu, n_cycles =    5.3557950262946648E-004   11.786550178024697                2
+ residu relatif, residu absolu, n_cycles =    4.3216791334797653E-004   10.758309445394355                2
+ residu relatif, residu absolu, n_cycles =    3.9532465698923267E-004   22.515026293054841                2
+ residu relatif, residu absolu, n_cycles =    2.1207127838889449E-004   17.655710800626384                2
+ *** energie ***          30   1.5762711864406697E-003
+ residu relatif, residu absolu, n_cycles =    2.6044577152227548E-003   139.77817157986794                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.8475697746344404E-002   1.3325777700292887               79
+ residu relatif, residu absolu, n_cycles =    9.8879951950637160E-002  0.48154194549125084               45
+ residu relatif, residu absolu, n_cycles =    9.6014700775247319E-002  0.46121160339474720               47
+ residu relatif, residu absolu, n_cycles =    8.9556868104232250E+035   9.8570313681297775E-002          35
+ residu relatif, residu absolu, n_cycles =    8411925198374.4307        8.6383992016359712E-002         111
+ residu relatif, residu absolu, n_cycles =    1.2842735010568089        9.2059323407639629E-002          63
+ residu relatif, residu absolu, n_cycles =    1.7658375926269063        9.0094592435838977E-002          66
+ residu relatif, residu absolu, n_cycles =   0.52134776100986024        9.0780785594739830E-002          99
+ residu relatif, residu absolu, n_cycles =   0.35888470215708385        9.9420676014282949E-002          84
+ residu relatif, residu absolu, n_cycles =    9.7330569603961581E-002  0.17322785565570245               83
+ *** energie ***          11   2.3474576271186431E-002
+ residu relatif, residu absolu, n_cycles =    9.8383869978976454E-002  0.29282391882328968               69
+ residu relatif, residu absolu, n_cycles =    9.9191532258902801E-002  0.86021071721924769               55
+ residu relatif, residu absolu, n_cycles =    9.4488257090494104E-002  0.75139250465314200               45
+ residu relatif, residu absolu, n_cycles =    9.6239578541381807E-002   2.3918025137616850               21
+ residu relatif, residu absolu, n_cycles =    8.8335540659632616E-002   2.5937607819995749                9
+ residu relatif, residu absolu, n_cycles =    8.7120149371532604E-002   2.6562644864193428                3
+ residu relatif, residu absolu, n_cycles =    7.2487343768210810E-002   2.2690128422587836                3
+ residu relatif, residu absolu, n_cycles =    9.3443462324525078E-002   6.8495293896113534                2
+ residu relatif, residu absolu, n_cycles =    7.4887935942027140E-002   7.3127017343481011                2
+ residu relatif, residu absolu, n_cycles =    5.6728381828184259E-002   7.8394428396006299                2
+ *** energie ***          21   1.1949152542372865E-002
+ residu relatif, residu absolu, n_cycles =    3.7882769330786110E-002   8.4347925568824316                2
+ residu relatif, residu absolu, n_cycles =    2.1179740629528473E-002   9.1017186571589601                2
+ residu relatif, residu absolu, n_cycles =    9.2844736274630933E-003   9.8084820543267135                2
+ residu relatif, residu absolu, n_cycles =    2.9120381742510915E-003   10.618217989172742                2
+ residu relatif, residu absolu, n_cycles =    6.4175705297482924E-004   11.368742329550214                2
+ residu relatif, residu absolu, n_cycles =    5.3628682767674991E-004   11.786286696305366                2
+ residu relatif, residu absolu, n_cycles =    4.3271868283524062E-004   10.760417268793489                2
+ residu relatif, residu absolu, n_cycles =    3.9577933069670225E-004   22.485797674729366                2
+ residu relatif, residu absolu, n_cycles =    2.1071000804729197E-004   17.651144372842989                2
+ *** energie ***          30   1.5762711864406697E-003
+  
+  temps elapsed de calcul :    1233.24805    
   

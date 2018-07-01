@@ -1,3 +1,144 @@
+ 
+                     CCCC   EEEEE   PPPP    X   X    SSSS
+                    C       E       P   P    X X    S    
+                    C       EEEE    PPPP      X      SSS 
+                    C       E       P        X X        S
+                     CCCC   EEEEE   P       X   X   SSSS 
+               A COUPLED ELECTRON/PHOTON X-SECTION GENERATION CODE
+ VERSION: 7.5.4
+ DATE: January 16, 2013
+   cepxs regression test                                                 
+
+ EXECUTION DATE    7- 1-18      CEPXS START TIME   15: 8:45
+ INPUT/GRID GENERATION SUCCESSFUL
+ PROCESSING X-SECTIONS FOR MATERIAL   1 UNKNOWN                                 
+ e_to_e_tot_1.dat                                                                
+ e_to_e_1.dat                                                                    
+ p_to_p_tot_1.dat                                                                
+ p_to_p_1.dat                                                                    
+ e_to_g_1.dat                                                                    
+ p_to_g_1.dat                                                                    
+ p_to_e_1.dat                                                                    
+ e_edep_1.dat                                                                    
+ g_to_g_tot_1.dat                                                                
+ g_to_g_1.dat                                                                    
+ g_to_e_1.dat                                                                    
+ g_to_p_1.dat                                                                    
+ g_edep_1.dat                                                                    
+ PROCESSING X-SECTIONS FOR MATERIAL   2 TI                                      
+ e_to_e_tot_2.dat                                                                
+ e_to_e_2.dat                                                                    
+ p_to_p_tot_2.dat                                                                
+ p_to_p_2.dat                                                                    
+ e_to_g_2.dat                                                                    
+ p_to_g_2.dat                                                                    
+ p_to_e_2.dat                                                                    
+ e_edep_2.dat                                                                    
+ g_to_g_tot_2.dat                                                                
+ g_to_g_2.dat                                                                    
+ g_to_e_2.dat                                                                    
+ g_to_p_2.dat                                                                    
+ g_edep_2.dat                                                                    
+ PROCESSING X-SECTIONS FOR MATERIAL   3 N                                       
+ e_to_e_tot_3.dat                                                                
+ e_to_e_3.dat                                                                    
+ p_to_p_tot_3.dat                                                                
+ p_to_p_3.dat                                                                    
+ e_to_g_3.dat                                                                    
+ p_to_g_3.dat                                                                    
+ p_to_e_3.dat                                                                    
+ e_edep_3.dat                                                                    
+ g_to_g_tot_3.dat                                                                
+ g_to_g_3.dat                                                                    
+ g_to_e_3.dat                                                                    
+ g_to_p_3.dat                                                                    
+ g_edep_3.dat                                                                    
+ PROCESSING X-SECTIONS FOR MATERIAL   4 AG                                      
+ e_to_e_tot_4.dat                                                                
+ e_to_e_4.dat                                                                    
+ p_to_p_tot_4.dat                                                                
+ p_to_p_4.dat                                                                    
+ e_to_g_4.dat                                                                    
+ p_to_g_4.dat                                                                    
+ p_to_e_4.dat                                                                    
+ e_edep_4.dat                                                                    
+ g_to_g_tot_4.dat                                                                
+ g_to_g_4.dat                                                                    
+ g_to_e_4.dat                                                                    
+ g_to_p_4.dat                                                                    
+ g_edep_4.dat                                                                    
+ PROCESSING X-SECTIONS FOR MATERIAL   5 UNKNOWN                                 
+ e_to_e_tot_5.dat                                                                
+ e_to_e_5.dat                                                                    
+ p_to_p_tot_5.dat                                                                
+ p_to_p_5.dat                                                                    
+ e_to_g_5.dat                                                                    
+ p_to_g_5.dat                                                                    
+ p_to_e_5.dat                                                                    
+ e_edep_5.dat                                                                    
+ g_to_g_tot_5.dat                                                                
+ g_to_g_5.dat                                                                    
+ g_to_e_5.dat                                                                    
+ g_to_p_5.dat                                                                    
+ g_edep_5.dat                                                                    
+ PROCESSING X-SECTIONS FOR MATERIAL   6 UNKNOWN                                 
+ e_to_e_tot_6.dat                                                                
+ e_to_e_6.dat                                                                    
+ p_to_p_tot_6.dat                                                                
+ p_to_p_6.dat                                                                    
+ e_to_g_6.dat                                                                    
+ p_to_g_6.dat                                                                    
+ p_to_e_6.dat                                                                    
+ e_edep_6.dat                                                                    
+ g_to_g_tot_6.dat                                                                
+ g_to_g_6.dat                                                                    
+ g_to_e_6.dat                                                                    
+ g_to_p_6.dat                                                                    
+ g_edep_6.dat                                                                    
+ PERFORMING FINAL CHECKS
+ 
+ X-SECTIONS SUCCESSFULLY GENERATED
+
+  TOTAL CPU TIME (SEC) =            1
   
  nombre de processeurs et taches maximuns           4           4
   
+ densite lu sur le fichier dicom (format HU) : densite_hu.don                                                                                                                  
+ materiau mis a 1
+  
+ warning : le materiau            2  n'est pas utilise
+  
+ warning : le materiau            3  n'est pas utilise
+  
+ warning : le materiau            4  n'est pas utilise
+  
+ warning : le materiau            5  n'est pas utilise
+  
+ warning : le materiau            6  n'est pas utilise
+  
+  
+ ============== Recapitulatif ==============
+ modele M1
+ type de relaxation GS_parallele_aleatoire   
+ n_cycles, n_energie_grid =         1200          30
+ n_energie_en_memoire =           30
+ lf, mf, nf =          143         138           1
+ Lx, Ly, Lz =    13.8671808       13.3788996       1.00000000    
+ e_min, e_max =    1.00000005E-03   3.55762728E-02
+ n_groupe_particules            2
+ ordre, seuil_residu =           1  0.10000000000000001     
+ valeur propre b pour Mn = maximum
+ champs magnetique : non
+ calcul 2d
+ type des particules e-g 
+ ===========================================
+  
+ residu relatif, residu absolu, n_cycles =    3.3078307902906856E-003   195.74824923214683                2
+ *** energie ***           1   3.4999999999999996E-002
+ residu relatif, residu absolu, n_cycles =    9.1959304397580016E-002   1.3810718087991904               81
+ residu relatif, residu absolu, n_cycles =    9.5245621686605761E-002  0.49824030339721781               48
+ residu relatif, residu absolu, n_cycles =    9.9666208799213840E-002  0.49973959545711794               48
+ residu relatif, residu absolu, n_cycles =    8.5544681780411572E+035   9.4775768979468752E-002          40
+ residu relatif, residu absolu, n_cycles =    56030698711152.266        9.7734784696172902E-002         112
+ residu relatif, residu absolu, n_cycles =    1.0755507117886369        9.4762471915549706E-002          66
+ residu relatif, residu absolu, n_cycles =    1.3325952075047545        9.1202746143300081E-002          66
