@@ -13,7 +13,7 @@ import sys
 import cPickle as pickle
 import math
 
-NB_LEARN_SLICE = 1
+NB_LEARN_SLICE = 0
 NB_TEST_SLICE = 4
 
 class Save_Model :
@@ -42,8 +42,8 @@ class Save_Test :
 		main.nb_test_imgs = self.nb_test_imgs
 		main.slices_test = self.slices_test
 
-class Main :
-	def __init__(self) :
+class Atlas :
+	def __init__(self, param) :
 
 		self.learn_imgs = None
 		self.test_imgs = None
@@ -53,6 +53,7 @@ class Main :
 		self.nb_learn_imgs = 0
 		self.nb_test_imgs = 0
 
+		#param
 		self.method = None
 		self.path = None
 		self.split_method = None
@@ -65,7 +66,10 @@ class Main :
 		self.plot = None
 		self.ask_help = None
 		self.save_result = None
-		self.extract_param(sys.argv)
+		self.config_file = None
+		self.density_file = None
+
+		self.extract_param(param)
 		if self.ask_help == "true" :
 			self.help()
 			exit()
@@ -234,8 +238,9 @@ class Main :
 					fig.add_subplot(3, 1, 3)
 					plt.imshow(img_recompt)
 
-					if not os.path.exists(dir_result):
-    					os.makedirs(dir_result)
+					if not os.path.exists(dir_result) :
+						os.makedirs(dir_result)
+						
 					name = dir_result + "result_slice_" + str(indice_slice) + ".png"
 					fig.savefig(name)
 
@@ -248,7 +253,7 @@ class Main :
 				else :
 					print("Aucune image dans cette slice")
 
-			for i in range(NB_TEST_SLICE) :
+			for i in range(len(self.slices_test)) :
 				# if i >= 12 :
 				test_slice(self, i, plot, save_result)
 
@@ -289,23 +294,36 @@ class Main :
 			pickle.dump(save_test, output, pickle.HIGHEST_PROTOCOL)
 
 	def fload_model(self, dir_load) :
-		print("Chargement du modèle à partir de " + dir_load + "...")
 
-		if self.path_test != None :
-			print("Chargement des images de tests à partir de " + self.path_test + "...")
-			file_img_test = self.path_test
-		else :
-			file_img_test = dir_load + "tests.dat"
+		def load_train(self, dir_load) :
+			print("Chargement du modèle à partir de " + dir_load + "...")
+			file_model = dir_load + "model.dat"
+			with open(file_model, "r") as input :
+				save_model = pickle.load(input)
+				save_model.copy_into(self)
 
-		file_model = dir_load + "model.dat"
+		def load_test(self, dir_load) :
 
-		with open(file_model, "r") as input :
-			save_model = pickle.load(input)
-			save_model.copy_into(self)
+			def load(self, file_img_test) :
+				with open(file_img_test, "r") as input :
+					save_test = pickle.load(input)
+					save_test.copy_into(self)
 
-		with open(file_img_test, "r") as input :
-			save_test = pickle.load(input)
-			save_test.copy_into(self)
+			if self.path_test != None :
+				# On charge une sauvgarde d'image de test
+				print("Chargement des images de tests à partir de " + self.path_test + "...")
+				file_img_test = self.path_test
+				load(self, file_img_test)
+
+			elif self.config_file and self.density_file :
+				self.extract_slice_test()
+
+			else :
+				file_img_test = dir_load + "tests.dat"
+				load(self, file_img_test)
+
+		load_train(self, dir_load)
+		load_test(self, dir_load)
 
 	def extract_img_density(self, nb_learn_slice, nb_test_slice) :
 
@@ -337,7 +355,7 @@ class Main :
 
 			def extract_img_test(list_img_density, indice_test, nb_img_slice) :
 				images = list()
-				first_indice_for_each_slice = list()
+				first_indice_for_each_slice = [0]
 				for i in indice_test :
 					first_indice_for_each_slice += [len(images)]
 					images += list_img_density[i].extract_images()[:nb_img_slice]
@@ -362,6 +380,7 @@ class Main :
 			slices_test = [list_img_density[i].extract_slice() for i in indice_test]
 			return quart_img_learn, img_test, slices_test, first_indice_slice
 
+		
 		print("Chargement des images à partir de " + self.path)
 		list_img_density = get_list_img_density(self)
 		result = extract_and_seperate_img(list_img_density, nb_learn_slice, nb_test_slice, self.nb_img_for_each_slice)
@@ -373,6 +392,24 @@ class Main :
 
 		print(str(len(self.learn_imgs)) + " quarts images d'apprentissage chargées.")
 		print(str(len(self.test_imgs)) + " images de tests chargées.")
+
+	def extract_slice_test(self) :
+
+		def get_img_density(self) :
+			img_density = None
+			if self.config_file and self.density_file :
+				print("Chargement des images à partir de " + self.density_file + " et " + self.config_file) 
+				img_density = imd.Img_Density(self.density_file, self.config_file)
+			return img_density
+		
+		def extract_test_img(self, img_density) :
+			imgs = img_density.extract_images()
+			return imgs
+
+		img_density = get_img_density(self)
+		self.test_imgs = extract_test_img(self, img_density)
+		self.slices_test = [img_density.extract_slice()]
+		self.first_indice_slice = [0, len(self.test_imgs)]
 
 	def extract_param(self, argv) :
 
@@ -393,13 +430,15 @@ class Main :
 		self.load_model = take_value(param, "load_model", "false")
 		self.save_model = take_value(param, "save_model", "false")
 		self.path_save = take_value(param, "path_save", "./save/")
-		self.path = take_value(param, "path", "../working_dir/")
+		self.path = take_value(param, "path", "../../../working_dir/")
 		self.symmetric_similarity = take_value(param, "symmetric", "true")
 		self.path_test = take_value(param, "path_test", None)
 		self.nb_img_for_each_slice = int(take_value(param, "nb_img_slice", 10000))
 		self.plot = take_value(param, "plot", "false")
 		self.ask_help = take_value(param, "help", "false")
 		self.save_result = take_value(param, "save_result", "true")
+		self.config_file = take_value(param, "config_file", "")
+		self.density_file = take_value(param, "density_file", "")
 
 	def help(self) :
 		print("method=value --- values = [zt_dt, dt]")
@@ -407,16 +446,18 @@ class Main :
 		print("load_model=value --- values = [false, true]")
 		print("save_model=value --- values = [false, true]")
 		print("path_save=value --- default = ./save/")
-		print("path=value --- default = ../working_dir/")
+		print("path=value --- default = ../../../working_dir/")
 		print("symmetric=value --- values = [true, false]")
 		print("path_test=value --- default = None")
 		print("nb_img_slice=value --- default = 10000")
 		print("plot=value --- value = [false, true]")
 		print("save_result=value --- value = [true, false]")
+		print("config_file=value --- value = \"\"")
+		print("density_file=value --- value = \"\"")
 
 if __name__ == '__main__':
 
-	main = Main()
+	main = Atlas(sys.argv)
 	plot = main.plot == "true"
 	save_result = main.save_result == "true"
 	main.run(plot = plot, save_result = save_result)

@@ -575,6 +575,9 @@ class DicomParser:
         - filename_header : le nom du cas traité
         - slice_id : identifiant de la coupe
         - contourage : une sequence de points representant un polygone ferme
+
+        retour :
+            les noms des deux fichiers générés
         """
         slice = self.slices[slice_id]
 
@@ -588,6 +591,9 @@ class DicomParser:
         domaine_n_points = get_domaine_n_points(domaine, self.n_points_raffines)
         domaine_dimensions = get_domaine_dimensions(domaine, self.dimensions, self.maillage)
         domaine_sources = get_domaine_sources(domaine, sources)
+
+        filename_hounsfield = None
+        filename = None
 
         # Generation du fichier correspondant a la densite HU
         densite_lu = options['densite_lu']
@@ -605,6 +611,7 @@ class DicomParser:
             filename = working_directory + "/slice_" + str(slice_id).zfill(3) + "/densite_constante/config_KIDS.don"
             
         lancer_generation(filename, domaine_sources, domaine_n_points, domaine_dimensions, options)
+        return filename_hounsfield, filename
 
 
     def generate_DICOM_calculs_finaux(self, slice_id, working_directory, options):
@@ -634,7 +641,7 @@ class DicomParser:
         if not os.path.exists(directory):
             os.makedirs(directory)
         lancer_generation(filename, domaine_sources, domaine_n_points, domaine_dimensions, options, calculs_finaux=True)
-
+        return filename
 
     
 
