@@ -6,10 +6,12 @@
 # Copyright (c) 2017, CELIA Bordeaux
 # This file is part of cythi, released under a BSD license.
 
+import os
 from MainGUI import *
 from threading import Thread
 from MultiSlider import *
 from Atlas import *
+from Img_Density import *
 
 class DicomPrevisualisation(tk.Frame):
     """
@@ -377,6 +379,69 @@ class LancerCalculs(Thread):
         self.options = options
         self.calculs_finaux = calculs_finaux
 
+    def use_atlas(self, filename_hounsfield, filename_config) :
+
+        def create_param(filename_hounsfield, filename_config) :
+            param = "load_model=true path=src/Paraka/short_model/"
+            param += " config_file=" + filename_config 
+            param += " density_file=" + filename_hounsfield
+            return param 
+
+        def reverse_img(img) :
+            size = (len(img), len(img[0]))
+            new = [[0 for i in range(size[0])] for j in range(size[1])]
+            for i in range(size[1]) :
+                for j in range(size[0]) :
+                    new[i][j] = img[j][i]
+            return new
+
+        def create_img_to_calcul(result, sources, densite_hu) :
+            all_imgs = []
+            size = (len(densite_hu[0]), len(densite_hu))
+            for ind, source in enumerate(sources) :
+                x1 = source[0]
+                x2 = source[1]
+                res = result[ind]
+                res = reverse_img(res)
+
+                img_to_calcul = [[-1 for i in range(size[0])] for j in range(size[1])]
+                rayon = Img_Density.RAYON_SUB_IMG
+
+                for i in range(2*rayon) :
+                    for j in range(2*rayon) :
+                        y1 = x2 - rayon + i
+                        y2 = x1 - rayon + j
+                        img_to_calcul[y1][y2] = res[i][j]
+
+                all_imgs += [img_to_calcul]
+            return all_imgs
+
+        def write_into_files(imgs_to_calcul, dirname="tmp/") :
+
+            def write_img(img, filename) :
+                size = (len(img[0]), len(img))
+                with open(filename, "w+") as f :
+                    string = str(size[0]) + " " + str(size[1]) + "\n"
+                    f.write(string)
+                    for line in img :
+                        for elem in line :
+                            f.write(str(elem) + " ")
+                        f.write("\n")
+
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
+            for ind, img in enumerate(imgs_to_calcul) :
+                groupe = ind + 1
+                filename = dirname + "img" + str(groupe) + ".dat"
+                write_img(img, filename)
+
+        param = create_param(filename_hounsfield, filename_config)
+        paraka = Atlas(param)
+        result, sources, density_hu = paraka.run()
+        imgs_to_calcul = create_img_to_calcul(result, sources, density_hu)
+        write_into_files(imgs_to_calcul)
+
+
     def run(self):
         """ Code à exécuter pendant l'exécution du thread """
         # Calcul des sources à placer pour la prévisualisation (réparties en fonction du ROI cible)
@@ -416,13 +481,8 @@ class LancerCalculs(Thread):
             # On doit aussi les enregistrer dans un dossier temporaire de manière à ce que M1 vienne les lire
             # On lance paraka avec le model enregistrer avec le fichier de test correspondant à l'ensemble des images 
             # extraite (zone d'influence) à partir de config_kids.don et densite_hu.don
-            param = "load_model=true path=src/Paraka/short_model/"
-            param += " config_file=" + filename_config 
-            param += " density_file=" + filename_hounsfield
-            param += " plot=true"
-            paraka = Atlas(param)
-            paraka.run(plot=False)
-
+            self.use_atlas(filename_hounsfield, filename_config)
+                
             # Puis Lancement du calcul M1
             command = self.dicom_navigation.PATH_start_previsualisation + " " + self.slice.get_slice_directory() + " " + str(self.dicom_navigation.densite_lu.get())
             os.system(command)

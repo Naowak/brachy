@@ -133,6 +133,9 @@ class Img_Density :
 	def extract_slice(self) :
 		return self.img_density
 
+	def extract_sources(self) :
+		return self.sources
+
 	#------------------------- Plot --------------------------
 
 	def show_img_density(self) :

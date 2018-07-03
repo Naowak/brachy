@@ -52,6 +52,7 @@ class Atlas :
 		self.model = None
 		self.nb_learn_imgs = 0
 		self.nb_test_imgs = 0
+		self.sources = None
 
 		#param
 		self.method = None
@@ -252,10 +253,14 @@ class Atlas :
 						save_img_result(self, indice_slice, list_score, list_difference)
 				else :
 					print("Aucune image dans cette slice")
+				return list_difference
 
+
+			list_difference = []
 			for i in range(len(self.slices_test)) :
-				# if i >= 12 :
-				test_slice(self, i, plot, save_result)
+				result = test_slice(self, i, plot, save_result)
+				list_difference += result
+			return list_difference
 
 		if self.load_model == "true" :
 				self.fload_model(self.path)
@@ -271,7 +276,8 @@ class Atlas :
 
 		#test des données
 		# self.model.predict_all_imgs(self.test_imgs)
-		make_all_test(self, plot, save_result)	
+		result = make_all_test(self, plot, save_result)	
+		return result, self.sources, self.slices_test[0] #ici result est une liste d'image représentant les zone à recalculer
 
 	def fsave_model(self, dir_save) :
 		print("Sauvegarde du modèle dans " + dir_save + "...")
@@ -410,6 +416,7 @@ class Atlas :
 		self.test_imgs = extract_test_img(self, img_density)
 		self.slices_test = [img_density.extract_slice()]
 		self.first_indice_slice = [0, len(self.test_imgs)]
+		self.sources = img_density.extract_sources()
 
 	def extract_param(self, options) :
 
