@@ -436,7 +436,7 @@ class LancerCalculs(Thread):
                 write_img(img, filename)
 
         param = create_param(filename_hounsfield, filename_config)
-        paraka = Atlas(param)
+        paraka = Atlas(param.split(" "))
         result, sources, density_hu = paraka.run()
         imgs_to_calcul = create_img_to_calcul(result, sources, density_hu)
         write_into_files(imgs_to_calcul)

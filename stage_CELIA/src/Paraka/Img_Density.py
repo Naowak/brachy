@@ -5,6 +5,8 @@ import math
 import random
 import copy
 
+import Quartil
+
 class Img_Density :
 	"""Classe représentant une image de densité quantifier
 	 en M différentes matières. L'image est obtenu à partir 
@@ -31,6 +33,14 @@ class Img_Density :
 	 		 		de l'image de densité
 	 		 - self.img_material : img de densité converti en image des matériaux
 	 		 - self.sub_imgs : Sous images de matériaux extraite pour chaque source"""
+
+ 		def find_directory(density_file) :
+ 		 	length = len(density_file)
+ 		 	for i in range(length-1, -1, -1) :
+ 		 		if density_file[i] == "/" :
+ 		 			return density_file[:i+1]
+
+	 	self.directory = find_directory(density_file)
 	 	#On charge l'image
 	 	self.load_img_density(density_file)
 	 	#On charge les sources
@@ -123,11 +133,18 @@ class Img_Density :
 		return self.sub_imgs
 
 	def extract_quart_images(self) :
+		#ce sont les images de d'apprentissage que l'on extrait
+		#il faut conserver un chemin vers leur calcul de dose
+		#et savoir quelle est sont orientation (localisation)
+		location = ["NO", "NE", "SO", "SE"]
 		rayon = self.RAYON_SUB_IMG
 		quart_images = list()
-		for elem in self.sub_imgs :
+		for ind, elem in enumerate(self.sub_imgs) : # il y a autant de sub_img que de sources
 			img = elem[0]
-			quart_images += extract_quartil(img, rayon)
+			filename_dose = self.directory + "dose_source_" + str(ind).zfill(3) + ".dat"
+			quartils = extract_quartil(img, rayon)
+			quartils = [Quartil.Quartil(q, filename_dose, location[i]) for i, q in enumerate(quartils)]
+			quart_images += quartils
 		return quart_images
 
 	def extract_slice(self) :
@@ -186,7 +203,7 @@ def rotation(img, nb) :
 		img = rotate_90_degrees(img)
 	return img
 
-def extract_quartil(img, rayon = Img_Density.RAYON_SUB_IMG) :				
+def extract_quartil(img, rayon = Img_Density.RAYON_SUB_IMG) :
 	up_left = img[:rayon]
 	up_left = [line[:rayon] for line in up_left]
 	up_left = rotation(up_left, 2)

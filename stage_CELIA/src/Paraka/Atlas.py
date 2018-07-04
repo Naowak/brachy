@@ -13,7 +13,7 @@ import sys
 import cPickle as pickle
 import math
 
-NB_LEARN_SLICE = 0
+NB_LEARN_SLICE = 1
 NB_TEST_SLICE = 4
 
 class Save_Model :
@@ -361,7 +361,7 @@ class Atlas :
 
 			def extract_img_test(list_img_density, indice_test, nb_img_slice) :
 				images = list()
-				first_indice_for_each_slice = [0]
+				first_indice_for_each_slice = []
 				for i in indice_test :
 					first_indice_for_each_slice += [len(images)]
 					images += list_img_density[i].extract_images()[:nb_img_slice]
@@ -428,10 +428,11 @@ class Atlas :
 				return default_value
 
 		param = dict()
-		args = options.split(" ")
-		for elem in args :
+		# args = options.split(" ")
+		for elem in options :
 			tab = elem.split("=")
-			param[tab[0]] = tab[1]
+			if len(tab) > 1 :
+				param[tab[0]] = tab[1]
 
 		self.method = take_value(param, "method", "zt_dt")
 		self.split_method = take_value(param, "split_method", "random")
