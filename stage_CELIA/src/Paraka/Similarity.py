@@ -200,7 +200,9 @@ def get_disque_segment(img, intervale) :
 	for i in range(size) :
 		for j in range(size) :
 			# A AMELIORER, ON PEUT PARCOURIR QUE LES PIXELS DU DISQUE
-			if is_in_circle(i, j, size) :
+			if i == 0 and j == 0 :
+				pass
+			elif is_in_circle(i, j, size) :
 				p = [i, j]
 				proj = projection(p, size)
 				proj_norm = float(proj[0])/size

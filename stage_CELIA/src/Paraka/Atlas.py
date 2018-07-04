@@ -144,10 +144,11 @@ class Atlas :
 						list_prediction = result[0]
 						list_score = result[1]
 						list_difference = result[2]
+						list_quart_pred = result[3]
 					else :
 						print("No image to predict")
 
-					return list_prediction, list_score, list_difference
+					return list_prediction, list_score, list_difference, list_quart_pred
 
 				def calcul_img_success(self, indice_slice, list_score) :
 
@@ -245,7 +246,11 @@ class Atlas :
 					name = dir_result + "result_slice_" + str(indice_slice) + ".png"
 					fig.savefig(name)
 
-				list_prediction, list_score, list_difference = make_predictions(self, indice_slice)
+				list_prediction, list_score, list_difference, list_quart_pred = make_predictions(self, indice_slice)
+				# /!\ Here we are !
+				print(list_quart_pred)
+				# /!\ Here we are !
+
 				if len(list_prediction) > 0 :
 					if plot :
 						plot_result(self, indice_slice, list_score, list_difference)

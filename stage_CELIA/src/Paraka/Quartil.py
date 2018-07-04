@@ -20,3 +20,8 @@ class Quartil :
 
 	def __setitem__(self, key, item) :
 		self.my_img[key] = item
+
+	def __str__(self) :
+		string = "Filename : " + self.filename_dose + "\n"
+		string += "Location : " + self.location
+		return string

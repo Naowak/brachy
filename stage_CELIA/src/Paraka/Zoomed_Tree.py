@@ -292,10 +292,10 @@ class Zoomed_Tree() :
 		z_img = zi.Zoomed_Image(img)
 		node = find_closest_node(self, z_img)
 		prediction, score, dt_node, nb_visit, intervale = node.decision_tree.predict(img)
-		if plot :
-			plot_result(img, prediction)
+		# if plot :
+		# plot_result(img, prediction)
 
-		return prediction, score, intervale
+		return prediction, score, intervale #ici prédiction est un quartil
 
 	def predict_all_imgs(self, imgs, plot=False) :
 
@@ -307,11 +307,11 @@ class Zoomed_Tree() :
 			for q_img in quart_imgs :
 				q_pred, q_score, q_intervale = self.find_closest_img(q_img)
 				score += q_score
-				quart_pred += [q_pred]
+				quart_pred += [q_pred] #ensemble de quartil : en mode  [1 2; 3 4]
 				quart_interval += [q_intervale]
 			prediction = imd.recompose_into_img(quart_pred)
 			result_img = simy.get_full_disque(quart_interval)
-			return prediction, score, result_img
+			return prediction, score, result_img, quart_pred 
 
 		def plot_result(img, prediction, difference) :
 			fig = plt.figure()
@@ -333,13 +333,15 @@ class Zoomed_Tree() :
 		list_prediction = list()
 		list_score = list()
 		list_difference = list()
+		list_quart_pred = list()
 
 		for i, img in enumerate(imgs) :
 			begin = time.time()
-			prediction, score, difference = predict_one_img(self, img)
+			prediction, score, difference, quart_pred = predict_one_img(self, img)
 			end = time.time()
 
 			list_prediction += [prediction]
+			list_quart_pred += [quart_pred]
 			list_score += [score]
 			list_difference += [difference]
 
@@ -355,7 +357,7 @@ class Zoomed_Tree() :
 		print(bcolors.OKGREEN)
 		print(stats)
 		print(bcolors.ENDC)
-		return list_prediction, list_score, list_difference
+		return list_prediction, list_score, list_difference, list_quart_pred
 
 	def __str__(self) :
 

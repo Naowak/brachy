@@ -2,6 +2,7 @@
 #-*- coding: utf-8 -*-
 
 import random
+import Quartil
 import Similarity as simy
 import Img_Density as imd
 import Stats
@@ -55,7 +56,7 @@ class Decision_Tree() :
 
 			prediction = imd.recompose_into_img(quart_pred)
 			result_img = simy.get_full_disque(quart_intervale)
-			return prediction, score, result_img
+			return prediction, score, result_img, quart_pred #prédiction est un quartil
 
 		def plot_result(img, prediction, difference) :
 			fig = plt.figure()
@@ -77,15 +78,17 @@ class Decision_Tree() :
 		list_prediction = list()
 		list_score = list()
 		list_difference = list()
+		list_quart_pred = list()
 
 		for i, img in enumerate(list_imgs_to_predict) :
 			begin = time.time()
-			prediction, score, difference = predict_one_img_full(self, img)
+			prediction, score, difference, quart_pred = predict_one_img_full(self, img)
 			end = time.time()
 
 			list_prediction += [prediction]
 			list_score += [score]
 			list_difference += [difference]
+			list_quart_pred += [quart_pred]
 
 			temps = end - begin
 			stats.add_test(score, temps)
@@ -95,7 +98,7 @@ class Decision_Tree() :
 				plot_result(img, prediction, difference)
 
 		print(stats)
-		return list_prediction, list_score, list_difference
+		return list_prediction, list_score, list_difference, list_quart_pred
 
 	def predict(self, img_to_predict) :
 
@@ -123,7 +126,10 @@ class Decision_Tree() :
 		def symetric_img(img) :
 			len_first = len(img)
 			len_second = len(img[0])
-			return [[img[j][i] for j in range(len_second)] for i in range(len_first)]
+			filename_dose = img.filename_dose
+			location = img.location
+			sym_img = [[img[j][i] for j in range(len_second)] for i in range(len_first)]
+			return Quartil.Quartil(sym_img, filename_dose, location)
 
 		def img_to_return(self, img_to_predict, img_found, score) :
 			if self.symmetric_similarity == "true" :
