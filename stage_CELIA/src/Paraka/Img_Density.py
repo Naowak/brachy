@@ -141,9 +141,9 @@ class Img_Density :
 		quart_images = list()
 		for ind, elem in enumerate(self.sub_imgs) : # il y a autant de sub_img que de sources
 			img = elem[0]
-			filename_dose = self.directory + "dose_source_" + str(ind).zfill(3) + ".dat"
+			filename_dose = self.directory + "dose_source_" + str(ind+1).zfill(3) + ".dat"
 			quartils = extract_quartil(img, rayon)
-			quartils = [Quartil.Quartil(q, filename_dose, location[i]) for i, q in enumerate(quartils)]
+			quartils = [Quartil.Quartil(q, filename_dose, location[i], self.sources[i]) for i, q in enumerate(quartils)]
 			quart_images += quartils
 		return quart_images
 

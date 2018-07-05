@@ -14,7 +14,7 @@ import cPickle as pickle
 import math
 
 NB_LEARN_SLICE = 1
-NB_TEST_SLICE = 4
+NB_TEST_SLICE = 1
 
 class Save_Model :
 	def __init__(self, main) :
@@ -246,10 +246,16 @@ class Atlas :
 					name = dir_result + "result_slice_" + str(indice_slice) + ".png"
 					fig.savefig(name)
 
+				def extract_files_and_location_predict(self, list_quart_pred) :
+					falp = []
+					for pred in list_quart_pred :
+						fl = [(quart.filename_dose, quart.location) for quart in pred]
+						falp += [fl]
+					return falp
+
+
 				list_prediction, list_score, list_difference, list_quart_pred = make_predictions(self, indice_slice)
-				# /!\ Here we are !
-				print(list_quart_pred)
-				# /!\ Here we are !
+				list_files_and_location_predict = extract_files_and_location_predict(self, list_quart_pred)
 
 				if len(list_prediction) > 0 :
 					if plot :
@@ -258,14 +264,16 @@ class Atlas :
 						save_img_result(self, indice_slice, list_score, list_difference)
 				else :
 					print("Aucune image dans cette slice")
-				return list_difference
+				return list_difference, list_files_and_location_predict
 
 
 			list_difference = []
+			list_location_files = []
 			for i in range(len(self.slices_test)) :
-				result = test_slice(self, i, plot, save_result)
+				(result, location_files) = test_slice(self, i, plot, save_result)
 				list_difference += result
-			return list_difference
+				list_location_files += location_files
+			return list_difference, list_location_files
 
 		if self.load_model == "true" :
 				self.fload_model(self.path)
@@ -281,8 +289,8 @@ class Atlas :
 
 		#test des données
 		# self.model.predict_all_imgs(self.test_imgs)
-		result = make_all_test(self, plot, save_result)	
-		return result, self.sources, self.slices_test[0] #ici result est une liste d'image représentant les zone à recalculer
+		result, location_files = make_all_test(self, plot, save_result)	
+		return result, self.sources, self.slices_test[0], location_files #ici result est une liste d'image représentant les zone à recalculer
 
 	def fsave_model(self, dir_save) :
 		print("Sauvegarde du modèle dans " + dir_save + "...")

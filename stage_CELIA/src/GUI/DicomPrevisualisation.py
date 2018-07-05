@@ -382,7 +382,7 @@ class LancerCalculs(Thread):
     def use_atlas(self, filename_hounsfield, filename_config) :
 
         def create_param(filename_hounsfield, filename_config) :
-            param = "load_model=true path=src/Paraka/short_model/"
+            param = "load_model=true path=src/Paraka/sm97/"
             param += " config_file=" + filename_config 
             param += " density_file=" + filename_hounsfield
             return param 
@@ -437,7 +437,8 @@ class LancerCalculs(Thread):
 
         param = create_param(filename_hounsfield, filename_config)
         paraka = Atlas(param.split(" "))
-        result, sources, density_hu = paraka.run()
+        result, sources, density_hu, location_files = paraka.run()
+        print(location_files)
         imgs_to_calcul = create_img_to_calcul(result, sources, density_hu)
         write_into_files(imgs_to_calcul)
 
