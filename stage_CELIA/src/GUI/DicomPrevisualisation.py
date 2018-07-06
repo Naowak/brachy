@@ -382,7 +382,7 @@ class LancerCalculs(Thread):
     def use_atlas(self, filename_hounsfield, filename_config) :
 
         def create_param(filename_hounsfield, filename_config) :
-            param = "load_model=true path=src/Paraka/sm97/"
+            param = "load_model=true path=sm97-200/"
             param += " config_file=" + filename_config 
             param += " density_file=" + filename_hounsfield
             return param 
@@ -437,10 +437,95 @@ class LancerCalculs(Thread):
 
         param = create_param(filename_hounsfield, filename_config)
         paraka = Atlas(param.split(" "))
-        result, sources, density_hu, location_files = paraka.run()
-        print(location_files)
+        result, sources, density_hu, quart_pred = paraka.run()
         imgs_to_calcul = create_img_to_calcul(result, sources, density_hu)
         write_into_files(imgs_to_calcul)
+        return sources, quart_pred
+
+
+    def copy_dose(self, sources, quart_pred) :
+
+        def read_img_to_calcul(filename) :
+
+            def is_intable(string) :
+                return string == "-1" or string == "0" or string == "1"
+
+            img = []
+            with open(filename, "r") as f :
+                line = f.readline()
+                for line in f :
+                    tab = line.split(" ")
+                    my_line = []
+                    for elem in tab :
+                        if is_intable(elem) :
+                            my_line += [int(elem)]
+                    img += [my_line]
+            return img
+
+        def get_big_img_dose(four_quart, rayon) :
+            NO = four_quart[0].dose
+            NE = four_quart[1].dose
+            SO = four_quart[2].dose
+            SE = four_quart[3].dose
+            all_dose = recompose_into_img([NO, NE, SO, SE], rayon)
+            return all_dose
+
+        def write_dose_in_filedose(self, file_dose, img_to_calcul, dose, source, rayon) :
+
+            def are_coordonates_to_copy(img_to_calcul, x, y, source, rayon) :
+                if x >= source[0] - rayon and x < source[0] + rayon :
+                    if y >= source[1] - rayon and y < source[1] + rayon :
+                        # print(source, x, y)
+                        return img_to_calcul[y][x] == 1
+                return False
+
+            def get_dose(x, y, source, rayon, dose) :
+                i = x - source[0] + rayon
+                j = y - source[1] + rayon
+                return dose[i][j]
+
+            def get_new_line(tab_line, dose) :
+                tab_line[3] = "{:.8e}".format(dose)
+                new_line = ""
+                for elem in tab_line : 
+                    new_line += "   " + elem
+                return new_line
+
+            incomplete_dose = self.dicom_navigation.working_directory + "/slice_" + \
+                str(self.slice.get_slice_id()).zfill(3) + "/densite_lu/tmp_dose" + \
+                str(i+1).zfill(3) + ".dat"
+            os.rename(file_dose, incomplete_dose)
+            rd = open(incomplete_dose, "r")
+            wd = open(file_dose, "w+")
+
+            for line in rd :
+                if "#" in line :
+                    wd.write(line)
+                else :
+                    tab = [elem for elem in line.split(" ") if elem != ""]
+                    if len(tab) == 7 :
+                        x = int(tab[4]) - 1
+                        y = int(tab[5]) - 1
+                        if are_coordonates_to_copy(img_to_calcul, x, y, source, rayon) :
+                            my_dose = get_dose(x, y, source, rayon, dose)
+                            new_line = get_new_line(tab, my_dose)
+                            wd.write(new_line)
+                        else :
+                            wd.write(line)
+
+            rd.close()
+            wd.close()
+
+        rayon = Img_Density.RAYON_SUB_IMG
+        for i, four_quart in enumerate(quart_pred) :
+            dose = get_big_img_dose(four_quart, rayon)
+            source = sources[i]
+            filename = "tmp/img" + str(i+1) + ".dat"
+            img_to_calcul = read_img_to_calcul(filename)
+            file_dose = self.dicom_navigation.working_directory + "/slice_" + \
+                str(self.slice.get_slice_id()).zfill(3) + "/densite_lu/dose_source_" + \
+                str(i+1).zfill(3) + ".dat"
+            write_dose_in_filedose(self, file_dose, img_to_calcul, dose, source, rayon)
 
 
     def run(self):
@@ -482,11 +567,15 @@ class LancerCalculs(Thread):
             # On doit aussi les enregistrer dans un dossier temporaire de manière à ce que M1 vienne les lire
             # On lance paraka avec le model enregistrer avec le fichier de test correspondant à l'ensemble des images 
             # extraite (zone d'influence) à partir de config_kids.don et densite_hu.don
-            self.use_atlas(filename_hounsfield, filename_config)
+            sources, quart_pred = self.use_atlas(filename_hounsfield, filename_config)
                 
             # Puis Lancement du calcul M1
             command = self.dicom_navigation.PATH_start_previsualisation + " " + self.slice.get_slice_directory() + " " + str(self.dicom_navigation.densite_lu.get())
             os.system(command)
+
+            #On recopie les doses qui ne devait pas être à recalculer
+            #Et on supprime les fichiers dans tmp/
+            self.copy_dose(sources, quart_pred)
 
             # On retire l'affichage de "Calculs en cours..."
             self.slice.set_calculs_en_cours(0)

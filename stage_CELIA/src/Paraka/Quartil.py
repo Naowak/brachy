@@ -10,7 +10,6 @@ class Quartil :
 		self.source = pos_source
 		all_slice_dose = self.extract_dose()
 		self.dose = self.extract_dose_zone_influence(all_slice_dose)
-		print(self.dose)
 
 	def extract_dose(self) :
 		size = len(self.my_img)
@@ -27,7 +26,7 @@ class Quartil :
 				elif len(tab) == 7 :
 						x = int(tab[4]) - 1
 						y = int(tab[5]) - 1
-						dose = int(tab[3])
+						dose = float(tab[3])
 						dose_all_img[x][y] = dose
 		return dose_all_img
 
@@ -85,6 +84,5 @@ class Quartil :
 		string = "Filename : " + self.filename_dose + "\n"
 		string += "Location : " + self.location
 		string += "Source : " + str(self.source)
-		string += "Dose :\n" + str(self.dose)
 		return string
 
