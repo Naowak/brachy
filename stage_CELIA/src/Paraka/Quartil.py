@@ -43,27 +43,27 @@ class Quartil :
 
 		rayon = len(self.my_img)
 		quart_dose = None
-		x_source = self.source[0]
-		y_source = self.source[1]
+		y_source = self.source[0]
+		x_source = self.source[1]
 
 		if self.location == "NO" :
-			cols = all_slice_dose[x_source - rayon : x_source]
-			quart_dose = [col[y_source - rayon : y_source] for col in cols]
+			cols = all_slice_dose[y_source - rayon : y_source]
+			quart_dose = [col[x_source - rayon : x_source] for col in cols]
 			quart_dose = rotation(quart_dose, 2)
 
 		elif self.location == "NE" :
-			cols = all_slice_dose[x_source : x_source + rayon]
-			quart_dose = [col[y_source - rayon : y_source] for col in cols]
+			cols = all_slice_dose[y_source - rayon : y_source]
+			quart_dose = [col[x_source : x_source + rayon] for col in cols]
 			quart_dose = rotation(quart_dose, 1)
 
 		elif self.location == "SO" :
-			cols = all_slice_dose[x_source - rayon : x_source]
-			quart_dose = [col[y_source : y_source + rayon] for col in cols]
+			cols = all_slice_dose[y_source : y_source + rayon]
+			quart_dose = [col[x_source - rayon : x_source] for col in cols]
+			quart_dose = rotation(quart_dose, 3)
 
 		elif self.location == "SE" :
-			cols = all_slice_dose[x_source : x_source + rayon]
-			quart_dose = [col[y_source : y_source + rayon] for col in cols]
-			quart_dose = rotation(quart_dose, 3)
+			cols = all_slice_dose[y_source : y_source + rayon]
+			quart_dose = [col[x_source : x_source + rayon] for col in cols]
 
 		return quart_dose
 
