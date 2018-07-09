@@ -7,6 +7,7 @@
 # This file is part of cythi, released under a BSD license.
 
 import os
+import matplotlib.pyplot as plt
 from MainGUI import *
 from threading import Thread
 from MultiSlider import *
@@ -470,6 +471,14 @@ class LancerCalculs(Thread):
             all_dose = recompose_into_img([NO, NE, SO, SE], rayon)
             return all_dose
 
+        def get_big_img(four_quart, rayon) :
+            NO = four_quart[0].my_img
+            NE = four_quart[1].my_img
+            SO = four_quart[2].my_img
+            SE = four_quart[3].my_img
+            all_img = recompose_into_img([NO, NE, SO, SE], rayon)
+            return all_img
+
         def write_dose_in_filedose(self, file_dose, img_to_calcul, dose, source, rayon) :
 
             def are_coordonates_to_copy(img_to_calcul, x, y, source, rayon) :
@@ -516,9 +525,24 @@ class LancerCalculs(Thread):
             rd.close()
             wd.close()
 
+        def plot_in_files(full_dose, full_img) :
+            fig = plt.figure()
+            fig.add_subplot(2, 1, 1)
+            plt.imshow(full_dose)
+            fig.add_subplot(2, 1, 2)
+            plt.imshow(full_img)
+            fig.savefig("../img_result/pred_dose_" + str(i).zfill(3) + ".png")
+            plt.close(fig)
+
         rayon = Img_Density.RAYON_SUB_IMG
         for i, four_quart in enumerate(quart_pred) :
+            print("Pred " + str(i))
+            for q in four_quart :
+                print(q)
+            print("\n")
             dose = get_big_img_dose(four_quart, rayon)
+            # full_img = get_big_img(four_quart, rayon)
+            # plot_in_files(dose, full_img)
             source = sources[i]
             filename = "tmp/img" + str(i+1) + ".dat"
             img_to_calcul = read_img_to_calcul(filename)
