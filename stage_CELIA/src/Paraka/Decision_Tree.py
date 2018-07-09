@@ -124,13 +124,14 @@ class Decision_Tree() :
 			return closest_img, score_max, nb_visit, best_intervale
 
 		def symetric_img(img) :
-			len_first = len(img)
-			len_second = len(img[0])
-			filename_dose = img.filename_dose
-			source = img.source
-			location = img.location
-			sym_img = [[img[j][i] for j in range(len_second)] for i in range(len_first)]
-			return Quartil.Quartil(sym_img, filename_dose, location, source)
+			return img.create_symmetric()
+			# len_first = len(img)
+			# len_second = len(img[0])
+			# filename_dose = img.filename_dose
+			# source = img.source
+			# location = img.location
+			# sym_img = [[img[j][i] for j in range(len_second)] for i in range(len_first)]
+			# return Quartil.Quartil(sym_img, filename_dose, location, source)
 
 		def img_to_return(self, img_to_predict, img_found, score) :
 			if self.symmetric_similarity == "true" :

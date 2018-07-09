@@ -3,13 +3,31 @@
 
 class Quartil :
 
-	def __init__(self, img, filename_dose, location, pos_source) :
+	def __init__(self, img, filename_dose, location, pos_source, dose=None) :
 		self.my_img = img
 		self.filename_dose = filename_dose
 		self.location = location # location = "NO", "NE", "SO", "SE"
 		self.source = pos_source
-		all_slice_dose = self.extract_dose()
-		self.dose = self.extract_dose_zone_influence(all_slice_dose)
+		if dose == None :
+			all_slice_dose = self.extract_dose()
+			self.dose = self.extract_dose_zone_influence(all_slice_dose)
+		else :
+			self.dose = dose
+
+	def create_symmetric(self) :
+
+		def symmetric_img(img) :
+			len_first = len(img)
+			len_second = len(img[0])
+			return [[img[j][i] for j in range(len_second)] for i in range(len_first)]
+
+		img = symmetric_img(self.my_img)
+		filename_dose = self.filename_dose
+		location = self.location
+		pos_source = self.source
+		dose = symmetric_img(self.dose)
+		return Quartil(img, filename_dose, location, pos_source, dose)
+
 
 	def extract_dose(self) :
 		size = len(self.my_img)

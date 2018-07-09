@@ -7,6 +7,8 @@ from matplotlib import pyplot as plt
 from interval import interval
 import math as m
 
+MARGE_IN_RADIAN = 0.3
+
 class Dict_Sim :
 
 	def __init__(self, size = None) :
@@ -142,9 +144,9 @@ def similarity_between_two_imgs(img1, img2, plot = False) :
 		acos_1 = m.acos(cos_1)
 		acos_2 = m.acos(cos_2)
 		if acos_1 < acos_2 :
-			return interval([acos_1, acos_2])
+			return interval([acos_1 - MARGE_IN_RADIAN, acos_2 + MARGE_IN_RADIAN])
 		else :
-			return interval([acos_2, acos_1])
+			return interval([acos_2 - MARGE_IN_RADIAN, acos_1 + MARGE_IN_RADIAN])
 
 	def get_intervale_length(intervale) :
 		cpt = 0
@@ -197,22 +199,32 @@ def get_disque_segment(img, intervale) :
 	size = imd.Img_Density.RAYON_SUB_IMG
 	res = [[1 for i in range(size)] for j in range(size)]
 
-	for i in range(size) :
-		for j in range(size) :
-			# A AMELIORER, ON PEUT PARCOURIR QUE LES PIXELS DU DISQUE
-			if i == 0 and j == 0 :
-				pass
-			elif is_in_circle(i, j, size) :
-				p = [i, j]
-				proj = projection(p, size)
-				proj_norm = float(proj[0])/size
-				if proj_norm > 1 :
-					proj_norm = 1.0
-				value_on_circle = m.acos(proj_norm)
-				if value_on_circle in intervale :
+	if len(intervale) > 0 :
+		for i in range(size) :
+			for j in range(size) :
+				# A AMELIORER, ON PEUT PARCOURIR QUE LES PIXELS DU DISQUE
+				if i == 0 and j == 0 :
 					res[i][j] = 0
-			else :
-				res[i][j] = -1
+				elif is_in_circle(i, j, size) :
+					p = [i, j]
+					proj = projection(p, size)
+					proj_norm_abs = float(proj[0])/size
+					proj_norm_ord = float(proj[1])/size
+
+					if proj_norm_abs > 1 :
+						proj_norm_abs = 1.0
+					if proj_norm_ord > 1 :
+						proj_norm_ord = 1.0
+
+					value_on_circle_abs = m.acos(proj_norm_abs)
+					value_on_circle_ord = m.asin(proj_norm_ord)
+
+					if value_on_circle_abs in intervale :
+						res[i][j] = 0
+					elif value_on_circle_ord in intervale :
+						res[i][j] = 0
+				else :
+					res[i][j] = -1
 	return res
 
 def get_full_disque(q_intervals) :

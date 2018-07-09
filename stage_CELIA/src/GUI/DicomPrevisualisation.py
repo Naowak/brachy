@@ -383,7 +383,7 @@ class LancerCalculs(Thread):
     def use_atlas(self, filename_hounsfield, filename_config) :
 
         def create_param(filename_hounsfield, filename_config) :
-            param = "load_model=true path=sm97-200/"
+            param = "load_model=true path=sm97-200.1/"
             param += " config_file=" + filename_config 
             param += " density_file=" + filename_hounsfield
             return param 
