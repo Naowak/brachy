@@ -1,6 +1,8 @@
 #!/usr/lib/env python2.7
 #-*- coding: utf-8 -*-
 
+import matplotlib.pyplot as plt
+
 class Quartil :
 
 	def __init__(self, img, filename_dose, location, pos_source, dose=None) :
@@ -42,7 +44,7 @@ class Quartil :
 						nby = int(tab[tab.index("NBY") + 2])
 						dose_all_img = [[0 for j in range(nby)] for i in range(nbx)]
 				elif len(tab) == 7 :
-						x = int(tab[4]) - 1
+						x = int(tab[4]) - 1	
 						y = int(tab[5]) - 1
 						dose = float(tab[3])
 						dose_all_img[x][y] = dose
@@ -64,6 +66,11 @@ class Quartil :
 		y_source = self.source[0]
 		x_source = self.source[1]
 
+		# img = all_slice_dose[y_source - rayon : y_source + rayon]
+		# img = [a[x_source - rayon : x_source + rayon] for a in img]
+		# plt.imshow(img)
+		# plt.show()
+
 		if self.location == "NO" :
 			cols = all_slice_dose[y_source - rayon : y_source]
 			quart_dose = [col[x_source - rayon : x_source] for col in cols]
@@ -82,6 +89,9 @@ class Quartil :
 		elif self.location == "SE" :
 			cols = all_slice_dose[y_source : y_source + rayon]
 			quart_dose = [col[x_source : x_source + rayon] for col in cols]
+
+		# plt.imshow(quart_dose)
+		# plt.show()
 
 		return quart_dose
 

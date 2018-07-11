@@ -71,8 +71,8 @@ class Img_Density :
 			for line in f :
 				if "volume_spheroid" in line :
 					tab = line.split(" ")
-					x1 = float(tab[2])*10
-					x2 = float(tab[3])*10
+					x1 = float(tab[2])*10 + 1 # Pour une raison inconnue mes sources n'étais pas centrée
+					x2 = float(tab[3])*10 + 2 # Voilà le problème réglé
 					self.sources += [(int(round(x1)), int(round(x2)))]
 
 	def extract_material_from_density(self, limits_density_to_material) :

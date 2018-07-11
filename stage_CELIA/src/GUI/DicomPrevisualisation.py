@@ -441,10 +441,10 @@ class LancerCalculs(Thread):
         result, sources, density_hu, quart_pred = paraka.run()
         imgs_to_calcul = create_img_to_calcul(result, sources, density_hu)
         write_into_files(imgs_to_calcul)
-        return sources, quart_pred
+        return sources, quart_pred, paraka.test_imgs
 
 
-    def copy_dose(self, sources, quart_pred) :
+    def copy_dose(self, sources, quart_pred, imgs_test) :
 
         def read_img_to_calcul(filename) :
 
@@ -525,13 +525,25 @@ class LancerCalculs(Thread):
             rd.close()
             wd.close()
 
-        def plot_in_files(full_dose, full_img) :
+        def plot_in_files(full_dose, full_img, img_to_calcul, img_test) :
+
+            def symmetric_img(img) :
+                len_first = len(img)
+                len_second = len(img[0])
+                return [[img[j][i] for j in range(len_second)] for i in range(len_first)]
+
             fig = plt.figure()
-            fig.add_subplot(2, 1, 1)
+            fig.add_subplot(2, 2, 1)
             plt.imshow(full_dose)
-            fig.add_subplot(2, 1, 2)
+            fig.add_subplot(2, 2, 2)
+            plt.imshow(img_to_calcul)
+            fig.add_subplot(2, 2, 3)
+            full_img = symmetric_img(full_img)
             plt.imshow(full_img)
-            fig.savefig("../img_result/pred_dose_" + str(i).zfill(3) + ".png")
+            fig.add_subplot(2, 2, 4)
+            img_test = symmetric_img(img_test)
+            plt.imshow(img_test)
+            fig.savefig("../pred_dose_img/pred_dose_" + str(i).zfill(3) + ".png")
             plt.close(fig)
 
         rayon = Img_Density.RAYON_SUB_IMG
@@ -540,12 +552,12 @@ class LancerCalculs(Thread):
             for q in four_quart :
                 print(q)
             print("\n")
-            dose = get_big_img_dose(four_quart, rayon)
-            # full_img = get_big_img(four_quart, rayon)
-            # plot_in_files(dose, full_img)
-            source = sources[i]
             filename = "tmp/img" + str(i+1) + ".dat"
             img_to_calcul = read_img_to_calcul(filename)
+            dose = get_big_img_dose(four_quart, rayon)
+            full_img = get_big_img(four_quart, rayon)
+            plot_in_files(dose, full_img, img_to_calcul, imgs_test[i][0])
+            source = sources[i]
             file_dose = self.dicom_navigation.working_directory + "/slice_" + \
                 str(self.slice.get_slice_id()).zfill(3) + "/densite_lu/dose_source_" + \
                 str(i+1).zfill(3) + ".dat"
@@ -591,15 +603,15 @@ class LancerCalculs(Thread):
             # On doit aussi les enregistrer dans un dossier temporaire de manière à ce que M1 vienne les lire
             # On lance paraka avec le model enregistrer avec le fichier de test correspondant à l'ensemble des images 
             # extraite (zone d'influence) à partir de config_kids.don et densite_hu.don
-            sources, quart_pred = self.use_atlas(filename_hounsfield, filename_config)
-                
+            sources, quart_pred, imgs_test = self.use_atlas(filename_hounsfield, filename_config)
+
             # Puis Lancement du calcul M1
             command = self.dicom_navigation.PATH_start_previsualisation + " " + self.slice.get_slice_directory() + " " + str(self.dicom_navigation.densite_lu.get())
             os.system(command)
 
             #On recopie les doses qui ne devait pas être à recalculer
             #Et on supprime les fichiers dans tmp/
-            self.copy_dose(sources, quart_pred)
+            self.copy_dose(sources, quart_pred, imgs_test)
 
             # On retire l'affichage de "Calculs en cours..."
             self.slice.set_calculs_en_cours(0)
