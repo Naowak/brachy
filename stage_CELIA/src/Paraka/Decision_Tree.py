@@ -10,6 +10,7 @@ from ProgressBar import ProgressBar
 from matplotlib import pyplot as plt
 import time
 import copy
+import operator
 
 class Decision_Tree() :
 	
@@ -44,19 +45,30 @@ class Decision_Tree() :
 	def predict_all_imgs(self, list_imgs_to_predict, plot = False) :
 
 		def predict_one_img_full(self, img_full) :
+
+			def get_priority(list_score) :
+				a = ["NO", "NE", "SO", "SE"]
+				list_score = list(enumerate(list_score))
+				list_score.sort(key=operator.itemgetter(1), reverse=True)
+				index_sorted = [e[0] for e in list_score]
+				return [a[i] for i in index_sorted]
+
 			quart_img = imd.extract_quartil(img_full)
 			score = 0
 			quart_pred = []
 			quart_intervale = []
+			list_score = []
 			for q_img in quart_img :
 				q_pred, q_score, q_node, q_nb_visit, q_best_intervale = self.predict(q_img)
 				quart_pred += [q_pred]
 				score += q_score
+				list_score += [score]
 				quart_intervale += [q_best_intervale]
 
-			prediction = imd.recompose_into_img(quart_pred)
+			priority = get_priority(list_score)
+			prediction = imd.recompose_into_img(quart_pred, priority)
 			result_img = simy.get_full_disque(quart_intervale)
-			return prediction, score, result_img, quart_pred #prédiction est un quartil
+			return prediction, score, result_img, quart_pred, priority #prédiction est un quartil
 
 		def plot_result(img, prediction, difference) :
 			fig = plt.figure()
@@ -79,16 +91,18 @@ class Decision_Tree() :
 		list_score = list()
 		list_difference = list()
 		list_quart_pred = list()
+		list_priority = list()
 
 		for i, img in enumerate(list_imgs_to_predict) :
 			begin = time.time()
-			prediction, score, difference, quart_pred = predict_one_img_full(self, img)
+			prediction, score, difference, quart_pred, priority = predict_one_img_full(self, img)
 			end = time.time()
 
 			list_prediction += [prediction]
 			list_score += [score]
 			list_difference += [difference]
 			list_quart_pred += [quart_pred]
+			list_priority += [priority]
 
 			temps = end - begin
 			stats.add_test(score, temps)
@@ -98,7 +112,7 @@ class Decision_Tree() :
 				plot_result(img, prediction, difference)
 
 		print(stats)
-		return list_prediction, list_score, list_difference, list_quart_pred
+		return list_prediction, list_score, list_difference, list_quart_pred, list_priority
 
 	def predict(self, img_to_predict) :
 

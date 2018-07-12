@@ -15,8 +15,9 @@ class Img_Density :
 	 Nous récupérons aussi la position des sources dans config_KIDS.don"""
 
 	RAYON_SUB_IMG = 32
-	CENTER_IMG = RAYON_SUB_IMG - 0.5
-	CIRCLE_SHAPE = [[1 if math.sqrt(pow(i-CENTER_IMG, 2) + pow(j-CENTER_IMG, 2)) <= RAYON_SUB_IMG else 0 for i in range(2*RAYON_SUB_IMG)] for j in range(2*RAYON_SUB_IMG)]
+	TAILLE_SUB_IMG = 2*RAYON_SUB_IMG - 1
+	CENTER_IMG = RAYON_SUB_IMG - 1
+	CIRCLE_SHAPE = [[1 if math.sqrt(pow(i-CENTER_IMG, 2) + pow(j-CENTER_IMG, 2)) <= RAYON_SUB_IMG - 1 else 0 for i in range(TAILLE_SUB_IMG)] for j in range(TAILLE_SUB_IMG)]
 
 	 # ------------------------ Init -----------------------------
 
@@ -114,17 +115,16 @@ class Img_Density :
 		""" Extrait de self.img_material la sous image associé à chacune
 		des sources de self.sources. Enregistre le résultats dans self.sub_imgs"""
 
-
 		rayon = self.RAYON_SUB_IMG
-		
+
 		self.sub_imgs = list()
 		for source in self.sources :
 			s_ord = source[1]
 			s_abs = source[0]
-			sub_ord = self.img_material[s_ord - rayon: s_ord + rayon]
-			sub_img = [tmp[s_abs - rayon : s_abs + rayon] for tmp in sub_ord]
-			if len(sub_img) == 2*rayon and len(sub_img[0]) == 2*rayon :
-				sub_img = [[sub_img[i][j] if self.CIRCLE_SHAPE[i][j] == 1 else -1 for i in range(2*rayon)] for j in range(2*rayon)]
+			sub_ord = self.img_material[s_ord - rayon + 1: s_ord + rayon]
+			sub_img = [tmp[s_abs - rayon + 1 : s_abs + rayon] for tmp in sub_ord]
+			if len(sub_img) == self.TAILLE_SUB_IMG and len(sub_img[0]) == self.TAILLE_SUB_IMG :
+				sub_img = [[sub_img[i][j] if self.CIRCLE_SHAPE[i][j] == 1 else -1 for i in range(self.TAILLE_SUB_IMG)] for j in range(self.TAILLE_SUB_IMG)]
 				elem = (sub_img, s_abs, s_ord)
 				self.sub_imgs += [elem]
 
@@ -186,7 +186,7 @@ class Img_Density :
 	def show_sub_imgs(self) :
 		"""Affiche toutes les sous images une par une"""
 		for sub_img in self.sub_imgs :
-			plt.imshow(sub_img)
+			plt.imshow(sub_img[0])
 			plt.show()
 
 
@@ -209,39 +209,81 @@ def extract_quartil(img, rayon = Img_Density.RAYON_SUB_IMG) :
 	up_left = rotation(up_left, 2)
 
 	up_right = img[:rayon]
-	up_right = [line[rayon:] for line in up_right]
+	up_right = [line[rayon - 1:] for line in up_right]
 	up_right = rotation(up_right, 1)
 
-	down_left = img[rayon:]
+	down_left = img[rayon - 1:]
 	down_left = [line[:rayon] for line in down_left]
 	down_left = rotation(down_left, 3)
 
-	down_right = img[rayon:]
-	down_right = [line[rayon:] for line in down_right]
+	down_right = img[rayon - 1:]
+	down_right = [line[rayon - 1:] for line in down_right]
 
 	return [up_left, up_right, down_left, down_right]
 
-def recompose_into_img(quartils, rayon = Img_Density.RAYON_SUB_IMG) :
+def recompose_into_img(quartils, priority, rayon = Img_Density.RAYON_SUB_IMG) :
+
+	def copy_into(sub, full, location) :
+
+		def copy_sub_into_full(sub_img, full_img, origine_x, origine_y) :
+			sub_img_size = len(sub_img)
+			for i, x in enumerate(list(range(origine_x, origine_x + sub_img_size))) :
+				for j, y in enumerate(list(range(origine_y, origine_y + sub_img_size))) :
+					full_img[x][y] = sub_img[i][j]
+
+		if location == "NO" :
+			origine_x = 0
+			origine_y = 0
+		elif location == "NE" :
+			origine_y = Img_Density.RAYON_SUB_IMG - 1
+			origine_x = 0
+		elif location == "SO" :
+			origine_y = 0
+			origine_x = Img_Density.RAYON_SUB_IMG - 1
+		elif location == "SE" :
+			origine_x = Img_Density.RAYON_SUB_IMG - 1
+			origine_y = Img_Density.RAYON_SUB_IMG - 1
+
+		copy_sub_into_full(sub, full, origine_x, origine_y)
+
+	# priority = [NO, NE, SO, SE] -> ordre inverse de superposition
 	[up_left, up_right, down_left, down_right] = quartils
 	up_left = rotation(up_left, 2)
 	up_right = rotation(up_right, 3)
 	down_left = rotation(down_left, 1)
+	quartils = [up_left, up_right, down_left, down_right]
 
-	img = []
-	for i in range(len(up_left)) :
-		img += [up_left[i] + up_right[i]]
-	for i in range(len(down_left)) :
-		img += [down_left[i] + down_right[i]]
-	return img
+	all_location = ["NO", "NE", "SO", "SE"]
+
+	priority.reverse()
+	full_img = [[0 for i in range(Img_Density.TAILLE_SUB_IMG)] for j in range(Img_Density.TAILLE_SUB_IMG)]
+	for p in priority :
+		i = all_location.index(p)
+		q = quartils[i]
+		copy_into(q, full_img, p)
+
+	return full_img
 
 
 
 # ----------------------- Main -----------------------
 
 if __name__ == "__main__" :
-	density_file = "./working_dir/slice_090/densite_lu/densite_hu.don"
-	config_file = "./working_dir/slice_090/densite_lu/config_KIDS.don"
+	density_file = "../../../working_dir/slice_090/densite_lu/densite_hu.don"
+	config_file = "../../../working_dir/slice_090/densite_lu/config_KIDS.don"
 
 	img = Img_Density(density_file, config_file)
-	img.show_imgs()
-	img.show_sub_imgs()
+	# img.show_imgs()
+	# img.show_sub_imgs()
+	a = img.extract_quart_images()
+	for i, sub_img in enumerate(img.sub_imgs) :
+		sub_img = sub_img[0]
+		quartils = a[4*i: 4*i + 4]
+		recomp = recompose_into_img(quartils, ["NO", "SE", "SO", "NE"])
+		fig = plt.figure()
+		fig.add_subplot(2, 1, 1)
+		plt.imshow(sub_img)
+		fig.add_subplot(2, 1, 2)
+		plt.imshow(recomp)
+		plt.show()
+

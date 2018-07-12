@@ -438,13 +438,13 @@ class LancerCalculs(Thread):
 
         param = create_param(filename_hounsfield, filename_config)
         paraka = Atlas(param.split(" "))
-        result, sources, density_hu, quart_pred = paraka.run()
+        result, sources, density_hu, quart_pred, list_priority = paraka.run()
         imgs_to_calcul = create_img_to_calcul(result, sources, density_hu)
         write_into_files(imgs_to_calcul)
-        return sources, quart_pred, paraka.test_imgs
+        return sources, quart_pred, paraka.test_imgs, list_priority
 
 
-    def copy_dose(self, sources, quart_pred, imgs_test) :
+    def copy_dose(self, sources, quart_pred, imgs_test, list_priority) :
 
         def read_img_to_calcul(filename) :
 
@@ -463,32 +463,34 @@ class LancerCalculs(Thread):
                     img += [my_line]
             return img
 
-        def get_big_img_dose(four_quart, rayon) :
+        def get_big_img_dose(four_quart, priority, rayon) :
             NO = four_quart[0].dose
             NE = four_quart[1].dose
             SO = four_quart[2].dose
             SE = four_quart[3].dose
-            all_dose = recompose_into_img([NO, NE, SO, SE], rayon)
+            all_dose = recompose_into_img([NO, NE, SO, SE], priority, rayon)
             return all_dose
 
-        def get_big_img(four_quart, rayon) :
+        def get_big_img(four_quart, priority, rayon) :
             NO = four_quart[0].my_img
             NE = four_quart[1].my_img
             SO = four_quart[2].my_img
             SE = four_quart[3].my_img
-            all_img = recompose_into_img([NO, NE, SO, SE], rayon)
+            all_img = recompose_into_img([NO, NE, SO, SE], priority, rayon)
             return all_img
 
         def write_dose_in_filedose(self, file_dose, img_to_calcul, dose, source, rayon) :
 
             def are_coordonates_to_copy(img_to_calcul, x, y, source, rayon) :
-                if x >= source[0] - rayon and x < source[0] + rayon :
-                    if y >= source[1] - rayon and y < source[1] + rayon :
+                rayon -= 1
+                if x >= source[0] - rayon and x <= source[0] + rayon :
+                    if y >= source[1] - rayon and y <= source[1] + rayon :
                         # print(source, x, y)
                         return img_to_calcul[y][x] == 1
                 return False
 
             def get_dose(x, y, source, rayon, dose) :
+                rayon -= 1
                 i = x - source[0] + rayon
                 j = y - source[1] + rayon
                 return dose[i][j]
@@ -554,8 +556,11 @@ class LancerCalculs(Thread):
             print("\n")
             filename = "tmp/img" + str(i+1) + ".dat"
             img_to_calcul = read_img_to_calcul(filename)
-            dose = get_big_img_dose(four_quart, rayon)
-            full_img = get_big_img(four_quart, rayon)
+
+            priority = list_priority[i]
+            dose = get_big_img_dose(four_quart, priority, rayon)
+            full_img = get_big_img(four_quart, priority, rayon)
+
             plot_in_files(dose, full_img, img_to_calcul, imgs_test[i][0])
             source = sources[i]
             file_dose = self.dicom_navigation.working_directory + "/slice_" + \
@@ -603,7 +608,7 @@ class LancerCalculs(Thread):
             # On doit aussi les enregistrer dans un dossier temporaire de manière à ce que M1 vienne les lire
             # On lance paraka avec le model enregistrer avec le fichier de test correspondant à l'ensemble des images 
             # extraite (zone d'influence) à partir de config_kids.don et densite_hu.don
-            sources, quart_pred, imgs_test = self.use_atlas(filename_hounsfield, filename_config)
+            sources, quart_pred, imgs_test, list_priority = self.use_atlas(filename_hounsfield, filename_config)
 
             # Puis Lancement du calcul M1
             command = self.dicom_navigation.PATH_start_previsualisation + " " + self.slice.get_slice_directory() + " " + str(self.dicom_navigation.densite_lu.get())
@@ -611,7 +616,7 @@ class LancerCalculs(Thread):
 
             #On recopie les doses qui ne devait pas être à recalculer
             #Et on supprime les fichiers dans tmp/
-            self.copy_dose(sources, quart_pred, imgs_test)
+            self.copy_dose(sources, quart_pred, imgs_test, list_priority)
 
             # On retire l'affichage de "Calculs en cours..."
             self.slice.set_calculs_en_cours(0)
