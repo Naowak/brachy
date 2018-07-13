@@ -281,22 +281,26 @@ def get_full_disque(q_intervals) :
 		return result_inter
 
 	rayon = imd.Img_Density.RAYON_SUB_IMG
-	p_center = (rayon - 0.5, rayon - 0.5)
-	img_result = [[1 for i in range(2*rayon)] for j in range(2*rayon)]
+	p_center = (imd.Img_Density.CENTER_IMG, imd.Img_Density.CENTER_IMG)
+	img_result = [[1 for i in range(2*rayon - 1)] for j in range(2*rayon - 1)]
 	intervale = recompose_intervale_from_q_intervals(q_intervals)
 
-	for i in range(2*rayon) :
-		for j in range(2*rayon) :
+	for i in range(2*rayon - 1) :
+		for j in range(2*rayon - 1) :
 			point = (i, j)
-			if is_in_circle(point, p_center) :
-				point_proj = projection(point, p_center)
-				value_on_circle = get_value_on_circle(point_proj, p_center)
-				if value_on_circle in intervale :
-					img_result[i][j] = 0
-			else :
-				pass
+
+			if not is_in_circle(point, p_center) :
 				img_result[i][j] = -1
 
+			else : #is in circle
+				if len(intervale) > 0 :
+					if point[0] == p_center[0] and point[1] == p_center[1] :
+						img_result[i][j] = 0
+					else :
+						point_proj = projection(point, p_center)
+						value_on_circle = get_value_on_circle(point_proj, p_center)
+						if value_on_circle in intervale :
+							img_result[i][j] = 0
 	return img_result
 
 

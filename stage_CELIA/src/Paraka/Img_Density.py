@@ -261,14 +261,14 @@ def recompose_into_img(quartils, priority, rayon = Img_Density.RAYON_SUB_IMG) :
 			origine_x = 0
 			origine_y = 0
 		elif location == "NE" :
-			origine_y = Img_Density.RAYON_SUB_IMG - 1
+			origine_y = rayon - 1
 			origine_x = 0
 		elif location == "SO" :
 			origine_y = 0
-			origine_x = Img_Density.RAYON_SUB_IMG - 1
+			origine_x = rayon - 1
 		elif location == "SE" :
-			origine_x = Img_Density.RAYON_SUB_IMG - 1
-			origine_y = Img_Density.RAYON_SUB_IMG - 1
+			origine_x = rayon - 1
+			origine_y = rayon - 1
 
 		copy_sub_into_full(sub, full, origine_x, origine_y)
 

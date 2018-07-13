@@ -383,7 +383,7 @@ class LancerCalculs(Thread):
     def use_atlas(self, filename_hounsfield, filename_config) :
 
         def create_param(filename_hounsfield, filename_config) :
-            param = "load_model=true path=sm97-200.1/"
+            param = "load_model=true path=sm97-200.2/"
             param += " config_file=" + filename_config 
             param += " density_file=" + filename_hounsfield
             return param 
@@ -406,10 +406,11 @@ class LancerCalculs(Thread):
                 res = reverse_img(res)
 
                 img_to_calcul = [[-1 for i in range(size[0])] for j in range(size[1])]
+                taille_img = Img_Density.TAILLE_SUB_IMG
                 rayon = Img_Density.RAYON_SUB_IMG
 
-                for i in range(2*rayon) :
-                    for j in range(2*rayon) :
+                for i in range(taille_img) :
+                    for j in range(taille_img) :
                         y1 = x2 - rayon + i
                         y2 = x1 - rayon + j
                         img_to_calcul[y1][y2] = res[i][j]
