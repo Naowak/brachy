@@ -48,6 +48,9 @@ class Quartil :
 						y = int(tab[5]) - 1
 						dose = float(tab[3])
 						dose_all_img[x][y] = dose
+		print(self.source)
+		plt.imshow(dose_all_img)
+		plt.show()
 		return dose_all_img
 
 	def extract_dose_zone_influence(self, all_slice_dose) :
@@ -66,32 +69,32 @@ class Quartil :
 		y_source = self.source[0]
 		x_source = self.source[1]
 
-		# img = all_slice_dose[y_source - rayon : y_source + rayon]
-		# img = [a[x_source - rayon : x_source + rayon] for a in img]
-		# plt.imshow(img)
-		# plt.show()
+		img = all_slice_dose[y_source - rayon : y_source + rayon]
+		img = [a[x_source - rayon : x_source + rayon] for a in img]
+		plt.imshow(img)
+		plt.show()
 
 		if self.location == "NO" :
-			cols = all_slice_dose[y_source - rayon : y_source]
-			quart_dose = [col[x_source - rayon : x_source] for col in cols]
+			cols = all_slice_dose[y_source - rayon + 1: y_source + 1]
+			quart_dose = [col[x_source - rayon + 1: x_source + 1] for col in cols]
 			quart_dose = rotation(quart_dose, 2)
 
 		elif self.location == "NE" :
-			cols = all_slice_dose[y_source - rayon : y_source]
+			cols = all_slice_dose[y_source - rayon + 1: y_source + 1]
 			quart_dose = [col[x_source : x_source + rayon] for col in cols]
 			quart_dose = rotation(quart_dose, 1)
 
 		elif self.location == "SO" :
 			cols = all_slice_dose[y_source : y_source + rayon]
-			quart_dose = [col[x_source - rayon : x_source] for col in cols]
+			quart_dose = [col[x_source - rayon + 1: x_source + 1] for col in cols]
 			quart_dose = rotation(quart_dose, 3)
 
 		elif self.location == "SE" :
 			cols = all_slice_dose[y_source : y_source + rayon]
 			quart_dose = [col[x_source : x_source + rayon] for col in cols]
 
-		# plt.imshow(quart_dose)
-		# plt.show()
+		plt.imshow(quart_dose)
+		plt.show()
 
 		return quart_dose
 

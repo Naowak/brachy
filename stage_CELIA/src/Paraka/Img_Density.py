@@ -45,6 +45,7 @@ class Img_Density :
 	 	#On charge l'image
 	 	self.load_img_density(density_file)
 	 	#On charge les sources
+	 	self.load_propotions(config_file)
 	 	self.load_sources(config_file)
 	 	self.extract_material_from_density([465]) 
 	 	self.extract_sub_imgs()
@@ -62,6 +63,31 @@ class Img_Density :
 		self.width = len(self.img_density[0])
 		self.height = len(self.img_density)
 
+	def load_propotions(self, config_file) :
+		self.coef_x = None
+		self.coef_y = None
+
+		lf = 0
+		mf = 0
+		Lx = 0
+		Ly = 0
+
+		with open(config_file) as f :
+			while lf == 0 or mf == 0 or Lx == 0 or Ly == 0 :
+				line = f.readline()
+				tab = line.split(" ")
+				if tab[0] == "-lf" :
+					lf = float(tab[1])
+				elif tab[0] == "-mf" :
+					mf = float(tab[1])
+				elif tab[0] == "-Lx" :
+					Lx = float(tab[1])
+				elif tab[0] == "-Ly" :
+					Ly = float(tab[1])
+
+		self.coef_x = lf / Lx
+		self.coef_y = mf / Ly
+
 	def load_sources(self, config_file) :
 		""" Charge la position des sources
 		Param :
@@ -72,8 +98,8 @@ class Img_Density :
 			for line in f :
 				if "volume_spheroid" in line :
 					tab = line.split(" ")
-					x1 = float(tab[2])*10 + 1 # Pour une raison inconnue mes sources n'étais pas centrée
-					x2 = float(tab[3])*10 + 2 # Voilà le problème réglé
+					x1 = float(tab[2])*self.coef_x 
+					x2 = float(tab[3])*self.coef_y 
 					self.sources += [(int(round(x1)), int(round(x2)))]
 
 	def extract_material_from_density(self, limits_density_to_material) :
