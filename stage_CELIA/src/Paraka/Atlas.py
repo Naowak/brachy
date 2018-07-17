@@ -138,6 +138,7 @@ class Atlas :
 					list_prediction = []
 					list_score = []
 					list_difference = []
+					list_difference_without_margin = []
 
 					if len(img_from_slice) > 0 :
 						result = self.model.predict_all_imgs(img_from_slice)
@@ -146,10 +147,11 @@ class Atlas :
 						list_difference = result[2]
 						list_quart_pred = result[3]
 						list_priority = result[4]
+						list_difference_without_margin = result[5]
 					else :
 						print("No image to predict")
 
-					return list_prediction, list_score, list_difference, list_quart_pred, list_priority
+					return list_prediction, list_score, list_difference, list_quart_pred, list_priority, list_difference_without_margin
 
 				def calcul_img_success(self, indice_slice, list_score) :
 
@@ -255,7 +257,8 @@ class Atlas :
 				# 	return falp
 
 
-				list_prediction, list_score, list_difference, list_quart_pred, list_priority = make_predictions(self, indice_slice)
+				#prediction
+				list_prediction, list_score, list_difference, list_quart_pred, list_priority, list_difference_without_margin = make_predictions(self, indice_slice)
 				# list_files_and_location_predict = extract_files_and_location_predict(self, list_quart_pred)
 
 				if len(list_prediction) > 0 :
@@ -265,18 +268,20 @@ class Atlas :
 						save_img_result(self, indice_slice, list_score, list_difference)
 				else :
 					print("Aucune image dans cette slice")
-				return list_difference, list_quart_pred, list_priority
+				return list_difference, list_quart_pred, list_priority, list_difference_without_margin
 
 
 			list_difference = []
 			list_quart_pred = []
 			list_priority = []
+			list_difference_without_margin = []
 			for i in range(len(self.slices_test)) :
-				(result, quart_pred, priority) = test_slice(self, i, plot, save_result)
+				(result, quart_pred, priority, difference_without_margin) = test_slice(self, i, plot, save_result)
 				list_difference += result
 				list_quart_pred += quart_pred
 				list_priority += priority
-			return list_difference, list_quart_pred, list_priority
+				list_difference_without_margin += difference_without_margin
+			return list_difference, list_quart_pred, list_priority, list_difference_without_margin
 
 		if self.load_model == "true" :
 				self.fload_model(self.path)
@@ -292,8 +297,8 @@ class Atlas :
 
 		#test des données
 		# self.model.predict_all_imgs(self.test_imgs)
-		result, quart_pred, list_priority = make_all_test(self, plot, save_result)
-		return result, self.sources, self.slices_test[0], quart_pred, list_priority #ici result est une liste d'image représentant les zone à recalculer
+		result, quart_pred, list_priority, list_difference_without_margin = make_all_test(self, plot, save_result)
+		return result, self.sources, self.slices_test[0], quart_pred, list_priority, list_difference_without_margin #ici result est une liste d'image représentant les zone à recalculer
 
 	def fsave_model(self, dir_save) :
 		print("Sauvegarde du modèle dans " + dir_save + "...")

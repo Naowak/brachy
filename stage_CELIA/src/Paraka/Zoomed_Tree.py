@@ -312,19 +312,24 @@ class Zoomed_Tree() :
 			quart_imgs = imd.extract_quartil(img)
 			quart_pred = []
 			quart_interval = []
+			quart_interval_without_margin = []
 			list_score = []
 			score = 0
 			for q_img in quart_imgs :
 				q_pred, q_score, q_intervale = self.find_closest_img(q_img)
+				q_wm_score, q_interval_without_margin = simy.similarity_between_two_imgs(q_pred.my_img, q_img, marge=0)
 				score += q_score
 				list_score += [score]
 				quart_pred += [q_pred] #ensemble de quartil : en mode  [1 2; 3 4]
 				quart_interval += [q_intervale]
+				quart_interval_without_margin += [q_interval_without_margin]
+
 
 			priority = get_priority(list_score)
+			result_img_without_margin = simy.get_full_disque(quart_interval_without_margin, center_circle = False)
 			prediction = imd.recompose_into_img(quart_pred, priority)
 			result_img = simy.get_full_disque(quart_interval)
-			return prediction, score, result_img, quart_pred, priority
+			return prediction, score, result_img, quart_pred, priority, result_img_without_margin
 
 		def plot_result(img, prediction, difference) :
 			fig = plt.figure()
@@ -346,12 +351,13 @@ class Zoomed_Tree() :
 		list_prediction = list()
 		list_score = list()
 		list_difference = list()
+		list_difference_without_margin = list()
 		list_quart_pred = list()
 		list_priority = list()
 
 		for i, img in enumerate(imgs) :
 			begin = time.time()
-			prediction, score, difference, quart_pred, priority = predict_one_img(self, img)
+			prediction, score, difference, quart_pred, priority, difference_without_margin = predict_one_img(self, img)
 			end = time.time()
 
 			list_prediction += [prediction]
@@ -359,6 +365,7 @@ class Zoomed_Tree() :
 			list_score += [score]
 			list_difference += [difference]
 			list_priority += [priority]
+			list_difference_without_margin += [difference_without_margin]
 
 			temps = end - begin
 			stats.add_test(score, temps)
@@ -372,7 +379,7 @@ class Zoomed_Tree() :
 		print(bcolors.OKGREEN)
 		print(stats)
 		print(bcolors.ENDC)
-		return list_prediction, list_score, list_difference, list_quart_pred, list_priority
+		return list_prediction, list_score, list_difference, list_quart_pred, list_priority, list_difference_without_margin
 
 	def __str__(self) :
 

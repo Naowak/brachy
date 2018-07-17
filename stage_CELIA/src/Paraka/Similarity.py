@@ -113,7 +113,7 @@ def calcul_matrix_similarity(img1, img2) :
 		raise ValueError
 	return [[1 if img1[i][j]==img2[i][j] else 0 for j in range(size_x1)] for i in range(size_y1)]
 
-def similarity_between_two_imgs(img1, img2, plot = False) :
+def similarity_between_two_imgs(img1, img2, plot = False, marge = MARGE_IN_RADIAN) :
 
 	def get_corners_projections(pixel, rayon_max,) :
 
@@ -138,15 +138,15 @@ def similarity_between_two_imgs(img1, img2, plot = False) :
 	def is_in_circle(i, j, rayon) :
 		return m.sqrt(pow(i, 2) + pow(j, 2)) <= rayon 
 
-	def get_intervale(point_1, point_2) :
+	def get_intervale(point_1, point_2, marge) :
 		cos_1 = float(point_1[0])/size
 		cos_2 = float(point_2[0])/size
 		acos_1 = m.acos(cos_1)
 		acos_2 = m.acos(cos_2)
 		if acos_1 < acos_2 :
-			return interval([acos_1 - MARGE_IN_RADIAN, acos_2 + MARGE_IN_RADIAN])
+			return interval([acos_1 - marge, acos_2 + marge])
 		else :
-			return interval([acos_2 - MARGE_IN_RADIAN, acos_1 + MARGE_IN_RADIAN])
+			return interval([acos_2 - marge, acos_1 + marge])
 
 	def get_intervale_length(intervale) :
 		cpt = 0
@@ -165,7 +165,7 @@ def similarity_between_two_imgs(img1, img2, plot = False) :
 				#différence repéré entre les deux images
 				#on projette le point sur le cercle
 				proj_1, proj_2 = get_corners_projections((i, j), size)
-				inter = inter | get_intervale(proj_1, proj_2)
+				inter = inter | get_intervale(proj_1, proj_2, marge)
 
 	if plot :
 		print(inter)
@@ -227,7 +227,7 @@ def get_disque_segment(img, intervale) :
 					res[i][j] = -1
 	return res
 
-def get_full_disque(q_intervals) :
+def get_full_disque(q_intervals, center_circle = True) :
 
 	def projection(point, p_center, rayon = imd.Img_Density.RAYON_SUB_IMG) :
 		relative_point = (point[0] - p_center[0], point[1] - p_center[1])
@@ -294,7 +294,10 @@ def get_full_disque(q_intervals) :
 
 			else : #is in circle
 				if len(intervale) > 0 :
-					if point[0] == p_center[0] and point[1] == p_center[1] :
+					# if point[0] == p_center[0] and point[1] == p_center[1] :
+					if center_circle and is_in_circle(point, p_center, rayon=10) :
+						img_result[i][j] = 0
+					elif not center_circle and point[0] == p_center[0] and point[1] == p_center[1] :
 						img_result[i][j] = 0
 					else :
 						point_proj = projection(point, p_center)

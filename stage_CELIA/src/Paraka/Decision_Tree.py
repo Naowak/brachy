@@ -57,18 +57,22 @@ class Decision_Tree() :
 			score = 0
 			quart_pred = []
 			quart_intervale = []
+			quart_interval_without_margin = []
 			list_score = []
 			for q_img in quart_img :
 				q_pred, q_score, q_node, q_nb_visit, q_best_intervale = self.predict(q_img)
+				q_wm_score, q_interval_without_margin = simy.similarity_between_two_imgs(q_pred.my_img, q_img, marge=0)
 				quart_pred += [q_pred]
 				score += q_score
 				list_score += [score]
 				quart_intervale += [q_best_intervale]
+				quart_interval_without_margin += [q_interval_without_margin]
 
 			priority = get_priority(list_score)
+			result_img_without_margin = get_full_disque(quart_interval_without_margin, center_circle = False)
 			prediction = imd.recompose_into_img(quart_pred, priority)
 			result_img = simy.get_full_disque(quart_intervale)
-			return prediction, score, result_img, quart_pred, priority #prédiction est un quartil
+			return prediction, score, result_img, quart_pred, priority, result_img_without_margin #prédiction est un quartil
 
 		def plot_result(img, prediction, difference) :
 			fig = plt.figure()
@@ -90,17 +94,19 @@ class Decision_Tree() :
 		list_prediction = list()
 		list_score = list()
 		list_difference = list()
+		list_difference_without_margin = list()
 		list_quart_pred = list()
 		list_priority = list()
 
 		for i, img in enumerate(list_imgs_to_predict) :
 			begin = time.time()
-			prediction, score, difference, quart_pred, priority = predict_one_img_full(self, img)
+			prediction, score, difference, quart_pred, priority, difference_without_margin = predict_one_img_full(self, img)
 			end = time.time()
 
 			list_prediction += [prediction]
 			list_score += [score]
 			list_difference += [difference]
+			list_difference_without_margin += [difference_without_margin]
 			list_quart_pred += [quart_pred]
 			list_priority += [priority]
 
@@ -112,7 +118,7 @@ class Decision_Tree() :
 				plot_result(img, prediction, difference)
 
 		print(stats)
-		return list_prediction, list_score, list_difference, list_quart_pred, list_priority
+		return list_prediction, list_score, list_difference, list_quart_pred, list_priority, list_difference_without_margin
 
 	def predict(self, img_to_predict) :
 
