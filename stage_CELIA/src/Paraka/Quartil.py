@@ -5,11 +5,12 @@ import matplotlib.pyplot as plt
 
 class Quartil :
 
-	def __init__(self, img, filename_dose, location, pos_source, dose=None) :
+	def __init__(self, img, filename_dose, location, pos_source, taille_source = 1, dose=None) :
 		self.my_img = img
 		self.filename_dose = filename_dose
 		self.location = location # location = "NO", "NE", "SO", "SE"
 		self.source = pos_source
+		self.taille_source = taille_source
 		if dose == None :
 			all_slice_dose = self.extract_dose()
 			self.dose = self.extract_dose_zone_influence(all_slice_dose)
@@ -28,7 +29,8 @@ class Quartil :
 		location = self.location
 		pos_source = self.source
 		dose = symmetric_img(self.dose)
-		return Quartil(img, filename_dose, location, pos_source, dose)
+		taille_source = self.taille_source
+		return Quartil(img, filename_dose, location, pos_source, taille_source, dose)
 
 
 	def extract_dose(self) :
@@ -75,18 +77,18 @@ class Quartil :
 		# plt.show()
 
 		if self.location == "NO" :
-			cols = all_slice_dose[y_source - rayon + 1: y_source + 1]
-			quart_dose = [col[x_source - rayon + 1: x_source + 1] for col in cols]
+			cols = all_slice_dose[y_source - rayon + self.taille_source: y_source + self.taille_source]
+			quart_dose = [col[x_source - rayon + self.taille_source: x_source + self.taille_source] for col in cols]
 			quart_dose = rotation(quart_dose, 2)
 
 		elif self.location == "NE" :
-			cols = all_slice_dose[y_source - rayon + 1: y_source + 1]
+			cols = all_slice_dose[y_source - rayon + self.taille_source: y_source + self.taille_source]
 			quart_dose = [col[x_source : x_source + rayon] for col in cols]
 			quart_dose = rotation(quart_dose, 1)
 
 		elif self.location == "SO" :
 			cols = all_slice_dose[y_source : y_source + rayon]
-			quart_dose = [col[x_source - rayon + 1: x_source + 1] for col in cols]
+			quart_dose = [col[x_source - rayon + self.taille_source: x_source + self.taille_source] for col in cols]
 			quart_dose = rotation(quart_dose, 3)
 
 		elif self.location == "SE" :

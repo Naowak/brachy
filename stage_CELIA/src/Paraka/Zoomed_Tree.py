@@ -129,6 +129,7 @@ class Zoomed_Tree() :
 			self.dict_sim = simy.Dict_Sim(nb_imgs)
 			avancement = 0
 			fin = (nb_imgs * (nb_imgs - 1)) / 2
+
 			progress_bar = ProgressBar(avancement, fin)
 			for i in range(nb_imgs) :
 				for j in range(i+1, nb_imgs) :

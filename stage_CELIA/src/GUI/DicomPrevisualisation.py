@@ -13,6 +13,7 @@ from threading import Thread
 from MultiSlider import *
 from Atlas import *
 from Img_Density import *
+import Similarity as simy
 
 class DicomPrevisualisation(tk.Frame):
     """
@@ -383,40 +384,10 @@ class LancerCalculs(Thread):
     def use_atlas(self, filename_hounsfield, filename_config) :
 
         def create_param(filename_hounsfield, filename_config) :
-            param = "load_model=true path=sm97-200.2/"
+            param = "load_model=true path=sm97-200.3/"
             param += " config_file=" + filename_config 
             param += " density_file=" + filename_hounsfield
             return param 
-
-        def reverse_img(img) :
-            size = (len(img), len(img[0]))
-            new = [[0 for i in range(size[0])] for j in range(size[1])]
-            for i in range(size[1]) :
-                for j in range(size[0]) :
-                    new[i][j] = img[j][i]
-            return new
-
-        def create_img_to_calcul(result, sources, densite_hu) :
-            all_imgs = []
-            size = (len(densite_hu[0]), len(densite_hu))
-            for ind, source in enumerate(sources) :
-                x1 = source[0]
-                x2 = source[1]
-                res = result[ind]
-                res = reverse_img(res)
-
-                img_to_calcul = [[-1 for i in range(size[0])] for j in range(size[1])]
-                taille_img = Img_Density.TAILLE_SUB_IMG
-                rayon = Img_Density.RAYON_SUB_IMG
-
-                for i in range(taille_img) :
-                    for j in range(taille_img) :
-                        y1 = x2 - rayon + i
-                        y2 = x1 - rayon + j
-                        img_to_calcul[y1][y2] = res[i][j]
-
-                all_imgs += [img_to_calcul]
-            return all_imgs
 
         def write_into_files(imgs_to_calcul, dirname="tmp/") :
 
@@ -439,30 +410,12 @@ class LancerCalculs(Thread):
 
         param = create_param(filename_hounsfield, filename_config)
         paraka = Atlas(param.split(" "))
-        result, sources, density_hu, quart_pred, list_priority = paraka.run()
-        imgs_to_calcul = create_img_to_calcul(result, sources, density_hu)
-        write_into_files(imgs_to_calcul)
-        return sources, quart_pred, paraka.test_imgs, list_priority
+        result, sources, density_hu, quart_pred, list_priority, list_diff_without_margin = paraka.run()
+        list_diff = copy_source_result_into_slice_img(result, sources, density_hu)
+        write_into_files(list_diff)
+        return sources, quart_pred, paraka.test_imgs, list_priority, list_diff_without_margin, density_hu
 
-
-    def copy_dose(self, sources, quart_pred, imgs_test, list_priority) :
-
-        def read_img_to_calcul(filename) :
-
-            def is_intable(string) :
-                return string == "-1" or string == "0" or string == "1"
-
-            img = []
-            with open(filename, "r") as f :
-                line = f.readline()
-                for line in f :
-                    tab = line.split(" ")
-                    my_line = []
-                    for elem in tab :
-                        if is_intable(elem) :
-                            my_line += [int(elem)]
-                    img += [my_line]
-            return img
+    def copy_dose(self, sources, quart_pred, imgs_test, list_priority, list_diff_without_margin, densite_hu) :
 
         def get_big_img_dose(four_quart, priority, rayon) :
             NO = four_quart[0].dose
@@ -480,14 +433,14 @@ class LancerCalculs(Thread):
             all_img = recompose_into_img([NO, NE, SO, SE], priority, rayon)
             return all_img
 
-        def write_dose_in_filedose(self, file_dose, img_to_calcul, dose, source, rayon) :
+        def write_dose_in_filedose(self, file_dose, img_to_copy, dose, source, rayon) :
 
-            def are_coordonates_to_copy(img_to_calcul, x, y, source, rayon) :
+            def are_coordonates_to_copy(img_to_copy, x, y, source, rayon) :
                 rayon -= 1
                 if x >= source[0] - rayon and x <= source[0] + rayon :
                     if y >= source[1] - rayon and y <= source[1] + rayon :
                         # print(source, x, y)
-                        return img_to_calcul[y][x] == 1
+                        return img_to_copy[y][x] == 1
                 return False
 
             def get_dose(x, y, source, rayon, dose) :
@@ -503,9 +456,10 @@ class LancerCalculs(Thread):
                     new_line += "   " + elem
                 return new_line
 
+
             incomplete_dose = self.dicom_navigation.working_directory + "/slice_" + \
                 str(self.slice.get_slice_id()).zfill(3) + "/densite_lu/tmp_dose" + \
-                str(i+1).zfill(3) + ".dat"
+                str(i+1).zfill(3) + ".dat"          
             os.rename(file_dose, incomplete_dose)
             rd = open(incomplete_dose, "r")
             wd = open(file_dose, "w+")
@@ -518,7 +472,7 @@ class LancerCalculs(Thread):
                     if len(tab) == 7 :
                         x = int(tab[4]) - 1
                         y = int(tab[5]) - 1
-                        if are_coordonates_to_copy(img_to_calcul, x, y, source, rayon) :
+                        if are_coordonates_to_copy(img_to_copy, x, y, source, rayon) :
                             my_dose = get_dose(x, y, source, rayon, dose)
                             new_line = get_new_line(tab, my_dose)
                             wd.write(new_line)
@@ -528,7 +482,7 @@ class LancerCalculs(Thread):
             rd.close()
             wd.close()
 
-        def plot_in_files(full_dose, full_img, img_to_calcul, img_test) :
+        def plot_in_files(full_dose, full_img, img_to_copy, img_test) :
 
             def symmetric_img(img) :
                 len_first = len(img)
@@ -539,36 +493,35 @@ class LancerCalculs(Thread):
             fig.add_subplot(2, 2, 1)
             plt.imshow(full_dose)
             fig.add_subplot(2, 2, 2)
-            plt.imshow(img_to_calcul)
+            plt.imshow(img_to_copy)
             fig.add_subplot(2, 2, 3)
             full_img = symmetric_img(full_img)
             plt.imshow(full_img)
             fig.add_subplot(2, 2, 4)
             img_test = symmetric_img(img_test)
             plt.imshow(img_test)
-            fig.savefig("../pred_dose_img/pred_dose_" + str(i).zfill(3) + ".png")
+            fig.savefig("../my_screen/pred_dose_img/pred_dose_" + str(i).zfill(3) + ".png")
             plt.close(fig)
 
         rayon = Img_Density.RAYON_SUB_IMG
+        list_imgs_to_copy = copy_source_result_into_slice_img(list_diff_without_margin, sources, densite_hu)
         for i, four_quart in enumerate(quart_pred) :
             print("Pred " + str(i))
             for q in four_quart :
                 print(q)
             print("\n")
-            filename = "tmp/img" + str(i+1) + ".dat"
-            img_to_calcul = read_img_to_calcul(filename)
 
+            img_to_copy = list_imgs_to_copy[i]
             priority = list_priority[i]
             dose = get_big_img_dose(four_quart, priority, rayon)
             full_img = get_big_img(four_quart, priority, rayon)
 
-            plot_in_files(dose, full_img, img_to_calcul, imgs_test[i][0])
+            plot_in_files(dose, full_img, img_to_copy, imgs_test[i][0])
             source = sources[i]
             file_dose = self.dicom_navigation.working_directory + "/slice_" + \
                 str(self.slice.get_slice_id()).zfill(3) + "/densite_lu/dose_source_" + \
                 str(i+1).zfill(3) + ".dat"
-            write_dose_in_filedose(self, file_dose, img_to_calcul, dose, source, rayon)
-
+            write_dose_in_filedose(self, file_dose, img_to_copy, dose, source, rayon)
 
     def run(self):
         """ Code à exécuter pendant l'exécution du thread """
@@ -609,7 +562,7 @@ class LancerCalculs(Thread):
             # On doit aussi les enregistrer dans un dossier temporaire de manière à ce que M1 vienne les lire
             # On lance paraka avec le model enregistrer avec le fichier de test correspondant à l'ensemble des images 
             # extraite (zone d'influence) à partir de config_kids.don et densite_hu.don
-            sources, quart_pred, imgs_test, list_priority = self.use_atlas(filename_hounsfield, filename_config)
+            sources, quart_pred, imgs_test, list_priority, list_diff_without_margin, densite_hu = self.use_atlas(filename_hounsfield, filename_config)
 
             # Puis Lancement du calcul M1
             command = self.dicom_navigation.PATH_start_previsualisation + " " + self.slice.get_slice_directory() + " " + str(self.dicom_navigation.densite_lu.get())
@@ -617,7 +570,8 @@ class LancerCalculs(Thread):
 
             #On recopie les doses qui ne devait pas être à recalculer
             #Et on supprime les fichiers dans tmp/
-            self.copy_dose(sources, quart_pred, imgs_test, list_priority)
+            self.copy_dose(sources, quart_pred, imgs_test, list_priority, list_diff_without_margin, densite_hu)
+
 
             # On retire l'affichage de "Calculs en cours..."
             self.slice.set_calculs_en_cours(0)
@@ -629,3 +583,34 @@ class LancerCalculs(Thread):
         self.dicom_navigation.get_dicom_contourage().compute_appartenances_contourage_slice(self.slice)
         self.dicom_navigation.get_dicom_hdv().update_hdv()
         self.dicom_navigation.refresh()
+
+
+def reverse_img(img) :
+    size = (len(img), len(img[0]))
+    new = [[0 for i in range(size[0])] for j in range(size[1])]
+    for i in range(size[1]) :
+        for j in range(size[0]) :
+            new[i][j] = img[j][i]
+    return new
+
+def copy_source_result_into_slice_img(result, sources, densite_hu) :
+    all_imgs = []
+    size = (len(densite_hu[0]), len(densite_hu))
+    for ind, source in enumerate(sources) :
+        x1 = source[0]
+        x2 = source[1]
+        res = result[ind]
+        res = reverse_img(res)
+
+        img_to_calcul = [[-1 for i in range(size[0])] for j in range(size[1])]
+        taille_img = Img_Density.TAILLE_SUB_IMG
+        rayon = Img_Density.RAYON_SUB_IMG
+
+        for i in range(taille_img) :
+            for j in range(taille_img) :
+                y1 = x2 - rayon + i
+                y2 = x1 - rayon + j
+                img_to_calcul[y1][y2] = res[i][j]
+
+        all_imgs += [img_to_calcul]
+    return all_imgs

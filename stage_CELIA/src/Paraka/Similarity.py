@@ -7,7 +7,8 @@ from matplotlib import pyplot as plt
 from interval import interval
 import math as m
 
-MARGE_IN_RADIAN = 0.3
+MARGE_IN_RADIAN = 0.5
+CENTER_CIRCLE_RAYON = 10
 
 class Dict_Sim :
 
@@ -282,11 +283,11 @@ def get_full_disque(q_intervals, center_circle = True) :
 
 	rayon = imd.Img_Density.RAYON_SUB_IMG
 	p_center = (imd.Img_Density.CENTER_IMG, imd.Img_Density.CENTER_IMG)
-	img_result = [[1 for i in range(2*rayon - 1)] for j in range(2*rayon - 1)]
+	img_result = [[1 for i in range(imd.Img_Density.TAILLE_SUB_IMG)] for j in range(imd.Img_Density.TAILLE_SUB_IMG)]
 	intervale = recompose_intervale_from_q_intervals(q_intervals)
 
-	for i in range(2*rayon - 1) :
-		for j in range(2*rayon - 1) :
+	for i in range(imd.Img_Density.TAILLE_SUB_IMG) :
+		for j in range(imd.Img_Density.TAILLE_SUB_IMG) :
 			point = (i, j)
 
 			if not is_in_circle(point, p_center) :
@@ -295,7 +296,7 @@ def get_full_disque(q_intervals, center_circle = True) :
 			else : #is in circle
 				if len(intervale) > 0 :
 					# if point[0] == p_center[0] and point[1] == p_center[1] :
-					if center_circle and is_in_circle(point, p_center, rayon=10) :
+					if center_circle and is_in_circle(point, p_center, rayon=CENTER_CIRCLE_RAYON) :
 						img_result[i][j] = 0
 					elif not center_circle and point[0] == p_center[0] and point[1] == p_center[1] :
 						img_result[i][j] = 0
@@ -304,8 +305,55 @@ def get_full_disque(q_intervals, center_circle = True) :
 						value_on_circle = get_value_on_circle(point_proj, p_center)
 						if value_on_circle in intervale :
 							img_result[i][j] = 0
+
+	#on agrandi un peu la zone de recalcul
+	# if grow_zone :
+	# 	for i in range(GROW_MARGE) :
+	# 		grow_zone_to_calcul(img_result)
 	return img_result
 
+
+def grow_zone_to_calcul(img) :
+
+	def is_in_circle(point, center,  rayon = imd.Img_Density.RAYON_SUB_IMG) :
+		return m.sqrt(pow(point[0] - center[0], 2) + pow(point[1] - center[1], 2)) <= rayon
+
+	def get_voisins(i, j, center = (imd.Img_Density.CENTER_IMG, imd.Img_Density.CENTER_IMG)) :
+		list_voisins = []
+
+		if i > 0 and j > 0 :
+			p =  (i - 1, j - 1)
+			if is_in_circle(p, center) :
+				list_voisins += [p]
+		if i > 0 and j < imd.Img_Density.TAILLE_SUB_IMG - 1:
+			p = (i - 1, j + 1)
+			if is_in_circle(p, center) :
+				list_voisins += [p]
+		if i < imd.Img_Density.TAILLE_SUB_IMG - 1 and j > 0 :
+			p = (i + 1, j - 1)
+			if is_in_circle(p, center) :
+				list_voisins += [p]
+		if i < imd.Img_Density.TAILLE_SUB_IMG - 1 and j < imd.Img_Density.TAILLE_SUB_IMG - 1 :
+			p = (i + 1, j + 1)
+			if is_in_circle(p, center) :
+				list_voisins += [p]
+
+		return list_voisins
+
+	#si tu as un voisin à recalculer, on te met à zéro
+	list_points = []
+	for i in range(len(img)) :
+		for j in range(len(img[0])) :
+			if img[i][j] == 1 :
+				p = (i, j)
+				vs = get_voisins(i, j)
+				for v in vs :
+					if img[v[0]][v[1]] == 0 :
+						list_points += [p]
+						break
+
+	for p in list_points :
+		img[p[0]][p[1]] = 0
 
 
 
@@ -319,7 +367,25 @@ if __name__ == "__main__" :
 	inter4 = interval()
 	q_intervals = (inter1, inter2, inter3, inter4)
 
-	img = get_full_disque(q_intervals)
+	img = get_full_disque(q_intervals, center_circle = True)
+
+	fig = plt.figure()
+	fig.add_subplot(3, 2, 1)
+	plt.imshow(img)
+	fig.add_subplot(3, 2, 2)
+	grow_zone_to_calcul(img)
+	plt.imshow(img)
+	fig.add_subplot(3, 2, 3)
+	grow_zone_to_calcul(img)
+	plt.imshow(img)
+	fig.add_subplot(3, 2, 4)
+	grow_zone_to_calcul(img)
+	plt.imshow(img)
+	fig.add_subplot(3, 2, 5)
+	grow_zone_to_calcul(img)
+	plt.imshow(img)
+	fig.add_subplot(3, 2, 6)
+	grow_zone_to_calcul(img)
 	plt.imshow(img)
 	plt.show()
 

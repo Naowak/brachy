@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 import math
 import random
 import copy
+import os
 
 import Quartil
 
@@ -14,9 +15,14 @@ class Img_Density :
 	 la zone d'influence à calculer.
 	 Nous récupérons aussi la position des sources dans config_KIDS.don"""
 
+	TAILLE_SOURCE = 1
 	RAYON_SUB_IMG = 32
-	TAILLE_SUB_IMG = 2*RAYON_SUB_IMG - 1
-	CENTER_IMG = RAYON_SUB_IMG - 1
+	TAILLE_SUB_IMG = 2*RAYON_SUB_IMG - TAILLE_SOURCE
+	if TAILLE_SOURCE % 2 == 1 :
+		#TAILLE SOURCE impaire
+		CENTER_IMG = RAYON_SUB_IMG - TAILLE_SOURCE/2 - 1
+	else :
+		CENTER_IMG = RAYON_SUB_IMG - TAILLE_SOURCE/2 - 0.5
 	CIRCLE_SHAPE = [[1 if math.sqrt(pow(i-CENTER_IMG, 2) + pow(j-CENTER_IMG, 2)) <= RAYON_SUB_IMG - 1 else 0 for i in range(TAILLE_SUB_IMG)] for j in range(TAILLE_SUB_IMG)]
 
 	 # ------------------------ Init -----------------------------
@@ -41,11 +47,13 @@ class Img_Density :
  		 		if density_file[i] == "/" :
  		 			return density_file[:i+1]
 
+ 		self.density_file = density_file
+ 		self.config_file = config_file
 	 	self.directory = find_directory(density_file)
 	 	#On charge l'image
 	 	self.load_img_density(density_file)
 	 	#On charge les sources
-	 	self.load_propotions(config_file)
+	 	self.load_proportions(config_file)
 	 	self.load_sources(config_file)
 	 	self.extract_material_from_density([465]) 
 	 	self.extract_sub_imgs()
@@ -55,15 +63,22 @@ class Img_Density :
 		Param : 
 			- density_file : String : Chemin du fichier densite_hu.don"""
 
+		def is_int(d) :
+			try :
+				int(d)
+			except :
+				return False
+			return True
+
 		self.img_density = list()
 		with open(density_file) as f :
 			for line in f :
-				vector_density_column = [int(d) for d in line.split(" ")]
+				vector_density_column = [int(d) for d in line.split(" ") if is_int(d)]
 				self.img_density += [vector_density_column]
 		self.width = len(self.img_density[0])
 		self.height = len(self.img_density)
 
-	def load_propotions(self, config_file) :
+	def load_proportions(self, config_file) :
 		self.coef_x = None
 		self.coef_y = None
 
@@ -121,6 +136,17 @@ class Img_Density :
 			- limits_density_to_material : list() : valeurs des seuils de densité
 				entre les différents matériaux. """
 
+		# def rewrite_density_file(self, density_materials = [-20, 800]) :
+		# 	for j in range(self.height) :
+		# 		for i in range(self.width) :
+		# 			self.img_density[j][i] = density_materials[self.img_material[j][i]]
+		# 	os.remove(self.density_file)
+		# 	with open(self.density_file, "w+") as f :
+		# 		for line in self.img_density :
+		# 			for elem in line :
+		# 				f.write(str(elem) + " ")
+		# 			f.write("\n")
+
 		limits_density_to_material.sort()
 		self.img_material = [[0 for i in range(self.width)] for j in range(self.height)]
 		for j in range(self.height) :
@@ -136,6 +162,9 @@ class Img_Density :
 					#au dernier seuil
 					self.img_material[j][i] = len(limits_density_to_material)
 					material_found = True
+		# Pour une densite constante dans chaque matière :
+		# rewrite_density_file(self)
+
 
 	def extract_sub_imgs(self) :
 		""" Extrait de self.img_material la sous image associé à chacune
@@ -147,13 +176,12 @@ class Img_Density :
 		for source in self.sources :
 			s_ord = source[1]
 			s_abs = source[0]
-			sub_ord = self.img_material[s_ord - rayon + 1: s_ord + rayon]
-			sub_img = [tmp[s_abs - rayon + 1 : s_abs + rayon] for tmp in sub_ord]
+			sub_ord = self.img_material[s_ord - rayon + self.TAILLE_SOURCE: s_ord + rayon]
+			sub_img = [tmp[s_abs - rayon + self.TAILLE_SOURCE : s_abs + rayon] for tmp in sub_ord]
 			if len(sub_img) == self.TAILLE_SUB_IMG and len(sub_img[0]) == self.TAILLE_SUB_IMG :
 				sub_img = [[sub_img[i][j] if self.CIRCLE_SHAPE[i][j] == 1 else -1 for i in range(self.TAILLE_SUB_IMG)] for j in range(self.TAILLE_SUB_IMG)]
 				elem = (sub_img, s_abs, s_ord)
 				self.sub_imgs += [elem]
-
 
 	def extract_images(self) :
 		return self.sub_imgs
@@ -169,7 +197,7 @@ class Img_Density :
 			img = elem[0]
 			filename_dose = self.directory + "dose_source_" + str(ind+1).zfill(3) + ".dat"
 			quartils = extract_quartil(img, rayon)
-			quartils = [Quartil.Quartil(q, filename_dose, location[i], self.sources[ind]) for i, q in enumerate(quartils)]
+			quartils = [Quartil.Quartil(q, filename_dose, location[i], self.sources[ind], self.TAILLE_SOURCE) for i, q in enumerate(quartils)]
 			quart_images += quartils
 		return quart_images
 
@@ -235,15 +263,15 @@ def extract_quartil(img, rayon = Img_Density.RAYON_SUB_IMG) :
 	up_left = rotation(up_left, 2)
 
 	up_right = img[:rayon]
-	up_right = [line[rayon - 1:] for line in up_right]
+	up_right = [line[rayon - Img_Density.TAILLE_SOURCE:] for line in up_right]
 	up_right = rotation(up_right, 1)
 
-	down_left = img[rayon - 1:]
+	down_left = img[rayon - Img_Density.TAILLE_SOURCE:]
 	down_left = [line[:rayon] for line in down_left]
 	down_left = rotation(down_left, 3)
 
-	down_right = img[rayon - 1:]
-	down_right = [line[rayon - 1:] for line in down_right]
+	down_right = img[rayon - Img_Density.TAILLE_SOURCE:]
+	down_right = [line[rayon - Img_Density.TAILLE_SOURCE:] for line in down_right]
 
 	return [up_left, up_right, down_left, down_right]
 
@@ -261,14 +289,14 @@ def recompose_into_img(quartils, priority, rayon = Img_Density.RAYON_SUB_IMG) :
 			origine_x = 0
 			origine_y = 0
 		elif location == "NE" :
-			origine_y = rayon - 1
+			origine_y = rayon - Img_Density.TAILLE_SOURCE
 			origine_x = 0
 		elif location == "SO" :
 			origine_y = 0
-			origine_x = rayon - 1
+			origine_x = rayon - Img_Density.TAILLE_SOURCE
 		elif location == "SE" :
-			origine_x = rayon - 1
-			origine_y = rayon - 1
+			origine_x = rayon - Img_Density.TAILLE_SOURCE
+			origine_y = rayon - Img_Density.TAILLE_SOURCE
 
 		copy_sub_into_full(sub, full, origine_x, origine_y)
 
