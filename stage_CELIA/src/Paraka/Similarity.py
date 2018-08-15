@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 from interval import interval
 import math as m
 
-MARGE_IN_RADIAN = 0.5
+MARGE_IN_RADIAN = 0
 CENTER_CIRCLE_RAYON = 10
 
 class Dict_Sim :
@@ -169,15 +169,24 @@ def similarity_between_two_imgs(img1, img2, plot = False, marge = MARGE_IN_RADIA
 				inter = inter | get_intervale(proj_1, proj_2, marge)
 
 	if plot :
-		print(inter)
-		print(m.pi/2 - get_intervale_length(inter))
 		fig = plt.figure()
-		fig.add_subplot(3, 1, 1)
+		fig.add_subplot(2, 2, 1)
 		plt.imshow(img1)
-		fig.add_subplot(3, 1, 2)
+		plt.title("Quart d'image 1")
+		plt.axis('off')
+		fig.add_subplot(2, 2, 2)
 		plt.imshow(img2)
-		fig.add_subplot(3, 1, 3)
+		plt.title("Quart d'image 2")
+		plt.axis('off')
+		fig.add_subplot(2, 2, 3)
 		plt.imshow(matrix)
+		plt.title("Image de difference")
+		plt.axis('off')
+		fig.add_subplot(2, 2, 4)
+		res  = get_disque_segment(img1, inter)
+		plt.imshow(res)
+		plt.title("Cones obtenus")
+		plt.axis('off')
 		plt.show()
 
 

@@ -69,7 +69,7 @@ class Decision_Tree() :
 				quart_interval_without_margin += [q_interval_without_margin]
 
 			priority = get_priority(list_score)
-			result_img_without_margin = get_full_disque(quart_interval_without_margin, center_circle = False)
+			result_img_without_margin = simy.get_full_disque(quart_interval_without_margin, center_circle = False)
 			prediction = imd.recompose_into_img(quart_pred, priority)
 			result_img = simy.get_full_disque(quart_intervale)
 			return prediction, score, result_img, quart_pred, priority, result_img_without_margin #prédiction est un quartil
@@ -87,8 +87,9 @@ class Decision_Tree() :
 			plt.show()
 
 		nb_prediction = len(list_imgs_to_predict)
+		nb_img_learn = len(self.list_ind_imgs)
 		print("Prédiction de " + str(nb_prediction) + " images en cours...")
-		stats = Stats.Stats(nb_prediction)
+		stats = Stats.Stats(nb_img_learn)
 		progress_bar = ProgressBar(0, len(list_imgs_to_predict))
 
 		list_prediction = list()

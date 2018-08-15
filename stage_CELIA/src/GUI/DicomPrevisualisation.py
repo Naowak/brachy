@@ -381,6 +381,7 @@ class LancerCalculs(Thread):
         self.options = options
         self.calculs_finaux = calculs_finaux
 
+
     def use_atlas(self, filename_hounsfield, filename_config) :
 
         def create_param(filename_hounsfield, filename_config) :
@@ -388,25 +389,6 @@ class LancerCalculs(Thread):
             param += " config_file=" + filename_config 
             param += " density_file=" + filename_hounsfield
             return param 
-
-        def write_into_files(imgs_to_calcul, dirname="tmp/") :
-
-            def write_img(img, filename) :
-                size = (len(img[0]), len(img))
-                with open(filename, "w+") as f :
-                    string = str(size[0]) + " " + str(size[1]) + "\n"
-                    f.write(string)
-                    for line in img :
-                        for elem in line :
-                            f.write(str(elem) + " ")
-                        f.write("\n")
-
-            if not os.path.exists(dirname):
-                os.makedirs(dirname)
-            for ind, img in enumerate(imgs_to_calcul) :
-                groupe = ind + 1
-                filename = dirname + "img" + str(groupe) + ".dat"
-                write_img(img, filename)
 
         param = create_param(filename_hounsfield, filename_config)
         paraka = Atlas(param.split(" "))
@@ -562,15 +544,22 @@ class LancerCalculs(Thread):
             # On doit aussi les enregistrer dans un dossier temporaire de manière à ce que M1 vienne les lire
             # On lance paraka avec le model enregistrer avec le fichier de test correspondant à l'ensemble des images 
             # extraite (zone d'influence) à partir de config_kids.don et densite_hu.don
-            sources, quart_pred, imgs_test, list_priority, list_diff_without_margin, densite_hu = self.use_atlas(filename_hounsfield, filename_config)
+
+            var_bool = True
+
+            if var_bool :
+                calcul_full(filename_config)
+            else :
+                sources, quart_pred, imgs_test, list_priority, list_diff_without_margin, densite_hu = self.use_atlas(filename_hounsfield, filename_config)
 
             # Puis Lancement du calcul M1
             command = self.dicom_navigation.PATH_start_previsualisation + " " + self.slice.get_slice_directory() + " " + str(self.dicom_navigation.densite_lu.get())
             os.system(command)
 
-            #On recopie les doses qui ne devait pas être à recalculer
-            #Et on supprime les fichiers dans tmp/
-            self.copy_dose(sources, quart_pred, imgs_test, list_priority, list_diff_without_margin, densite_hu)
+            if not var_bool :
+                #On recopie les doses qui ne devait pas être à recalculer
+                #Et on supprime les fichiers dans tmp/
+                self.copy_dose(sources, quart_pred, imgs_test, list_priority, list_diff_without_margin, densite_hu)
 
 
             # On retire l'affichage de "Calculs en cours..."
@@ -583,6 +572,84 @@ class LancerCalculs(Thread):
         self.dicom_navigation.get_dicom_contourage().compute_appartenances_contourage_slice(self.slice)
         self.dicom_navigation.get_dicom_hdv().update_hdv()
         self.dicom_navigation.refresh()
+
+def write_into_files(imgs_to_calcul, dirname="tmp/") :
+
+    def write_img(img, filename) :
+        size = (len(img[0]), len(img))
+        with open(filename, "w+") as f :
+            string = str(size[0]) + " " + str(size[1]) + "\n"
+            f.write(string)
+            for line in img :
+                for elem in line :
+                    f.write(str(elem) + " ")
+                f.write("\n")
+
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+    for ind, img in enumerate(imgs_to_calcul) :
+        groupe = ind + 1
+        filename = dirname + "img" + str(groupe) + ".dat"
+        write_img(img, filename)
+
+def calcul_full(filename_config) :
+
+    def read_param_config(filename_config) :
+        lf = 0
+        mf = 0
+        Lx = 0
+        Ly = 0
+
+        with open(filename_config) as f :
+            while lf == 0 or mf == 0 or Lx == 0 or Ly == 0 :
+                line = f.readline()
+                tab = line.split(" ")
+                if tab[0] == "-lf" :
+                    lf = float(tab[1])
+                elif tab[0] == "-mf" :
+                    mf = float(tab[1])
+                elif tab[0] == "-Lx" :
+                    Lx = float(tab[1])
+                elif tab[0] == "-Ly" :
+                    Ly = float(tab[1])
+
+        coef_x = lf / Lx
+        coef_y = mf / Ly
+        return coef_x, coef_y, int(lf), int(mf)
+
+    def read_sources(filename_config, coef_x, coef_y) :
+        sources = list()
+        with open(filename_config) as f :
+            for line in f :
+                if "volume_spheroid" in line :
+                    tab = line.split(" ")
+                    x1 = float(tab[2])*coef_x 
+                    x2 = float(tab[3])*coef_y 
+                    sources += [(int(round(x1)), int(round(x2)))]
+        return sources  
+
+    def make_all_full_img_to_calcul(sources, len_x, len_y) :
+
+        def make_one_full_img_to_calcul(source, len_x, len_y) :
+            tab = [[-1 for i in range(len_x)] for j in range(len_y)]
+            c1 = source[0]
+            c2 = source[1]
+            for i in range(len_y) :
+                for j in range(len_x) :
+                    if math.sqrt(pow(c2 - i, 2) + pow(c1 - j, 2)) < 32 :
+                        tab[i][j] = 0
+            return tab
+
+        list_img_to_calcul = list()
+        for source in sources :
+            img = make_one_full_img_to_calcul(source, len_x, len_y)
+            list_img_to_calcul += [img]
+        return list_img_to_calcul
+
+    coef_x, coef_y, len_x, len_y = read_param_config(filename_config)
+    sources = read_sources(filename_config, coef_x, coef_y)
+    list_img_to_calcul = make_all_full_img_to_calcul(sources, len_x, len_y)
+    write_into_files(list_img_to_calcul)
 
 
 def reverse_img(img) :
