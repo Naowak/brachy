@@ -126,6 +126,13 @@ class DicomPrevisualisation(tk.Frame):
                                   command=None)
         checkbox.grid(row=11, column=1, sticky=tk.E)
 
+        #Utilisation d'un modèle pour réduire les calcul M1
+        tk.Label(self, text="Utilisation d'un modèle").grid(row=12, column=0, sticky=tk.W)
+        self.checkbox_use_model= tk.IntVar()
+        checkbox = tk.Checkbutton(self, variable=self.checkbox_use_model, \
+                                  command=None)
+        checkbox.grid(row=12, column=1, sticky=tk.E)
+
         # Separateur
         ttk.Separator(self, orient=tk.HORIZONTAL).grid(row=12, padx=10, pady=10, columnspan=2)
 
@@ -281,7 +288,7 @@ class DicomPrevisualisation(tk.Frame):
 
         if self.checkbox_all_slices.get() == 0:
             # Lancement du thread pour la slice courante
-            thread_calculs = LancerCalculs(self.dicom_navigation, self.dicom_navigation.slice, options, calculs_finaux)
+            thread_calculs = LancerCalculs(self.dicom_navigation, self.dicom_navigation.slice, options, self.checkbox_use_model, calculs_finaux)
             thread_calculs.start()
         else:
             # Lancement des threads pour toutes les slices contourées
@@ -364,7 +371,7 @@ class DicomPrevisualisation(tk.Frame):
         # On lance un thread pour chaque slice contourée pour le ROI correspondant au contourage cible
         for (UID, array) in self.dicom_navigation.contourages[ROI_id].iteritems():
             slice_id = dicom_parser.UID_to_sliceid_LUT[UID]
-            thread_calculs = LancerCalculs(self.dicom_navigation, dicom_parser.get_slice(slice_id), options, calculs_finaux)
+            thread_calculs = LancerCalculs(self.dicom_navigation, dicom_parser.get_slice(slice_id), options, self.checkbox_use_model, calculs_finaux)
             thread_calculs.start()
             
         
@@ -374,12 +381,13 @@ class LancerCalculs(Thread):
     Le principe de la délégation est utilisé pour utiliser les informations relatives à dicom_previsualisation
     """
 
-    def __init__(self, dicom_navigation, slice, options, calculs_finaux=False):
+    def __init__(self, dicom_navigation, slice, options, use_model, calculs_finaux=False):
         Thread.__init__(self)
         self.dicom_navigation = dicom_navigation
         self.slice = slice
         self.options = options
         self.calculs_finaux = calculs_finaux
+        self.use_model = use_model
 
 
     def use_atlas(self, filename_hounsfield, filename_config) :
@@ -545,18 +553,17 @@ class LancerCalculs(Thread):
             # On lance paraka avec le model enregistrer avec le fichier de test correspondant à l'ensemble des images 
             # extraite (zone d'influence) à partir de config_kids.don et densite_hu.don
 
-            var_bool = True
-
-            if var_bool :
-                calcul_full(filename_config)
-            else :
+            if self.use_model :
                 sources, quart_pred, imgs_test, list_priority, list_diff_without_margin, densite_hu = self.use_atlas(filename_hounsfield, filename_config)
+            else :
+                #créer les image de calcul pour ne calculer que les cercles
+                calcul_full(filename_config)
 
             # Puis Lancement du calcul M1
             command = self.dicom_navigation.PATH_start_previsualisation + " " + self.slice.get_slice_directory() + " " + str(self.dicom_navigation.densite_lu.get())
             os.system(command)
 
-            if not var_bool :
+            if self.use_model :
                 #On recopie les doses qui ne devait pas être à recalculer
                 #Et on supprime les fichiers dans tmp/
                 self.copy_dose(sources, quart_pred, imgs_test, list_priority, list_diff_without_margin, densite_hu)
