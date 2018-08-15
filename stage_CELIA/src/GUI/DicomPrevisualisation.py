@@ -288,7 +288,7 @@ class DicomPrevisualisation(tk.Frame):
 
         if self.checkbox_all_slices.get() == 0:
             # Lancement du thread pour la slice courante
-            thread_calculs = LancerCalculs(self.dicom_navigation, self.dicom_navigation.slice, options, self.checkbox_use_model, calculs_finaux)
+            thread_calculs = LancerCalculs(self.dicom_navigation, self.dicom_navigation.slice, options, self.checkbox_use_model.get(), calculs_finaux)
             thread_calculs.start()
         else:
             # Lancement des threads pour toutes les slices contourées
@@ -371,7 +371,7 @@ class DicomPrevisualisation(tk.Frame):
         # On lance un thread pour chaque slice contourée pour le ROI correspondant au contourage cible
         for (UID, array) in self.dicom_navigation.contourages[ROI_id].iteritems():
             slice_id = dicom_parser.UID_to_sliceid_LUT[UID]
-            thread_calculs = LancerCalculs(self.dicom_navigation, dicom_parser.get_slice(slice_id), options, self.checkbox_use_model, calculs_finaux)
+            thread_calculs = LancerCalculs(self.dicom_navigation, dicom_parser.get_slice(slice_id), options, self.checkbox_use_model.get(), calculs_finaux)
             thread_calculs.start()
             
         
@@ -552,6 +552,7 @@ class LancerCalculs(Thread):
             # On doit aussi les enregistrer dans un dossier temporaire de manière à ce que M1 vienne les lire
             # On lance paraka avec le model enregistrer avec le fichier de test correspondant à l'ensemble des images 
             # extraite (zone d'influence) à partir de config_kids.don et densite_hu.don
+            print("model : ", self.use_model)
 
             if self.use_model :
                 sources, quart_pred, imgs_test, list_priority, list_diff_without_margin, densite_hu = self.use_atlas(filename_hounsfield, filename_config)
