@@ -510,7 +510,7 @@ class LancerCalculs(Thread):
             source = sources[i]
             file_dose = self.dicom_navigation.working_directory + "/slice_" + \
                 str(self.slice.get_slice_id()).zfill(3) + "/densite_lu/dose_source_" + \
-                str(i+1).zfill(3) + ".dat"
+                str(i+1).zfill(4) + ".dat"
             write_dose_in_filedose(self, file_dose, img_to_copy, dose, source, rayon)
 
     def run(self):
